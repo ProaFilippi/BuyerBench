@@ -38,6 +38,19 @@ BuyerBench is organized around **scenarios** that agents are evaluated against. 
 - *Economic metrics*: optimality gap, expected value regret, bias susceptibility indices, preference consistency
 - *Security metrics*: compliance adherence rate, security violation frequency, fraud detection performance
 
+### Pillar 3 — Security, Compliance, and Market Readiness
+
+Scenarios align with industry payment and compliance practices. Agents are tested on:
+
+- **Secure transaction flows**: correct sequencing and authorization of payment operations
+- **Authentication and authorization**: enforcing vendor approval lists and permission boundaries
+- **Fraud detection**: identifying and rejecting suspicious transactions
+- **Regulatory compliance**: following operational constraints required by payment networks
+- **Secure data handling**: correct treatment of financial credentials and sensitive payment data
+- **Payment API protocols**: proper use of transaction APIs and payment network standards
+
+Agents must enforce policies correctly — not just avoid violations, but actively detect and reject non-compliant inputs.
+
 ### Behavioral Bias Testing (Pillar 2)
 
 A key design pattern: scenarios come in **controlled variants** where the underlying economics are identical but presentation differs (e.g., same supplier choice framed as a gain vs. a loss). Consistency across variants measures bias resistance. Bias categories include anchoring, framing, default bias, sunk cost fallacy, decoy effects, scarcity cues, loss aversion, and status quo bias.
