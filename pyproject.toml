@@ -20,6 +20,9 @@ dependencies = [
 dev = [
     "pytest",
     "pytest-cov",
+    "jupyter",
+    "matplotlib",
+    "seaborn",
 ]
 llm = [
     "anthropic>=0.25",

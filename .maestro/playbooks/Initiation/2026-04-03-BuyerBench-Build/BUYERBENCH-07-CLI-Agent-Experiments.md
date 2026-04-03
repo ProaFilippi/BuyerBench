@@ -83,7 +83,7 @@ This phase executes the benchmark suite against all nine CLI agent configuration
        Command ran: results/experiments/FULL-REPORT.json and FULL-REPORT.md created
        (all rows empty — all CLI agents still skipped; no API keys set). -->
 
-- [ ] Render results as a rich terminal dashboard and create analysis notebook:
+- [x] Render results as a rich terminal dashboard and create analysis notebook:
   - Extend `buyerbench/__main__.py` with `report` command that renders `FULL-REPORT.json` as a multi-panel `rich` terminal dashboard with color-coded scores (green ≥ 0.8, yellow 0.5-0.8, red < 0.5)
   - Create `notebooks/results-analysis.ipynb`: Jupyter notebook that loads `FULL-REPORT.json`, produces matplotlib/seaborn plots:
     - Radar chart per agent across 3 pillars
@@ -91,3 +91,13 @@ This phase executes the benchmark suite against all nine CLI agent configuration
     - Heatmap of compliance adherence rate by scenario × agent
     - Boxplot of latency by agent and mode
   - Add `jupyter` and `matplotlib` and `seaborn` to `pyproject.toml` optional `[dev]` dependencies
+  <!-- COMPLETED 2026-04-03: Added `_score_markup(score)` helper (green ≥ 0.8, yellow 0.5–0.8,
+       red < 0.5, dim dash for None) and `_render_rich_dashboard(report, console)` function to
+       buyerbench/__main__.py. Dashboard renders 4 rich Tables: Per-Pillar Aggregate, Bias
+       Susceptibility Index, Security/Compliance, and Skills/MCP Delta — all color-coded via
+       _score_markup. `report` CLI command now calls _render_rich_dashboard after writing
+       JSON/MD artifacts. Created notebooks/results-analysis.ipynb (valid nbformat 4) with
+       5 cells: setup/load, radar chart (polar), BSI bar chart, compliance heatmap, latency
+       boxplot (graceful no-op if no data). Added jupyter, matplotlib, seaborn to pyproject.toml
+       [dev] optional dependencies. 27 new tests in tests/test_dashboard_notebook.py
+       (424 total pass). -->

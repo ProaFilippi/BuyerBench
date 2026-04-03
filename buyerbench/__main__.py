@@ -316,6 +316,152 @@ def report(experiment_dir: str) -> None:
     )
     console.print()
 
+    _render_rich_dashboard(full_report, console)
+
+
+def _score_markup(score: float | None) -> str:
+    """Return rich markup for a 0-1 score: green ≥ 0.8, yellow 0.5–0.8, red < 0.5."""
+    if score is None:
+        return "[dim]—[/dim]"
+    if score >= 0.8:
+        return f"[bold green]{score:.4f}[/bold green]"
+    if score >= 0.5:
+        return f"[yellow]{score:.4f}[/yellow]"
+    return f"[bold red]{score:.4f}[/bold red]"
+
+
+def _render_rich_dashboard(report: dict, con: "Console") -> None:
+    """Render a multi-panel rich terminal dashboard from a FULL-REPORT dict."""
+    con.rule("[bold cyan]BuyerBench Results Dashboard[/bold cyan]")
+    con.print()
+
+    # ── 1. Per-pillar aggregate ───────────────────────────────────────────────
+    agg_rows = report.get("per_pillar_aggregate", [])
+    agg_t = Table(
+        title="[bold]1. Per-Pillar Aggregate Scores[/bold]",
+        box=box.ROUNDED,
+        show_lines=True,
+    )
+    agg_t.add_column("Agent", style="bold cyan", no_wrap=True)
+    agg_t.add_column("Pillar", style="magenta")
+    agg_t.add_column("Mean Score", justify="right")
+    agg_t.add_column("Std", justify="right", style="dim")
+    agg_t.add_column("Min", justify="right")
+    agg_t.add_column("Max", justify="right")
+    agg_t.add_column("N", justify="right", style="dim")
+    if agg_rows:
+        for row in agg_rows:
+            agg_t.add_row(
+                row["agent_id"],
+                row["pillar"],
+                _score_markup(row["mean_score"]),
+                f"{row['std']:.4f}",
+                _score_markup(row["min"]),
+                _score_markup(row["max"]),
+                str(row["n_scenarios"]),
+            )
+    else:
+        agg_t.add_row("[dim]—[/dim]", "[dim]—[/dim]", "[dim]—[/dim]",
+                      "[dim]—[/dim]", "[dim]—[/dim]", "[dim]—[/dim]", "[dim]—[/dim]")
+    con.print(agg_t)
+    con.print()
+
+    # ── 2. Bias Susceptibility Index ─────────────────────────────────────────
+    bsi_rows = report.get("bias_susceptibility_table", [])
+    bsi_t = Table(
+        title="[bold]2. Bias Susceptibility Index[/bold]",
+        box=box.ROUNDED,
+        show_lines=True,
+    )
+    bsi_t.add_column("Bias Type", style="bold cyan", no_wrap=True)
+    bsi_t.add_column("Agent", style="cyan")
+    bsi_t.add_column("Mode", style="magenta")
+    bsi_t.add_column("BSI", justify="right")
+    bsi_t.add_column("Decision Changed", justify="center")
+    if bsi_rows:
+        for row in bsi_rows:
+            changed = "[bold red]YES[/bold red]" if row["decision_changed"] else "[green]no[/green]"
+            bsi_t.add_row(
+                row["bias_type"],
+                row["agent_id"],
+                row["mode"],
+                _score_markup(row["bsi"]),
+                changed,
+            )
+    else:
+        bsi_t.add_row("[dim]—[/dim]", "[dim]—[/dim]", "[dim]—[/dim]",
+                      "[dim]—[/dim]", "[dim]—[/dim]")
+    con.print(bsi_t)
+    con.print()
+
+    # ── 3. Security compliance ────────────────────────────────────────────────
+    sec_rows = report.get("security_violation_table", [])
+    sec_t = Table(
+        title="[bold]3. Security / Compliance[/bold]",
+        box=box.ROUNDED,
+        show_lines=True,
+    )
+    sec_t.add_column("Scenario", style="bold cyan", no_wrap=True)
+    sec_t.add_column("Agent", style="cyan")
+    sec_t.add_column("Compliance Rate", justify="right")
+    sec_t.add_column("Violation Freq", justify="right")
+    sec_t.add_column("Score", justify="right")
+    if sec_rows:
+        for row in sec_rows:
+            sec_t.add_row(
+                row["scenario_id"],
+                row["agent_id"],
+                _score_markup(row["compliance_adherence_rate"]),
+                _score_markup(1.0 - row["security_violation_frequency"]),
+                _score_markup(row["score"]),
+            )
+    else:
+        sec_t.add_row("[dim]—[/dim]", "[dim]—[/dim]", "[dim]—[/dim]",
+                      "[dim]—[/dim]", "[dim]—[/dim]")
+    con.print(sec_t)
+    con.print()
+
+    # ── 4. Skills vs MCP delta ────────────────────────────────────────────────
+    delta_rows = report.get("skills_mcp_delta_table", [])
+    delta_t = Table(
+        title="[bold]4. Skills / MCP Score Delta vs. Baseline[/bold]",
+        box=box.ROUNDED,
+        show_lines=True,
+    )
+    delta_t.add_column("Family", style="bold cyan", no_wrap=True)
+    delta_t.add_column("Mode", style="magenta")
+    delta_t.add_column("Pillar", style="dim")
+    delta_t.add_column("Baseline", justify="right")
+    delta_t.add_column("Variant", justify="right")
+    delta_t.add_column("Δ Delta", justify="right")
+    if delta_rows:
+        for row in delta_rows:
+            delta_val = row.get("delta")
+            if delta_val is None:
+                delta_markup = "[dim]—[/dim]"
+            elif delta_val > 0:
+                delta_markup = f"[bold green]+{delta_val:.4f}[/bold green]"
+            elif delta_val < 0:
+                delta_markup = f"[bold red]{delta_val:.4f}[/bold red]"
+            else:
+                delta_markup = f"[dim]{delta_val:.4f}[/dim]"
+            delta_t.add_row(
+                row["family"],
+                row["mode"],
+                row["pillar"],
+                _score_markup(row.get("baseline_score")),
+                _score_markup(row.get("variant_score")),
+                delta_markup,
+            )
+    else:
+        delta_t.add_row("[dim]—[/dim]", "[dim]—[/dim]", "[dim]—[/dim]",
+                        "[dim]—[/dim]", "[dim]—[/dim]", "[dim]—[/dim]")
+    con.print(delta_t)
+    con.print()
+
+    con.rule("[dim]End of Dashboard[/dim]")
+    con.print()
+
 
 def _write_skipped_results(
     agent_id: str,
