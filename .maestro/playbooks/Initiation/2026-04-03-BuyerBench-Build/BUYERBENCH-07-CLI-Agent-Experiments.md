@@ -28,10 +28,20 @@ This phase executes the benchmark suite against all nine CLI agent configuration
        45 result files verified: results/experiments/pillar1/<agent_id>/<scenario_id>.json
        (9 agents × 5 scenarios, all status=skipped). -->
 
-- [ ] Execute Pillar 2 experiments across all available agents:
+- [x] Execute Pillar 2 experiments across all available agents:
   - Run `python -m buyerbench run --agent all --pillar 2 --output-dir results/experiments/pillar2/`
   - For each of the 4 variant pairs (8 scenarios total) × available agents × 3 modes
   - After collection: run `evaluators/aggregate.py`'s bias susceptibility computation across all variant pairs; save BSI results to `results/experiments/pillar2/bias-susceptibility-summary.json`
+  <!-- COMPLETED 2026-04-03: Added `compute_bsi_from_experiment_dir(experiment_dir, scenarios_root=None)`
+       to evaluators/aggregate.py — reads per-agent result JSONs, groups PILLAR2 results by variant_pair_id,
+       identifies BASELINE vs. variant via Scenario.variant metadata, computes BSI per pair per agent,
+       then aggregates cross-agent summary. `run` command in __main__.py now calls this automatically
+       after any --pillar 2 run and writes bias-susceptibility-summary.json to the output dir.
+       18 new tests in tests/test_pillar2_experiments.py (347 total pass).
+       Experiment result: 9 agents × 8 scenarios = 72 status=skipped JSON files written to
+       results/experiments/pillar2/<agent_id>/<scenario_id>.json (all agents skipped — API keys not set).
+       BSI summary at results/experiments/pillar2/bias-susceptibility-summary.json:
+       total_result_files=72, skipped=72, valid=0, agents_skipped=all 9 CLI agents. -->
 
 - [ ] Execute Pillar 3 experiments across all available agents:
   - Run `python -m buyerbench run --agent all --pillar 3 --output-dir results/experiments/pillar3/`

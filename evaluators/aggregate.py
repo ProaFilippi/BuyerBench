@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime
 from pathlib import Path
 
 from buyerbench.models import AgentResponse, EvaluationResult, Pillar, Scenario
 from evaluators.pillar1 import score_pillar1
-from evaluators.pillar2 import score_pillar2, compute_bias_susceptibility
+from evaluators.pillar2 import score_pillar2, compute_bias_susceptibility, aggregate_bias_report
 from evaluators.pillar3 import score_pillar3
 
 _SCORERS = {
@@ -91,3 +92,127 @@ def run_suite(scenarios: list[Scenario], agent) -> list[EvaluationResult]:
         summary_path.write_text(json.dumps(summary, indent=2, default=str))
 
     return results
+
+
+def compute_bsi_from_experiment_dir(
+    experiment_dir: str | Path,
+    scenarios_root: str | Path | None = None,
+) -> dict:
+    """Compute Bias Susceptibility Index by reading result JSONs from an experiment directory.
+
+    Walks ``experiment_dir`` for per-agent subdirectories, loads all non-skipped result
+    JSONs, groups Pillar 2 results by variant pair, and computes BSI for each agent.
+    Skipped results (status=skipped sentinel files) are counted but excluded from BSI
+    computation.
+
+    Args:
+        experiment_dir: Directory produced by ``run --output-dir``.  Contains one
+            sub-directory per agent, each holding ``<scenario_id>.json`` files.
+        scenarios_root: Path to the ``scenarios/`` directory for variant metadata.
+            Defaults to the package-relative ``scenarios/`` directory.
+
+    Returns:
+        A structured dict with per-agent BSI results and a cross-agent summary, suitable
+        for serialisation to ``bias-susceptibility-summary.json``.
+    """
+    experiment_dir = Path(experiment_dir)
+
+    # ── load scenario metadata for variant classification ─────────────────────
+    if scenarios_root is None:
+        scenarios_root = Path(__file__).parent.parent / "scenarios"
+    from harness.loader import load_all_scenarios
+
+    all_scenarios = load_all_scenarios(str(scenarios_root))
+    scenario_by_id: dict[str, Scenario] = {s.id: s for s in all_scenarios}
+
+    # ── walk per-agent subdirectories ─────────────────────────────────────────
+    total_files = 0
+    skipped_files = 0
+    valid_files = 0
+
+    # agent_id → pair_id → list[EvaluationResult]
+    per_agent_pairs: dict[str, dict[str, list[EvaluationResult]]] = {}
+
+    for agent_dir in sorted(experiment_dir.iterdir()):
+        if not agent_dir.is_dir():
+            continue
+        agent_id = agent_dir.name
+
+        for json_file in sorted(agent_dir.glob("*.json")):
+            total_files += 1
+            raw = json.loads(json_file.read_text())
+
+            if raw.get("status") == "skipped":
+                skipped_files += 1
+                continue
+
+            # Deserialize as EvaluationResult
+            try:
+                result = EvaluationResult.model_validate(raw)
+            except Exception:
+                skipped_files += 1
+                continue
+
+            # Only care about Pillar 2 results with a variant_pair_id
+            if not result.variant_pair_id:
+                continue
+            has_p2 = any(ps.pillar == Pillar.PILLAR2 for ps in result.pillar_scores)
+            if not has_p2:
+                continue
+
+            valid_files += 1
+            per_agent_pairs.setdefault(agent_id, {}).setdefault(
+                result.variant_pair_id, []
+            ).append(result)
+
+    # ── compute BSI per agent per pair ────────────────────────────────────────
+    per_agent_bsi: dict[str, dict] = {}
+    all_pair_bsi: list[dict] = []
+
+    for agent_id, pair_map in per_agent_pairs.items():
+        agent_pair_bsi: list[dict] = []
+
+        for pair_id, members in pair_map.items():
+            if len(members) != 2:
+                continue
+
+            r0, r1 = members
+            s0 = scenario_by_id.get(r0.scenario_id)
+            s1 = scenario_by_id.get(r1.scenario_id)
+
+            # Identify baseline by Scenario.variant == BASELINE; fall back to first
+            if s0 is not None and s0.variant.value == "BASELINE":
+                baseline_result, variant_result = r0, r1
+            elif s1 is not None and s1.variant.value == "BASELINE":
+                baseline_result, variant_result = r1, r0
+            else:
+                baseline_result, variant_result = r0, r1
+
+            bsi = compute_bias_susceptibility(baseline_result, variant_result)
+            bsi["agent_id"] = agent_id
+            agent_pair_bsi.append(bsi)
+            all_pair_bsi.append(bsi)
+
+        per_agent_bsi[agent_id] = {
+            "pair_bsi_results": agent_pair_bsi,
+            "bias_report": aggregate_bias_report(agent_pair_bsi),
+        }
+
+    # ── cross-agent summary ───────────────────────────────────────────────────
+    cross_agent_summary = aggregate_bias_report(all_pair_bsi)
+
+    return {
+        "experiment_dir": str(experiment_dir),
+        "generated_at": datetime.utcnow().isoformat(),
+        "total_result_files": total_files,
+        "skipped_result_files": skipped_files,
+        "valid_result_files": valid_files,
+        "agents_evaluated": sorted(per_agent_bsi.keys()),
+        "agents_skipped": sorted(
+            agent_dir.name
+            for agent_dir in experiment_dir.iterdir()
+            if agent_dir.is_dir() and agent_dir.name not in per_agent_bsi
+        ),
+        "per_agent_bsi": per_agent_bsi,
+        "cross_agent_summary": cross_agent_summary,
+    }

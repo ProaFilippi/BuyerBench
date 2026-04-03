@@ -209,6 +209,19 @@ def run(
         console.print()
         console.print(table)
 
+    # ── Post-run: Pillar 2 BSI computation ───────────────────────────────────
+    if pillar == "2":
+        import json as _json
+        from evaluators.aggregate import compute_bsi_from_experiment_dir
+
+        bsi_summary = compute_bsi_from_experiment_dir(output_dir)
+        bsi_path = Path(output_dir) / "bias-susceptibility-summary.json"
+        bsi_path.write_text(_json.dumps(bsi_summary, indent=2, default=str))
+        console.print(
+            f"[bold cyan]BSI summary saved to[/bold cyan] "
+            f"[bold]{bsi_path}[/bold]"
+        )
+
     console.print()
     console.print(
         f"[bold green]Run complete — {len(all_scenarios)} scenario(s) × "
