@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 from buyerbench.models import AgentResponse, EvaluationResult, Pillar, Scenario
@@ -226,7 +226,7 @@ def compute_security_summary_from_experiment_dir(
 
     return {
         "experiment_dir": str(experiment_dir),
-        "generated_at": datetime.utcnow().isoformat(),
+        "generated_at": datetime.now(timezone.utc).isoformat(),
         "total_result_files": total_files,
         "skipped_result_files": skipped_files,
         "valid_result_files": valid_files,
@@ -352,7 +352,7 @@ def compute_bsi_from_experiment_dir(
 
     return {
         "experiment_dir": str(experiment_dir),
-        "generated_at": datetime.utcnow().isoformat(),
+        "generated_at": datetime.now(timezone.utc).isoformat(),
         "total_result_files": total_files,
         "skipped_result_files": skipped_files,
         "valid_result_files": valid_files,

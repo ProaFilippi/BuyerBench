@@ -17,7 +17,7 @@ class TestDemoCommand:
     def test_demo_output_mentions_scenarios_evaluated(self):
         runner = CliRunner()
         result = runner.invoke(cli, ["demo"])
-        assert "3 scenarios evaluated" in result.output
+        assert "scenarios evaluated" in result.output
 
     def test_run_unknown_agent_exits_nonzero(self):
         runner = CliRunner()

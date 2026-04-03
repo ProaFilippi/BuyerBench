@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 import math
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 from buyerbench.models import EvaluationResult, Pillar
@@ -25,7 +25,7 @@ def generate_summary_report(results: list[EvaluationResult]) -> dict:
             agent_id="unknown",
             total_scenarios=0,
             overall_pass_rate=0.0,
-            generated_at=datetime.utcnow(),
+            generated_at=datetime.now(timezone.utc),
         ).model_dump()
 
     agent_id = results[0].agent_id
@@ -77,7 +77,7 @@ def generate_summary_report(results: list[EvaluationResult]) -> dict:
         total_scenarios=total,
         overall_pass_rate=overall_passes / total,
         per_pillar={k: v for k, v in per_pillar.items()},
-        generated_at=datetime.utcnow(),
+        generated_at=datetime.now(timezone.utc),
     )
 
     return report.model_dump()
@@ -236,7 +236,7 @@ def generate_full_report(experiment_dir: str) -> dict:
                 })
 
     return {
-        "generated_at": datetime.utcnow().isoformat(),
+        "generated_at": datetime.now(timezone.utc).isoformat(),
         "experiment_dir": str(exp_dir),
         "per_pillar_aggregate": per_pillar_aggregate,
         "per_metric_breakdown": dict(per_metric_breakdown),

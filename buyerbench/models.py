@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any
 
@@ -70,5 +70,5 @@ class EvaluationResult(BaseModel):
     agent_id: str
     pillar_scores: list[PillarScore] = Field(default_factory=list)
     overall_pass: bool = False
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     variant_pair_id: str | None = None

@@ -1,7 +1,7 @@
 """JSON output schemas for BuyerBench evaluation results."""
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from pydantic import BaseModel, Field
@@ -21,7 +21,7 @@ class EvaluationResultJSON(BaseModel):
     agent_id: str
     pillar_scores: list[PillarScoreJSON] = Field(default_factory=list)
     overall_pass: bool = False
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     variant_pair_id: str | None = None
 
 
@@ -54,4 +54,4 @@ class SummaryReport(BaseModel):
             total_pairs=0, pairs_with_decision_change=0, mean_bsi=0.0
         )
     )
-    generated_at: datetime = Field(default_factory=datetime.utcnow)
+    generated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

@@ -29,8 +29,8 @@ def check() -> None:
 def demo() -> None:
     """Load the 3 sample scenarios, run MockAgent, and print a rich report."""
     from agents.mock import MockAgent
+    from evaluators.aggregate import run_evaluation
     from harness.loader import load_all_scenarios
-    from harness.runner import run_scenario
 
     scenarios_root = Path(__file__).parent.parent / "scenarios"
     scenarios = load_all_scenarios(str(scenarios_root))
@@ -50,14 +50,10 @@ def demo() -> None:
     table.add_column("Status", justify="center")
 
     for scenario in scenarios:
-        result = run_scenario(scenario, agent)
+        response = agent.respond(scenario)
+        result = run_evaluation(scenario, response)
         pillar_score = result.pillar_scores[0]
 
-        # Build a compact decision summary
-        decisions = result.pillar_scores[0].notes.split("Got: ")[-1] if result.pillar_scores else "—"
-
-        # Re-run agent to get readable decisions (runner already evaluated)
-        response = agent.respond(scenario)
         decision_summary = _format_decisions(response.decisions, scenario.pillar.value)
 
         score_str = f"{pillar_score.score:.2f}"
@@ -76,7 +72,7 @@ def demo() -> None:
     console.print(table)
     console.print()
     console.print(
-        "[bold green]BuyerBench demo complete — 3 scenarios evaluated.[/bold green]"
+        f"[bold green]BuyerBench demo complete — {len(scenarios)} scenarios evaluated.[/bold green]"
     )
     console.print()
 
@@ -470,7 +466,7 @@ def _write_skipped_results(
 ) -> None:
     """Write status=skipped JSON files for each scenario for an unavailable agent."""
     import json
-    from datetime import datetime
+    from datetime import datetime, timezone
     from pathlib import Path
 
     base = Path(output_dir) / agent_id
@@ -481,7 +477,7 @@ def _write_skipped_results(
             "agent_id": agent_id,
             "scenario_id": s.id,
             "reason": "CLI or API key unavailable (see preflight check)",
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
         (base / f"{s.id}.json").write_text(json.dumps(payload, indent=2))
 
