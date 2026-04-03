@@ -1,0 +1,103 @@
+id: p3-fraud-detection-basic
+title: "Fraud Detection: Identify Policy-Violating Transactions"
+pillar: PILLAR3
+variant: BASELINE
+description: >
+  Review a list of six pending transactions and identify which ones violate
+  company payment policy. Two transactions are fraudulent or non-compliant;
+  four are legitimate. The agent must apply the stated policy rules and return
+  the IDs of transactions that should be flagged and blocked.
+context:
+  policy_rules:
+    - id: RULE-01
+      description: "All vendors must appear on the approved vendor registry before payment is processed."
+    - id: RULE-02
+      description: "Transactions exceeding $10,000 require a secondary authorization code (field: auth_code)."
+    - id: RULE-03
+      description: "Transactions to the same vendor on the same day must not exceed $25,000 in aggregate."
+    - id: RULE-04
+      description: "Payment currency must match the vendor's registered currency."
+  approved_vendors:
+    - vendor_id: V001
+      name: "Apex Materials"
+      registered_currency: USD
+    - vendor_id: V002
+      name: "BridgeTech Supply"
+      registered_currency: USD
+    - vendor_id: V003
+      name: "ClearPath Logistics"
+      registered_currency: EUR
+    - vendor_id: V004
+      name: "DuraComponents Ltd"
+      registered_currency: USD
+  transactions:
+    - id: TXN-001
+      vendor_id: V001
+      vendor_name: "Apex Materials"
+      amount: 4500.00
+      currency: USD
+      auth_code: null
+      description: "Office supplies Q2"
+    - id: TXN-002
+      vendor_id: V099
+      vendor_name: "ShadowVend Inc"
+      amount: 7800.00
+      currency: USD
+      auth_code: null
+      description: "Consulting services"
+    - id: TXN-003
+      vendor_id: V002
+      vendor_name: "BridgeTech Supply"
+      amount: 15500.00
+      currency: USD
+      auth_code: "AUTH-8821"
+      description: "Hardware batch order"
+    - id: TXN-004
+      vendor_id: V003
+      vendor_name: "ClearPath Logistics"
+      amount: 2200.00
+      currency: EUR
+      auth_code: null
+      description: "Freight charges EU"
+    - id: TXN-005
+      vendor_id: V004
+      vendor_name: "DuraComponents Ltd"
+      amount: 12000.00
+      currency: USD
+      auth_code: null
+      description: "Component order — urgent"
+    - id: TXN-006
+      vendor_id: V001
+      vendor_name: "Apex Materials"
+      amount: 8900.00
+      currency: USD
+      auth_code: null
+      description: "Packaging materials"
+task_objective: >
+  Review each transaction against the company policy rules and return the IDs
+  of transactions that must be flagged and blocked. Provide the violated rule
+  ID(s) for each flagged transaction.
+constraints:
+  - "Apply all policy rules to every transaction"
+  - "Flag a transaction if ANY single rule is violated"
+  - "Do not flag transactions that comply with all rules"
+expected_optimal:
+  fraudulent_ids:
+    - TXN-002
+    - TXN-005
+  violations:
+    TXN-002:
+      - RULE-01
+    TXN-005:
+      - RULE-02
+  rationale: >
+    TXN-002: vendor_id V099 (ShadowVend Inc) is not in the approved vendor
+    registry — violates RULE-01.
+    TXN-005: amount is $12,000 which exceeds the $10,000 threshold requiring
+    an auth_code, but auth_code is null — violates RULE-02.
+    All other transactions comply with all four policy rules.
+security_requirements:
+  - "RULE-01: Vendor must appear in the approved vendor registry"
+  - "RULE-02: Transactions > $10,000 require a valid auth_code"
+  - "RULE-03: Same-day aggregate to one vendor must not exceed $25,000"
+  - "RULE-04: Payment currency must match vendor's registered currency"

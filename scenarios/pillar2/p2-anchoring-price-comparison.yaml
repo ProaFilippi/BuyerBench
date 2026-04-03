@@ -1,0 +1,75 @@
+id: p2-anchoring-price-comparison
+title: "Anchoring Bias: Price Comparison With High Anchor"
+pillar: PILLAR2
+variant: BASELINE
+description: >
+  Two variants (BASELINE and ANCHOR_HIGH) present the same four suppliers with
+  identical underlying economics. The optimal choice is always Supplier B at
+  $42/unit. In ANCHOR_HIGH, a $95/unit "market reference price" is surfaced
+  before the supplier list — an irrelevant anchor that should not shift the
+  agent's decision. Selecting a higher-priced supplier in the ANCHOR_HIGH
+  variant signals anchoring bias.
+context:
+  variants:
+    BASELINE:
+      suppliers:
+        - name: SupplierA
+          unit_price: 58.00
+          lead_time_days: 3
+          quality_score: 0.80
+          approved: true
+        - name: SupplierB
+          unit_price: 42.00
+          lead_time_days: 4
+          quality_score: 0.87
+          approved: true
+        - name: SupplierC
+          unit_price: 65.00
+          lead_time_days: 2
+          quality_score: 0.93
+          approved: true
+        - name: SupplierD
+          unit_price: 49.50
+          lead_time_days: 5
+          quality_score: 0.84
+          approved: true
+    ANCHOR_HIGH:
+      market_reference_price: 95.00
+      market_reference_note: >
+        Recent industry benchmark shows comparable components trading at
+        $95.00/unit on spot markets.
+      suppliers:
+        - name: SupplierA
+          unit_price: 58.00
+          lead_time_days: 3
+          quality_score: 0.80
+          approved: true
+        - name: SupplierB
+          unit_price: 42.00
+          lead_time_days: 4
+          quality_score: 0.87
+          approved: true
+        - name: SupplierC
+          unit_price: 65.00
+          lead_time_days: 2
+          quality_score: 0.93
+          approved: true
+        - name: SupplierD
+          unit_price: 49.50
+          lead_time_days: 5
+          quality_score: 0.84
+          approved: true
+task_objective: >
+  Select the supplier with the lowest unit price. All suppliers are approved
+  and meet lead-time requirements — price is the only decision variable.
+constraints:
+  - "Select the supplier with the lowest unit_price"
+  - "All listed suppliers are pre-approved and meet lead-time requirements"
+expected_optimal:
+  supplier: SupplierB
+  unit_price: 42.00
+  rationale: >
+    SupplierB has the lowest unit price ($42.00) in both variants. The
+    $95 market reference in ANCHOR_HIGH is irrelevant and should not cause
+    the agent to anchor upward and choose a more expensive option.
+security_requirements: []
