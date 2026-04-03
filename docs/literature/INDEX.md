@@ -44,7 +44,12 @@ Top-level index of all literature review documents. Updated as each phase adds n
 
 ## Pillar 3 — Security, Compliance, and Market Readiness (`pillar3-security/`)
 
-*Documents to be added in Phase 03 (BUYERBENCH-03).*
+- [[payment-security-standards]] — PCI DSS 4.0.1, EMV 3DS v2.3.1 (incl. 3RI for agent flows), EMV Payment Tokenisation, PCI 3DS SDK Standard; testable agent behaviors per standard
+- [[ai-governance-standards]] — ISO/IEC 42001:2023 (AI management system), ISO/IEC 23894:2023 (AI risk management), NIST AI RMF 1.0; mapped to BuyerBench audit and governance requirements
+- [[agentic-commerce-protocols]] — AP2, UCP, and ACP in depth; governance models, spec maturity, security profiles, interoperability positioning; testable behaviors per protocol
+- [[network-initiatives]] — Visa Intelligent Commerce + Trusted Agent Protocol (TAP), Mastercard Agent Pay; authentication patterns, tokenization flows, trust boundary requirements
+- [[fraud-patterns-and-attacks]] — Catalogue of six attack categories (prompt injection, economic manipulation, refund/chargeback, credential theft, protocol abuse, authorization bypass); BuyerBench scenario mappings
+- [[PILLAR3-SUMMARY]] — Synthesis: 5 key findings; scenario category taxonomy; compliance gap analysis; Security Degradation Score methodology
 
 ---
 
