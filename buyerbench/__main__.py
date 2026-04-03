@@ -17,6 +17,15 @@ def cli() -> None:
 
 
 @cli.command()
+def check() -> None:
+    """Verify CLI tools, API keys, and mock MCP server are available."""
+    from harness.preflight import check_environment
+
+    env = check_environment(print_report=True)
+    raise SystemExit(0 if env["overall"] else 1)
+
+
+@cli.command()
 def demo() -> None:
     """Load the 3 sample scenarios, run MockAgent, and print a rich report."""
     from agents.mock import MockAgent
