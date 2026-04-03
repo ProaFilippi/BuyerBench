@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "buyerbench"
+version = "0.1.0"
+description = "An open-source benchmark framework for evaluating AI buyer agents"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "Apache-2.0" }
+dependencies = [
+    "pydantic>=2.0",
+    "pyyaml",
+    "rich",
+    "click",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-cov",
+]
+
+[project.scripts]
+buyerbench = "buyerbench.__main__:cli"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["buyerbench*", "evaluators*", "harness*", "agents*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

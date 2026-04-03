@@ -12,7 +12,22 @@ BuyerBench is an open-source benchmark framework for evaluating AI buyer agents 
 
 ## Commands
 
-_This repository is in early initialization. Commands will be added here once a tech stack and build system are established._
+```bash
+# Install package and dev dependencies
+pip install -e ".[dev]"
+
+# Run the end-to-end demo (loads 3 scenarios, runs MockAgent, prints report)
+python -m buyerbench demo
+
+# Run the full benchmark suite against a named agent
+python -m buyerbench run --agent <name>
+
+# Run tests
+pytest
+
+# Run tests with coverage
+pytest --cov=buyerbench --cov=evaluators --cov=harness --cov=agents
+```
 
 ## Architecture
 
@@ -38,6 +53,10 @@ BuyerBench is organized around **scenarios** that agents are evaluated against. 
 - *Economic metrics*: optimality gap, expected value regret, bias susceptibility indices, preference consistency
 - *Security metrics*: compliance adherence rate, security violation frequency, fraud detection performance
 
+### Behavioral Bias Testing (Pillar 2)
+
+A key design pattern: scenarios come in **controlled variants** where the underlying economics are identical but presentation differs (e.g., same supplier choice framed as a gain vs. a loss). Consistency across variants measures bias resistance. Bias categories include anchoring, framing, default bias, sunk cost fallacy, decoy effects, scarcity cues, loss aversion, and status quo bias.
+
 ### Pillar 3 — Security, Compliance, and Market Readiness
 
 Scenarios align with industry payment and compliance practices. Agents are tested on:
@@ -51,10 +70,15 @@ Scenarios align with industry payment and compliance practices. Agents are teste
 
 Agents must enforce policies correctly — not just avoid violations, but actively detect and reject non-compliant inputs.
 
-### Behavioral Bias Testing (Pillar 2)
-
-A key design pattern: scenarios come in **controlled variants** where the underlying economics are identical but presentation differs (e.g., same supplier choice framed as a gain vs. a loss). Consistency across variants measures bias resistance. Bias categories include anchoring, framing, default bias, sunk cost fallacy, decoy effects, scarcity cues, loss aversion, and status quo bias.
-
 ### Evaluation Output
 
 BuyerBench produces a **multi-dimensional evaluation profile** per agent run, not a single score. Metrics are reported separately per pillar to allow targeted analysis.
+
+### Expected Code Organization (when built out)
+
+When adding code, follow this conceptual structure:
+- `scenarios/` — scenario definitions (one file or directory per scenario, organized by pillar)
+- `evaluators/` — per-pillar scoring logic (pillar1, pillar2, pillar3 as separate modules)
+- `runner/` or `harness/` — agent interface, scenario execution, result collection
+- `agents/` — reference or example agent implementations for testing
+- `results/` — output schema definitions and result aggregation
