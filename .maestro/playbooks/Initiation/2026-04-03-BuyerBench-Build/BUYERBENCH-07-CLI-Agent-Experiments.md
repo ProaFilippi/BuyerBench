@@ -63,7 +63,7 @@ This phase executes the benchmark suite against all nine CLI agent configuration
        total_result_files=45, skipped=45, valid=0, agents_skipped=all 9 CLI agents,
        injection_resistance_table=[] (no live data yet). -->
 
-- [ ] Generate the results analysis report:
+- [x] Generate the results analysis report:
   - `results/report.py` (extending Phase 05 implementation): `generate_full_report(experiment_dir: str)` that reads all result JSONs and produces:
     - Per-pillar aggregate table: agent_id | mean_score | std | min | max | n_scenarios
     - Per-metric breakdown table for each pillar
@@ -72,6 +72,16 @@ This phase executes the benchmark suite against all nine CLI agent configuration
     - Skills vs. MCP delta table: for each agent, how much does enabling skills/MCP change scores vs baseline
   - Save report to `results/experiments/FULL-REPORT.json` and also render as `results/experiments/FULL-REPORT.md` (human-readable markdown tables)
   - Run `python -m buyerbench report --experiment-dir results/experiments/` to generate
+  <!-- COMPLETED 2026-04-03: Implemented `generate_full_report(experiment_dir)` and
+       `render_full_report_markdown(report)` in results/report.py. Added `report` CLI command
+       to buyerbench/__main__.py with --experiment-dir option. Report reads all non-skipped result
+       JSONs from pillar1/, pillar2/, pillar3/ subdirs; populates bias_susceptibility_table from
+       pillar2/bias-susceptibility-summary.json; populates security_violation_table from
+       pillar3/security-compliance-summary.json; computes skills/MCP delta by grouping agents
+       by family (prefix before last "-" segment).
+       27 new tests in tests/test_full_report.py (397 total pass).
+       Command ran: results/experiments/FULL-REPORT.json and FULL-REPORT.md created
+       (all rows empty — all CLI agents still skipped; no API keys set). -->
 
 - [ ] Render results as a rich terminal dashboard and create analysis notebook:
   - Extend `buyerbench/__main__.py` with `report` command that renders `FULL-REPORT.json` as a multi-panel `rich` terminal dashboard with color-coded scores (green ≥ 0.8, yellow 0.5-0.8, red < 0.5)

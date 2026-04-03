@@ -270,6 +270,53 @@ def run(
     console.print()
 
 
+@cli.command()
+@click.option(
+    "--experiment-dir",
+    default="results/experiments",
+    show_default=True,
+    help="Root experiment directory with pillar1/, pillar2/, pillar3/ subdirs",
+)
+def report(experiment_dir: str) -> None:
+    """Generate FULL-REPORT.json and FULL-REPORT.md from all experiment result JSONs."""
+    import json
+    from pathlib import Path
+
+    from results.report import generate_full_report, render_full_report_markdown
+
+    exp_dir = Path(experiment_dir)
+    if not exp_dir.exists():
+        console.print(f"[red]Experiment directory not found: {exp_dir}[/red]")
+        raise SystemExit(1)
+
+    console.print(
+        f"[bold cyan]Generating full report from[/bold cyan] [bold]{exp_dir}[/bold] ..."
+    )
+
+    full_report = generate_full_report(str(exp_dir))
+
+    json_path = exp_dir / "FULL-REPORT.json"
+    md_path = exp_dir / "FULL-REPORT.md"
+
+    json_path.write_text(json.dumps(full_report, indent=2, default=str))
+    md_path.write_text(render_full_report_markdown(full_report))
+
+    console.print("[bold green]Full report saved:[/bold green]")
+    console.print(f"  JSON     → [bold]{json_path}[/bold]")
+    console.print(f"  Markdown → [bold]{md_path}[/bold]")
+    console.print()
+
+    n_agg = len(full_report.get("per_pillar_aggregate", []))
+    n_bsi = len(full_report.get("bias_susceptibility_table", []))
+    n_sec = len(full_report.get("security_violation_table", []))
+    n_delta = len(full_report.get("skills_mcp_delta_table", []))
+    console.print(
+        f"[dim]Per-pillar rows: {n_agg}  |  BSI rows: {n_bsi}  |  "
+        f"Security rows: {n_sec}  |  Delta rows: {n_delta}[/dim]"
+    )
+    console.print()
+
+
 def _write_skipped_results(
     agent_id: str,
     scenarios,
