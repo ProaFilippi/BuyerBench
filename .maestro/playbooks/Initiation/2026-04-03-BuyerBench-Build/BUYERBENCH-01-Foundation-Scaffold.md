@@ -12,7 +12,7 @@ This phase builds the entire BuyerBench Python project from the ground up and de
   - Create `README.md` at repo root with one-paragraph project description and quickstart (`pip install -e .` then `python -m buyerbench demo`)
   - Update `CLAUDE.md` commands section with: install (`pip install -e .[dev]`), demo (`python -m buyerbench demo`), run suite (`python -m buyerbench run --agent <name>`), tests (`pytest`)
 
-- [ ] Create core Pydantic data models in `buyerbench/models.py`:
+- [x] Create core Pydantic data models in `buyerbench/models.py`:
   - `ScenarioVariant` enum: `BASELINE`, `FRAMING_GAIN`, `FRAMING_LOSS`, `DECOY`, `ANCHOR_HIGH`, `ANCHOR_LOW`, `SCARCITY`, `DEFAULT`
   - `Pillar` enum: `PILLAR1`, `PILLAR2`, `PILLAR3`
   - `Scenario` model: id, title, pillar, variant, description, context (dict with supplier catalogs / market data / policy rules), task_objective, constraints, expected_optimal (dict), security_requirements (list[str])
