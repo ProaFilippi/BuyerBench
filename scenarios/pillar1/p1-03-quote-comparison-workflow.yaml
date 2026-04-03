@@ -1,0 +1,83 @@
+id: p1-03-quote-comparison-workflow
+title: "Quote Comparison: Extract, Parse, and Evaluate Unstructured Supplier Quotes"
+pillar: PILLAR1
+variant: BASELINE
+difficulty: medium
+tags:
+  - pillar1
+  - quote-comparison
+  - nlp
+  - medium
+evaluation_weights:
+  supplier_match: 0.5
+  extraction_accuracy: 0.3
+  constraint_adherence: 0.2
+description: >
+  The agent receives three supplier quotes in unstructured natural language text
+  (simulating real email or PDF responses). It must extract key procurement
+  terms from each quote, compare the options, and select the optimal supplier
+  meeting a maximum 7-day lead time and ISO 9001 certification requirement.
+  This tests information extraction combined with constrained evaluation.
+context:
+  product_request:
+    description: "Industrial Pressure Valve Type-B"
+    quantity: 1000
+    required_lead_time_days: 7
+    required_certification: "ISO 9001"
+  quotes:
+    - source: "Nexus Supply Co."
+      raw_text: >
+        Dear Procurement Team,
+
+        We are pleased to offer our services for your valve order. Nexus Supply
+        can provide Industrial Pressure Valve Type-B at a unit price of $28.50
+        for orders of 1,000 units or more. Standard delivery is 6 business days
+        from order confirmation. Payment terms are Net 30. Minimum order
+        quantity: 500 units. Our facility is ISO 9001 certified (cert #NS-2024-
+        0081, valid through 2026). Please reach out to sales@nexus.example for
+        questions.
+
+    - source: "PrimeSource Industrial"
+      raw_text: >
+        Re: RFQ — Valve Type-B
+
+        Thank you for the opportunity to quote. PrimeSource Industrial can
+        supply the requested valves at $31.00 per unit with 4-day express
+        delivery. All goods carry a 24-month warranty. Minimum order: 200 units.
+        Payment terms: Net 45. We are ISO 9001 certified. Best regards,
+        PrimeSource Sales Team.
+
+    - source: "FastParts Direct"
+      raw_text: >
+        Quote #FP-2024-882 | Valve Type-B
+        Unit Price: $26.75 | Lead Time: 9 business days | Min Order: 1,000
+        Payment Terms: Net 15 | Price valid for 30 days
+        Note: Quality certification documentation not currently on file.
+        Contact procurement@fastparts.example for bulk pricing.
+
+task_objective: >
+  Extract the unit price, lead time, payment terms, minimum order quantity, and
+  ISO 9001 certification status from each quote. Then select the supplier that
+  minimizes unit price while meeting: lead_time_days <= 7 AND ISO 9001
+  certified == true.
+constraints:
+  - "Maximum acceptable lead time: 7 business days"
+  - "Supplier must hold ISO 9001 certification"
+  - "Select exactly one supplier"
+  - "Base decision on extracted unit prices — do not infer or estimate"
+expected_optimal:
+  supplier: "Nexus Supply Co."
+  unit_price: 28.50
+  lead_time_days: 6
+  iso_9001_certified: true
+  eliminated_suppliers:
+    - supplier: "FastParts Direct"
+      reason: "Lead time is 9 days (exceeds 7-day limit) and no ISO 9001 certification on file"
+    - supplier: "PrimeSource Industrial"
+      reason: "Meets all constraints but unit price ($31.00) is higher than Nexus Supply ($28.50)"
+  rationale: >
+    FastParts Direct is eliminated by two constraint violations (9-day lead time
+    and missing ISO 9001 certification). PrimeSource is eligible but costs
+    $31.00/unit. Nexus Supply meets both constraints at the lower price of
+    $28.50/unit and is therefore the optimal choice.
+security_requirements: []

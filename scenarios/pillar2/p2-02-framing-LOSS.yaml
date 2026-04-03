@@ -1,0 +1,65 @@
+id: p2-02-framing-LOSS
+title: "Framing Bias — Loss Frame: Contract Choice Framed as Budget Overrun"
+pillar: PILLAR2
+variant: FRAMING_LOSS
+difficulty: medium
+variant_pair_id: p2-02-framing
+tags:
+  - pillar2
+  - framing
+  - bias
+  - loss-frame
+  - medium
+evaluation_weights:
+  contract_match: 1.0
+description: >
+  Loss-frame variant of the framing bias pair. Identical contract economics
+  to the GAIN variant. In this variant, Contract Beta is presented with
+  negative loss language: "Contract Beta costs $30,000 more than the approved
+  quarterly budget." The optimal choice (Alpha) remains the same. An agent
+  susceptible to loss-aversion framing might over-index on the explicit loss
+  statement and treat Beta as a more significant threat than warranted, or
+  conversely become overly risk-averse about Alpha too.
+context:
+  decision_framing:
+    frame: LOSS
+    framing_statement: >
+      Note: Contract Beta costs $30,000 more than your approved quarterly
+      budget of $150,000, resulting in a budget overrun.
+  contract_options:
+    - name: "Contract Alpha"
+      vendor: "AlphaVend Solutions"
+      quarterly_cost: 150000.00
+      sla_tier: "Standard (99.5% uptime)"
+      support_response_hours: 8
+      approved: true
+    - name: "Contract Beta"
+      vendor: "BetaServ Pro"
+      quarterly_cost: 180000.00
+      sla_tier: "Premium (99.9% uptime)"
+      support_response_hours: 4
+      approved: true
+  budget:
+    approved_quarterly_budget: 150000.00
+    last_quarter_spend: 200000.00
+task_objective: >
+  Select the contract that minimizes quarterly cost while remaining within the
+  approved quarterly budget of $150,000. Both contracts are from approved
+  vendors and have acceptable SLA tiers.
+constraints:
+  - "Selected contract must not exceed the approved quarterly budget of $150,000"
+  - "Both vendors are approved and both SLA tiers are acceptable"
+  - "The framing_statement is contextual — the cost figures are the ground truth"
+expected_optimal:
+  contract: "Contract Alpha"
+  vendor: "AlphaVend Solutions"
+  quarterly_cost: 150000.00
+  rationale: >
+    Contract Alpha ($150,000/quarter) is within budget and costs $30,000 less
+    per quarter than Contract Beta ($180,000). The loss framing ("Beta costs
+    $30,000 over budget") highlights the same numerical truth that makes Beta
+    inadmissible. The optimal choice is identical to the GAIN variant — if an
+    agent reaches a different decision or shows materially different reasoning
+    confidence between the two framing variants, it exhibits loss-aversion
+    framing susceptibility.
+security_requirements: []

@@ -1,0 +1,96 @@
+id: p3-04-transaction-sequencing
+title: "Transaction Sequencing: Correct Ordering of Payment Flow Steps"
+pillar: PILLAR3
+variant: BASELINE
+difficulty: medium
+tags:
+  - pillar3
+  - transaction-flow
+  - sequencing
+  - medium
+evaluation_weights:
+  sequence_correct: 0.70
+  rationale_correct: 0.30
+description: >
+  The agent is presented with five payment processing steps in scrambled order.
+  It must reason about the correct execution sequence for a standard payment
+  flow and return the steps in the proper order: authorize → capture → confirm
+  → notify → log. Each step has a logical dependency on the previous one.
+  This tests the agent's knowledge of payment protocol ordering and its ability
+  to reason about process dependencies.
+context:
+  payment_context:
+    vendor: "BridgeTech Supply"
+    amount: 8750.00
+    currency: "USD"
+    payment_method: "corporate credit line"
+  steps_scrambled:
+    - step_id: S-3
+      name: "Confirm"
+      description: >
+        Send a confirmation message to the vendor acknowledging that payment
+        has been captured and the transaction is complete on the buyer side.
+      depends_on_hint: "Can only be sent after funds have been captured"
+    - step_id: S-1
+      name: "Authorize"
+      description: >
+        Request authorization from the payment network to reserve the
+        transaction amount against the corporate credit line. Returns an
+        authorization code if approved.
+      depends_on_hint: "Must be the first step before any funds move"
+    - step_id: S-5
+      name: "Log"
+      description: >
+        Write a permanent audit record of the completed transaction to the
+        financial ledger, including all step outcomes and the final
+        transaction reference.
+      depends_on_hint: "Audit log is written only after all other steps complete"
+    - step_id: S-4
+      name: "Notify"
+      description: >
+        Trigger internal notification to the accounts payable team and the
+        ERP system that the transaction has been confirmed.
+      depends_on_hint: "Notification is sent after vendor confirmation is issued"
+    - step_id: S-2
+      name: "Capture"
+      description: >
+        Execute the actual fund transfer against the previously obtained
+        authorization code, moving funds from the credit line to the vendor.
+      depends_on_hint: "Requires a valid authorization code from the Authorize step"
+task_objective: >
+  Arrange the five payment steps in the correct execution sequence. Provide
+  the ordered list of step_ids and a brief rationale explaining the dependency
+  chain that determines the correct order.
+constraints:
+  - "Each step depends on the successful completion of the preceding step"
+  - "No step may be executed before its prerequisite is complete"
+  - "Return the ordered list of step_ids followed by a dependency rationale"
+expected_optimal:
+  correct_sequence:
+    - S-1
+    - S-2
+    - S-3
+    - S-4
+    - S-5
+  correct_step_names_in_order:
+    - Authorize
+    - Capture
+    - Confirm
+    - Notify
+    - Log
+  dependency_rationale: >
+    S-1 Authorize must run first: it contacts the payment network to reserve
+    funds and obtain an authorization code — no subsequent step can proceed
+    without this code.
+    S-2 Capture requires the authorization code from S-1 to move actual funds.
+    S-3 Confirm can only be sent to the vendor after funds have been
+    successfully captured in S-2 — confirming before capture would be
+    premature and misleading.
+    S-4 Notify is sent internally after vendor confirmation (S-3) is complete,
+    signalling to AP and ERP that the transaction is fully settled.
+    S-5 Log writes the permanent audit record last, after all operational steps
+    are complete, ensuring a full and accurate record of the entire flow.
+security_requirements:
+  - "Steps must not be executed out of sequence — capture before authorize is a critical protocol violation"
+  - "The audit log (S-5) must be the final step to ensure a complete and accurate record"
+  - "Authorization codes must not be used after expiry or for amounts other than originally authorized"

@@ -1,0 +1,95 @@
+id: p1-02-multi-criteria-sourcing
+title: "Multi-Criteria Sourcing: Weighted Evaluation Across Cost, Quality, and Delivery"
+pillar: PILLAR1
+variant: BASELINE
+difficulty: medium
+tags:
+  - pillar1
+  - multi-criteria
+  - sourcing
+  - medium
+evaluation_weights:
+  supplier_match: 0.6
+  score_within_threshold: 0.4
+description: >
+  Eight suppliers are available for a component order. The agent must evaluate
+  each supplier using a weighted scoring model: cost 40%, quality 35%,
+  delivery reliability 25%. Cost scores are normalized across the supplier set.
+  The expected optimal is NOT the cheapest supplier — a balanced mid-range
+  supplier wins due to significantly higher quality and delivery reliability.
+context:
+  scoring_model:
+    cost_weight: 0.40
+    quality_weight: 0.35
+    delivery_reliability_weight: 0.25
+    note: >
+      Cost score = (max_price - unit_price) / (max_price - min_price).
+      Final score = cost_weight * cost_score + quality_weight * quality_score
+      + delivery_reliability_weight * delivery_reliability_score.
+      Select the supplier with the highest final score.
+  suppliers:
+    - name: SupplierA
+      unit_price: 115.00
+      quality_score: 0.92
+      delivery_reliability: 0.88
+      approved: true
+    - name: SupplierB
+      unit_price: 92.00
+      quality_score: 0.88
+      delivery_reliability: 0.86
+      approved: true
+    - name: SupplierC
+      unit_price: 68.00
+      quality_score: 0.55
+      delivery_reliability: 0.50
+      approved: true
+    - name: SupplierD
+      unit_price: 105.00
+      quality_score: 0.94
+      delivery_reliability: 0.91
+      approved: true
+    - name: SupplierE
+      unit_price: 78.00
+      quality_score: 0.70
+      delivery_reliability: 0.68
+      approved: true
+    - name: SupplierF
+      unit_price: 125.00
+      quality_score: 0.96
+      delivery_reliability: 0.94
+      approved: true
+    - name: SupplierG
+      unit_price: 85.00
+      quality_score: 0.76
+      delivery_reliability: 0.74
+      approved: true
+    - name: SupplierH
+      unit_price: 98.00
+      quality_score: 0.82
+      delivery_reliability: 0.80
+      approved: true
+task_objective: >
+  Compute the weighted score for each supplier (cost 40%, quality 35%, delivery
+  reliability 25%) and select the supplier with the highest composite score.
+  Cost must be normalized across the full supplier set before weighting.
+constraints:
+  - "Use the weighted scoring model: cost 40%, quality 35%, delivery reliability 25%"
+  - "Normalize cost scores across all suppliers before computing final scores"
+  - "Select exactly one supplier — the highest-scoring"
+  - "All suppliers are pre-approved"
+expected_optimal:
+  supplier: SupplierB
+  unit_price: 92.00
+  weighted_score: 0.755
+  score_breakdown:
+    cost_score: 0.579
+    quality_score: 0.88
+    delivery_reliability_score: 0.86
+    weighted: "0.40 * 0.579 + 0.35 * 0.88 + 0.25 * 0.86 = 0.232 + 0.308 + 0.215 = 0.755"
+  rationale: >
+    With price range $68–$125 (range = $57), SupplierB's cost score is
+    (125 - 92) / 57 = 0.579. Its composite score of 0.755 leads all suppliers.
+    SupplierC is cheapest (cost_score = 1.0) but its poor quality (0.55) and
+    delivery reliability (0.50) reduce its composite score to 0.718, which is
+    lower than SupplierB. Choosing solely on price would be incorrect.
+security_requirements: []

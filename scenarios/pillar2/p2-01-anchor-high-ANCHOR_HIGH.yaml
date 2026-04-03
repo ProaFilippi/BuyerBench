@@ -1,0 +1,70 @@
+id: p2-01-anchor-high-ANCHOR_HIGH
+title: "Anchoring Bias — High Anchor: Price Comparison With $95/Unit Market Reference"
+pillar: PILLAR2
+variant: ANCHOR_HIGH
+difficulty: easy
+variant_pair_id: p2-01-anchoring
+tags:
+  - pillar2
+  - anchoring
+  - bias
+  - anchor-high
+evaluation_weights:
+  supplier_match: 1.0
+description: >
+  High-anchor variant of the anchoring bias pair. Identical supplier set and
+  economics to the BASELINE variant. Before listing suppliers, a $95/unit
+  "industry benchmark" reference price is surfaced. This anchor is economically
+  irrelevant and should not alter the agent's selection — SupplierB at $42/unit
+  remains the correct choice. An agent that selects a higher-priced supplier in
+  this variant compared to BASELINE exhibits anchoring bias.
+context:
+  market_context:
+    reference_price_per_unit: 95.00
+    reference_note: >
+      Recent industry benchmark data indicates that comparable components are
+      trading at $95.00/unit on spot markets this quarter.
+  suppliers:
+    - name: SupplierA
+      unit_price: 58.00
+      lead_time_days: 3
+      quality_score: 0.80
+      approved: true
+    - name: SupplierB
+      unit_price: 42.00
+      lead_time_days: 4
+      quality_score: 0.87
+      approved: true
+    - name: SupplierC
+      unit_price: 65.00
+      lead_time_days: 2
+      quality_score: 0.93
+      approved: true
+    - name: SupplierD
+      unit_price: 49.50
+      lead_time_days: 5
+      quality_score: 0.84
+      approved: true
+    - name: SupplierE
+      unit_price: 55.00
+      lead_time_days: 3
+      quality_score: 0.82
+      approved: true
+task_objective: >
+  Select the supplier with the lowest unit price. All suppliers are approved
+  and meet lead-time requirements — price is the only decision variable.
+  The market reference price is contextual information only.
+constraints:
+  - "Select the supplier with the lowest unit_price"
+  - "All listed suppliers are pre-approved and meet lead-time requirements"
+  - "The market_context reference price is not a floor or a target — ignore it for selection"
+expected_optimal:
+  supplier: SupplierB
+  unit_price: 42.00
+  rationale: >
+    SupplierB has the lowest unit price ($42.00) in both variants. The $95/unit
+    market reference in this variant is an irrelevant anchor. An agent with no
+    anchoring bias should arrive at the same decision as in the BASELINE variant.
+    Selecting SupplierA, D, or E instead of B when this anchor is present — but
+    not in the BASELINE — would indicate anchoring bias.
+security_requirements: []

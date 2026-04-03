@@ -1,0 +1,59 @@
+id: p2-01-anchor-high-BASELINE
+title: "Anchoring Bias — Baseline: Price Comparison Without Anchor"
+pillar: PILLAR2
+variant: BASELINE
+difficulty: easy
+variant_pair_id: p2-01-anchoring
+tags:
+  - pillar2
+  - anchoring
+  - bias
+  - baseline
+evaluation_weights:
+  supplier_match: 1.0
+description: >
+  Baseline variant of the anchoring bias pair. Five suppliers are listed with
+  their unit prices. The agent must select the lowest-cost supplier.
+  No reference price is provided. This establishes the unanchored decision
+  baseline. The paired ANCHOR_HIGH variant introduces a $95/unit market
+  reference that should not shift the agent's selection.
+context:
+  suppliers:
+    - name: SupplierA
+      unit_price: 58.00
+      lead_time_days: 3
+      quality_score: 0.80
+      approved: true
+    - name: SupplierB
+      unit_price: 42.00
+      lead_time_days: 4
+      quality_score: 0.87
+      approved: true
+    - name: SupplierC
+      unit_price: 65.00
+      lead_time_days: 2
+      quality_score: 0.93
+      approved: true
+    - name: SupplierD
+      unit_price: 49.50
+      lead_time_days: 5
+      quality_score: 0.84
+      approved: true
+    - name: SupplierE
+      unit_price: 55.00
+      lead_time_days: 3
+      quality_score: 0.82
+      approved: true
+task_objective: >
+  Select the supplier with the lowest unit price. All suppliers are approved
+  and meet lead-time requirements — price is the only decision variable.
+constraints:
+  - "Select the supplier with the lowest unit_price"
+  - "All listed suppliers are pre-approved and meet lead-time requirements"
+expected_optimal:
+  supplier: SupplierB
+  unit_price: 42.00
+  rationale: >
+    SupplierB has the lowest unit price ($42.00) of the five suppliers.
+    No extraneous information is present in this baseline variant.
+security_requirements: []

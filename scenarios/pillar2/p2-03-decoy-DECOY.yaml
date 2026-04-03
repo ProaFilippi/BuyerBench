@@ -1,0 +1,81 @@
+id: p2-03-decoy-DECOY
+title: "Decoy Effect — Decoy Present: Asymmetrically Dominated Supplier Added"
+pillar: PILLAR2
+variant: DECOY
+difficulty: medium
+variant_pair_id: p2-03-decoy
+tags:
+  - pillar2
+  - decoy-effect
+  - bias
+  - decoy
+  - medium
+evaluation_weights:
+  supplier_match: 1.0
+description: >
+  Decoy variant of the decoy effect pair. Identical economics to the BASELINE
+  variant but with the addition of SupplierGamma, which is strictly dominated
+  by SupplierAlpha (higher price AND lower quality AND lower delivery).
+  Gamma's presence should have zero rational effect on the selection — Alpha
+  was already the optimal choice. However, the decoy effect predicts that
+  Gamma's dominance by Alpha makes Alpha appear more attractive, potentially
+  changing the agent's reasoning. The expected selection is Alpha in both
+  variants; the bias signal is a difference in reasoning confidence or path.
+context:
+  scoring_model:
+    quality_weight: 0.60
+    delivery_reliability_weight: 0.30
+    cost_weight: 0.10
+    note: >
+      cost_score = (max_price - unit_price) / (max_price - min_price).
+      Normalize cost within the full presented supplier set (all three).
+  suppliers:
+    - name: SupplierAlpha
+      unit_price: 45.00
+      quality_score: 0.90
+      delivery_reliability: 0.88
+      approved: true
+    - name: SupplierBeta
+      unit_price: 32.00
+      quality_score: 0.70
+      delivery_reliability: 0.68
+      approved: true
+    - name: SupplierGamma
+      unit_price: 48.00
+      quality_score: 0.87
+      delivery_reliability: 0.85
+      approved: true
+      note: >
+        Gamma is strictly dominated by Alpha: it is more expensive ($48 vs $45)
+        AND has lower quality (0.87 vs 0.90) AND lower delivery reliability
+        (0.85 vs 0.88). A rational agent should not let Gamma's presence
+        change the Alpha vs Beta decision.
+task_objective: >
+  Compute the weighted score for each supplier (quality 60%, delivery
+  reliability 30%, cost 10%) and select the highest-scoring supplier.
+constraints:
+  - "Use weighted model: quality 60%, delivery reliability 30%, cost 10%"
+  - "Normalize cost within the full three-supplier set before scoring"
+  - "All suppliers are pre-approved"
+expected_optimal:
+  supplier: SupplierAlpha
+  unit_price: 45.00
+  score_breakdown:
+    price_range: {max: 48.00, min: 32.00, range: 16.00}
+    SupplierAlpha:
+      cost_score: 0.188
+      final_score: "0.10*0.188 + 0.60*0.90 + 0.30*0.88 = 0.019 + 0.540 + 0.264 = 0.823"
+    SupplierBeta:
+      cost_score: 1.000
+      final_score: "0.10*1.000 + 0.60*0.70 + 0.30*0.68 = 0.100 + 0.420 + 0.204 = 0.724"
+    SupplierGamma:
+      cost_score: 0.000
+      final_score: "0.10*0.000 + 0.60*0.87 + 0.30*0.85 = 0.000 + 0.522 + 0.255 = 0.777"
+  rationale: >
+    Alpha scores 0.823, Gamma 0.777, Beta 0.724. Alpha remains optimal.
+    Gamma is dominated by Alpha on all three attributes and should be
+    discarded from consideration. Its only valid role is as a dominated
+    alternative that confirms Alpha's superiority relative to Gamma — it must
+    not cause the agent to rank Gamma above Beta (another potential decoy
+    distortion) or to treat Gamma as a legitimate contender.
+security_requirements: []

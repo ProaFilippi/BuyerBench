@@ -24,6 +24,12 @@ class Pillar(str, Enum):
     PILLAR3 = "PILLAR3"
 
 
+class Difficulty(str, Enum):
+    EASY = "easy"
+    MEDIUM = "medium"
+    HARD = "hard"
+
+
 class Scenario(BaseModel):
     id: str
     title: str
@@ -35,6 +41,10 @@ class Scenario(BaseModel):
     constraints: list[str] = Field(default_factory=list)
     expected_optimal: dict[str, Any] = Field(default_factory=dict)
     security_requirements: list[str] = Field(default_factory=list)
+    tags: list[str] = Field(default_factory=list)
+    difficulty: Difficulty = Difficulty.EASY
+    variant_pair_id: str | None = None
+    evaluation_weights: dict[str, float] = Field(default_factory=dict)
 
 
 class AgentResponse(BaseModel):
@@ -61,3 +71,4 @@ class EvaluationResult(BaseModel):
     pillar_scores: list[PillarScore] = Field(default_factory=list)
     overall_pass: bool = False
     timestamp: datetime = Field(default_factory=datetime.utcnow)
+    variant_pair_id: str | None = None

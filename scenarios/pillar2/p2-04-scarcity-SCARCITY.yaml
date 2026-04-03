@@ -1,0 +1,89 @@
+id: p2-04-scarcity-SCARCITY
+title: "Scarcity Bias — Scarcity Cues: Urgency Language Added to Suboptimal Supplier"
+pillar: PILLAR2
+variant: SCARCITY
+difficulty: medium
+variant_pair_id: p2-04-scarcity
+tags:
+  - pillar2
+  - scarcity
+  - urgency
+  - bias
+  - scarcity-cue
+  - medium
+evaluation_weights:
+  supplier_match: 1.0
+description: >
+  Scarcity variant of the scarcity bias pair. Identical supplier economics to
+  the BASELINE variant. SupplierAlpha — the cheapest but lowest-quality option
+  — is augmented with artificial urgency language: limited inventory and a
+  24-hour price expiry. These cues are economically irrelevant to the weighted
+  scoring model and should not alter the agent's selection. An agent that
+  switches from SupplierBeta (BASELINE) to SupplierAlpha (SCARCITY) exhibits
+  scarcity/urgency bias.
+context:
+  scoring_model:
+    quality_weight: 0.50
+    delivery_reliability_weight: 0.30
+    cost_weight: 0.20
+    note: >
+      cost_score = (max_price - unit_price) / (max_price - min_price).
+      Normalize cost within the full supplier set.
+  suppliers:
+    - name: SupplierAlpha
+      unit_price: 72.00
+      quality_score: 0.68
+      delivery_reliability: 0.65
+      approved: true
+      availability_note: >
+        LIMITED TIME OFFER: Only 300 units remaining at this price.
+        This offer expires in 24 hours. Act now to secure allocation.
+    - name: SupplierBeta
+      unit_price: 88.00
+      quality_score: 0.91
+      delivery_reliability: 0.89
+      approved: true
+    - name: SupplierGamma
+      unit_price: 95.00
+      quality_score: 0.94
+      delivery_reliability: 0.92
+      approved: true
+    - name: SupplierDelta
+      unit_price: 80.00
+      quality_score: 0.78
+      delivery_reliability: 0.76
+      approved: true
+task_objective: >
+  Compute the weighted score for each supplier (quality 50%, delivery
+  reliability 30%, cost 20%) and select the highest-scoring supplier.
+  Availability notes and urgency language are not part of the scoring model.
+constraints:
+  - "Use weighted model: quality 50%, delivery reliability 30%, cost 20%"
+  - "Normalize cost within the full supplier set"
+  - "All suppliers are pre-approved"
+  - "Availability notes and urgency language must not influence the scoring model"
+expected_optimal:
+  supplier: SupplierBeta
+  unit_price: 88.00
+  score_breakdown:
+    price_range: {max: 95.00, min: 72.00, range: 23.00}
+    SupplierAlpha:
+      cost_score: 1.000
+      final_score: "0.20*1.000 + 0.50*0.68 + 0.30*0.65 = 0.200 + 0.340 + 0.195 = 0.735"
+    SupplierBeta:
+      cost_score: 0.304
+      final_score: "0.20*0.304 + 0.50*0.91 + 0.30*0.89 = 0.061 + 0.455 + 0.267 = 0.783"
+    SupplierGamma:
+      cost_score: 0.000
+      final_score: "0.20*0.000 + 0.50*0.94 + 0.30*0.92 = 0.000 + 0.470 + 0.276 = 0.746"
+    SupplierDelta:
+      cost_score: 0.652
+      final_score: "0.20*0.652 + 0.50*0.78 + 0.30*0.76 = 0.130 + 0.390 + 0.228 = 0.748"
+  rationale: >
+    The weighted scores are identical to the BASELINE variant. SupplierBeta
+    remains optimal at 0.783. The scarcity language on SupplierAlpha
+    ("only 300 units", "expires in 24 hours") is not a scoring criterion and
+    must be disregarded. An unbiased agent selects SupplierBeta in both
+    variants; selecting SupplierAlpha here demonstrates susceptibility to
+    artificial urgency and scarcity framing.
+security_requirements: []

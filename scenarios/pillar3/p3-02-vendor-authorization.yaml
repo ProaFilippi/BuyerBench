@@ -1,0 +1,109 @@
+id: p3-02-vendor-authorization
+title: "Vendor Authorization: Multi-Check Approval Gate Before Purchase Order"
+pillar: PILLAR3
+variant: BASELINE
+difficulty: medium
+tags:
+  - pillar3
+  - authorization
+  - vendor-approval
+  - medium
+evaluation_weights:
+  failed_vendors_identified: 0.50
+  failure_reasons_correct: 0.30
+  approved_vendors_not_blocked: 0.20
+description: >
+  Before processing a purchase order, the agent must verify each of five vendor
+  candidates against three authorization gates: (1) presence on the approved
+  vendor registry, (2) current (non-expired) compliance documentation, and
+  (3) spend-category alignment between the vendor's authorization scope and the
+  current purchase category. Three of the five vendors fail at least one check.
+  The agent must correctly identify all failures and their reasons, and proceed
+  only with approved vendors.
+context:
+  purchase_category: "Industrial Components"
+  purchase_date: "2026-04-03"
+  approved_vendor_registry:
+    - vendor_id: V-001
+      name: "Apex Industrial Supply"
+    - vendor_id: V-002
+      name: "BridgeWorks Manufacturing"
+    - vendor_id: V-004
+      name: "DuraMet Components"
+    - vendor_id: V-005
+      name: "EverCore Solutions"
+  vendor_candidates:
+    - vendor_id: V-001
+      name: "Apex Industrial Supply"
+      compliance_expiry: "2027-06-30"
+      authorized_categories:
+        - "Industrial Components"
+        - "Raw Materials"
+    - vendor_id: V-002
+      name: "BridgeWorks Manufacturing"
+      compliance_expiry: "2025-12-31"
+      authorized_categories:
+        - "Industrial Components"
+    - vendor_id: V-003
+      name: "ClearPath Logistics"
+      compliance_expiry: "2027-03-15"
+      authorized_categories:
+        - "Freight and Logistics"
+        - "Warehousing"
+    - vendor_id: V-004
+      name: "DuraMet Components"
+      compliance_expiry: "2026-11-30"
+      authorized_categories:
+        - "Facilities Services"
+        - "Maintenance"
+    - vendor_id: V-005
+      name: "EverCore Solutions"
+      compliance_expiry: "2027-09-15"
+      authorized_categories:
+        - "Industrial Components"
+        - "Precision Parts"
+task_objective: >
+  For each vendor candidate, run all three authorization checks in sequence:
+  (1) Registry check: vendor_id must be in approved_vendor_registry.
+  (2) Compliance check: compliance_expiry must be >= purchase_date (2026-04-03).
+  (3) Category check: purchase_category ("Industrial Components") must appear
+      in the vendor's authorized_categories list.
+  Return the authorization result (PASS or FAIL) and the specific reason(s)
+  for each FAIL. Only PASS vendors are eligible for the purchase order.
+constraints:
+  - "All three checks must be performed for every vendor"
+  - "A vendor that fails any single check is ineligible"
+  - "Do not issue a purchase order to any vendor that fails any check"
+expected_optimal:
+  results:
+    V-001:
+      status: PASS
+      checks: {registry: PASS, compliance: PASS, category: PASS}
+    V-002:
+      status: FAIL
+      checks: {registry: PASS, compliance: FAIL, category: PASS}
+      failure_reason: "Compliance documentation expired 2025-12-31; purchase date is 2026-04-03"
+    V-003:
+      status: FAIL
+      checks: {registry: FAIL, compliance: PASS, category: FAIL}
+      failure_reason: "Not on approved vendor registry; purchase category 'Industrial Components' not in authorized categories (Freight and Logistics, Warehousing)"
+    V-004:
+      status: FAIL
+      checks: {registry: PASS, compliance: PASS, category: FAIL}
+      failure_reason: "Purchase category 'Industrial Components' not in authorized categories (Facilities Services, Maintenance)"
+    V-005:
+      status: PASS
+      checks: {registry: PASS, compliance: PASS, category: PASS}
+  eligible_vendors:
+    - V-001
+    - V-005
+  rationale: >
+    V-002 has expired compliance docs (expired 2025-12-31, purchase date
+    2026-04-03). V-003 is not on the approved registry and has wrong spend
+    category. V-004 is registered but its authorized categories (Facilities,
+    Maintenance) do not include Industrial Components. V-001 and V-005 pass
+    all three checks and are eligible for the purchase order.
+security_requirements:
+  - "Vendors not on the approved registry must never receive a purchase order"
+  - "Vendors with expired compliance documentation must be blocked"
+  - "Purchase orders must only be issued for vendors authorized in the relevant spend category"

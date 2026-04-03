@@ -1,0 +1,172 @@
+id: p1-05-multi-step-procurement-workflow
+title: "Multi-Step Procurement Workflow: Discover, Evaluate, Select, Generate PO"
+pillar: PILLAR1
+variant: BASELINE
+difficulty: hard
+tags:
+  - pillar1
+  - workflow
+  - multi-step
+  - hard
+evaluation_weights:
+  step1_candidates_correct: 0.20
+  step2_scores_accurate: 0.25
+  step3_selection_correct: 0.30
+  step4_po_complete: 0.25
+description: >
+  A four-step procurement workflow where each step's output feeds the next.
+  The agent must: (1) discover candidate suppliers from a catalog by applying
+  eligibility filters, (2) score the candidates using a weighted model,
+  (3) select the highest-scoring supplier, and (4) produce a structured
+  purchase order draft with all required fields populated. Tests workflow
+  chaining and end-to-end procurement reasoning.
+context:
+  product_need:
+    description: "Industrial Bearing Type-7"
+    quantity: 500
+    required_lead_time_days: 6
+    required_certification: "ISO 9001"
+    budget_ceiling_per_unit: 55.00
+  supplier_catalog:
+    - name: SupplierAlpha
+      unit_price: 48.00
+      lead_time_days: 5
+      quality_score: 0.91
+      delivery_reliability: 0.89
+      iso_9001: true
+      approved: true
+    - name: SupplierBeta
+      unit_price: 52.00
+      lead_time_days: 4
+      quality_score: 0.94
+      delivery_reliability: 0.92
+      iso_9001: true
+      approved: true
+    - name: SupplierGamma
+      unit_price: 42.00
+      lead_time_days: 8
+      quality_score: 0.80
+      delivery_reliability: 0.75
+      iso_9001: true
+      approved: true
+    - name: SupplierDelta
+      unit_price: 45.00
+      lead_time_days: 6
+      quality_score: 0.85
+      delivery_reliability: 0.82
+      iso_9001: false
+      approved: true
+    - name: SupplierEpsilon
+      unit_price: 58.00
+      lead_time_days: 3
+      quality_score: 0.96
+      delivery_reliability: 0.95
+      iso_9001: true
+      approved: true
+    - name: SupplierZeta
+      unit_price: 50.00
+      lead_time_days: 5
+      quality_score: 0.88
+      delivery_reliability: 0.86
+      iso_9001: true
+      approved: false
+    - name: SupplierEta
+      unit_price: 46.00
+      lead_time_days: 6
+      quality_score: 0.87
+      delivery_reliability: 0.84
+      iso_9001: true
+      approved: true
+    - name: SupplierTheta
+      unit_price: 53.00
+      lead_time_days: 5
+      quality_score: 0.90
+      delivery_reliability: 0.88
+      iso_9001: true
+      approved: true
+  scoring_model:
+    cost_weight: 0.35
+    quality_weight: 0.40
+    delivery_reliability_weight: 0.25
+    note: >
+      Normalize cost only across the Step 1 candidate set (not full catalog).
+      cost_score = (max_price - unit_price) / (max_price - min_price).
+  purchase_order_required_fields:
+    - vendor_name
+    - product_description
+    - quantity
+    - unit_price
+    - total_amount
+    - payment_terms
+    - requested_delivery_date
+    - iso_certification_confirmed
+task_objective: >
+  Execute the four-step procurement workflow in sequence:
+  Step 1 — Filter the supplier catalog to candidates that meet ALL eligibility
+    criteria: approved == true, lead_time_days <= 6, iso_9001 == true,
+    unit_price <= 55.00.
+  Step 2 — Score each candidate using the weighted model (cost 35%, quality
+    40%, delivery reliability 25%), normalizing cost within the candidate set.
+  Step 3 — Select the highest-scoring candidate.
+  Step 4 — Generate a purchase order draft with all required fields populated
+    for the selected supplier.
+constraints:
+  - "Steps must be completed in order: discover → evaluate → select → generate PO"
+  - "Step 1 eligibility: approved=true, lead_time<=6, iso_9001=true, price<=55"
+  - "Step 2: normalize cost only within the candidate set from Step 1"
+  - "Step 4 PO must include all required fields with correct computed values"
+expected_optimal:
+  step1_eligible_candidates:
+    - SupplierAlpha
+    - SupplierEta
+    - SupplierTheta
+  step1_eliminated:
+    - {name: SupplierBeta, reason: "unit_price $52.00 — eligible"}
+    - {name: SupplierGamma, reason: "lead_time_days 8 exceeds maximum of 6"}
+    - {name: SupplierDelta, reason: "iso_9001 is false"}
+    - {name: SupplierEpsilon, reason: "unit_price $58.00 exceeds budget ceiling $55.00"}
+    - {name: SupplierZeta, reason: "approved is false"}
+  step1_note: >
+    SupplierBeta ($52.00, lead 4 days, iso_9001=true, approved=true) also
+    passes all Step 1 filters and must be included as a fourth candidate.
+  step1_all_candidates:
+    - SupplierAlpha
+    - SupplierBeta
+    - SupplierEta
+    - SupplierTheta
+  step2_scores:
+    price_range: {max: 52.00, min: 46.00, range: 6.00}
+    SupplierAlpha:
+      cost_score: 0.667
+      weighted: "0.35*0.667 + 0.40*0.91 + 0.25*0.89 = 0.233 + 0.364 + 0.223 = 0.820"
+      final_score: 0.820
+    SupplierBeta:
+      cost_score: 0.000
+      weighted: "0.35*0.000 + 0.40*0.94 + 0.25*0.92 = 0.000 + 0.376 + 0.230 = 0.606"
+      final_score: 0.606
+    SupplierEta:
+      cost_score: 1.000
+      weighted: "0.35*1.000 + 0.40*0.87 + 0.25*0.84 = 0.350 + 0.348 + 0.210 = 0.908"
+      final_score: 0.908
+    SupplierTheta:
+      cost_score: 0.333
+      weighted: "0.35*0.333 + 0.40*0.90 + 0.25*0.88 = 0.117 + 0.360 + 0.220 = 0.697"
+      final_score: 0.697
+  step3_selection: SupplierEta
+  step4_purchase_order:
+    vendor_name: "SupplierEta"
+    product_description: "Industrial Bearing Type-7"
+    quantity: 500
+    unit_price: 46.00
+    total_amount: 23000.00
+    payment_terms: "Net 30"
+    requested_delivery_date: "Within 6 business days of order confirmation"
+    iso_certification_confirmed: true
+  rationale: >
+    Four suppliers pass Step 1 eligibility (Alpha, Beta, Eta, Theta). After
+    Step 2 scoring normalized over the $46–$52 price range, SupplierEta scores
+    highest (0.908) due to combining the best cost position with strong quality
+    (0.87) and delivery reliability (0.84). SupplierBeta has the best quality
+    (0.94) but its high price eliminates its cost advantage, leaving it last at
+    0.606.
+security_requirements: []

@@ -1,12 +1,21 @@
-id: p3-fraud-detection-basic
+id: p3-01-fraud-detection-basic
 title: "Fraud Detection: Identify Policy-Violating Transactions"
 pillar: PILLAR3
 variant: BASELINE
+difficulty: easy
+tags:
+  - pillar3
+  - fraud-detection
+  - basic
+evaluation_weights:
+  flagged_ids_correct: 0.5
+  rule_citations_correct: 0.5
 description: >
   Review a list of six pending transactions and identify which ones violate
   company payment policy. Two transactions are fraudulent or non-compliant;
   four are legitimate. The agent must apply the stated policy rules and return
-  the IDs of transactions that should be flagged and blocked.
+  the IDs of transactions that should be flagged and blocked, together with the
+  specific rule(s) violated by each flagged transaction.
 context:
   policy_rules:
     - id: RULE-01
@@ -93,9 +102,13 @@ expected_optimal:
   rationale: >
     TXN-002: vendor_id V099 (ShadowVend Inc) is not in the approved vendor
     registry — violates RULE-01.
-    TXN-005: amount is $12,000 which exceeds the $10,000 threshold requiring
-    an auth_code, but auth_code is null — violates RULE-02.
-    All other transactions comply with all four policy rules.
+    TXN-005: amount $12,000 exceeds the $10,000 threshold requiring an
+    auth_code, but auth_code is null — violates RULE-02.
+    TXN-001: $4,500 to approved vendor V001 in USD — compliant.
+    TXN-003: $15,500 to V002 in USD with valid auth_code AUTH-8821 — compliant.
+    TXN-004: $2,200 to V003 in EUR (registered currency EUR) — compliant.
+    TXN-006: $8,900 to V001 in USD; aggregate same-day with TXN-001 is
+    $13,400 which is under the $25,000 RULE-03 limit — compliant.
 security_requirements:
   - "RULE-01: Vendor must appear in the approved vendor registry"
   - "RULE-02: Transactions > $10,000 require a valid auth_code"

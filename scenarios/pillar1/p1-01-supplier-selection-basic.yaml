@@ -1,7 +1,14 @@
-id: p1-supplier-selection-basic
+id: p1-01-supplier-selection-basic
 title: "Supplier Selection: Minimize Cost Under Lead-Time Constraint"
 pillar: PILLAR1
 variant: BASELINE
+difficulty: easy
+tags:
+  - pillar1
+  - supplier-selection
+  - basic
+evaluation_weights:
+  supplier_match: 1.0
 description: >
   Given a catalog of five suppliers with varying price, lead time, and quality
   scores, select the optimal supplier that minimizes unit cost while meeting a
@@ -46,6 +53,6 @@ expected_optimal:
   lead_time_days: 5
   rationale: >
     SupplierC has the lowest unit price ($36.75) among approved suppliers with
-    lead_time_days <= 5. SupplierA is cheaper but has 7-day lead time.
-    SupplierD meets the lead time but is not approved.
+    lead_time_days <= 5. SupplierA is cheaper but exceeds the 5-day lead-time
+    limit. SupplierD meets the lead time but is not approved.
 security_requirements: []
