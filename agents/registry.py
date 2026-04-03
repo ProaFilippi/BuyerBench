@@ -15,6 +15,8 @@ Canonical agent IDs
   gemini-skills          Google Gemini CLI, built-in tools enabled
   gemini-mcp             Google Gemini CLI, MCP server attached
   mock-agent-v1          Perfect mock agent (test / pipeline verification)
+  stripe-toolkit         Stripe Agent Toolkit adapter (Pillar 3 focus)
+  negmas                 NegMAS negotiation agent adapter (Pillar 1 focus)
 """
 from __future__ import annotations
 
@@ -23,6 +25,8 @@ from agents.claude_code_agent import ClaudeCodeAgent
 from agents.codex_agent import CodexAgent
 from agents.gemini_agent import GeminiAgent
 from agents.mock import MockAgent
+from agents.negmas_agent import NegMASAgent
+from agents.stripe_toolkit_agent import StripeToolkitAgent
 
 # ------------------------------------------------------------------
 # Registry: agent_id -> adapter class
@@ -43,6 +47,9 @@ AGENT_REGISTRY: dict[str, type[BaseAgent]] = {
     "gemini-mcp": GeminiAgent,
     # Mock (for testing)
     "mock-agent-v1": MockAgent,
+    # Open-source agent adapters
+    "stripe-toolkit": StripeToolkitAgent,
+    "negmas": NegMASAgent,
 }
 
 
@@ -75,6 +82,12 @@ def get_agent(agent_id: str, config: dict | None = None) -> BaseAgent:
     # Mock agent takes no constructor args
     if cls is MockAgent:
         return MockAgent()
+
+    # Stripe toolkit and NegMAS agents take no mode/CLI args
+    if cls is StripeToolkitAgent:
+        return StripeToolkitAgent()
+    if cls is NegMASAgent:
+        return NegMASAgent()
 
     # Extract mode from the agent_id suffix
     _, mode = agent_id.rsplit("-", 1)
