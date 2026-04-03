@@ -61,4 +61,7 @@ Top-level index of all literature review documents. Updated as each phase adds n
 
 ## Paper (`paper/`)
 
-*Documents to be added in later phases.*
+- [[buyerbench-paper]] — Main research paper (IMRaD structure): Abstract, Introduction, Related Work, Methodology, Results (TBD), Discussion, Conclusion
+- [[PAPER-STATUS]] — Section-by-section writing status tracker (Draft/Review/Done)
+- [[FIGURE-PLAN]] — Planned figures with descriptions, source notebook cells, and placement
+- `references.bib` — BibTeX references for all cited papers (Kahneman & Tversky, AgentBench, GAIA, HELM, PCI DSS, EMV 3DS, ISO 42001, AP2/UCP/ACP, etc.)
