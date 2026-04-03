@@ -93,7 +93,11 @@ def _format_decisions(decisions: dict, pillar: str) -> str:
 
 
 @cli.command()
-@click.option("--agent", required=True, help="Agent ID to evaluate (e.g. claude-code-baseline)")
+@click.option(
+    "--agent",
+    required=True,
+    help='Agent ID to evaluate (e.g. claude-code-baseline) or "all" for all real agents.',
+)
 @click.option("--scenario", default=None, help="Specific scenario ID to run")
 @click.option(
     "--pillar",
@@ -120,7 +124,9 @@ def run(
     dry_run: bool,
     output_dir: str,
 ) -> None:
-    """Run the benchmark suite against a named CLI agent."""
+    """Run the benchmark suite against a named CLI agent (or all agents)."""
+    import json
+    from datetime import datetime
     from pathlib import Path
 
     from agents.registry import AGENT_REGISTRY, get_agent
@@ -128,23 +134,29 @@ def run(
     from harness.loader import load_all_scenarios
     from harness.runner import run_scenario
 
-    # Validate agent_id before loading any scenarios
-    if agent not in AGENT_REGISTRY:
-        available = sorted(AGENT_REGISTRY.keys())
-        console.print(
-            f"[red]Unknown agent {agent!r}.[/red]\n"
-            f"Available agents: {', '.join(available)}"
-        )
-        raise SystemExit(1)
+    # ── Resolve agent list ────────────────────────────────────────────────────
+    _REAL_AGENTS = [aid for aid in AGENT_REGISTRY if aid != "mock-agent-v1"]
 
-    config = load_config()
-    config["dry_run"] = dry_run
-    agent_instance = get_agent(agent, config)
+    if agent == "all":
+        from harness.preflight import check_environment
 
+        env = check_environment(print_report=True)
+        available_set = set(env["available_agents"])
+        agents_to_run = [(aid, aid in available_set) for aid in _REAL_AGENTS]
+    else:
+        if agent not in AGENT_REGISTRY:
+            available = sorted(AGENT_REGISTRY.keys())
+            console.print(
+                f"[red]Unknown agent {agent!r}.[/red]\n"
+                f"Available agents: {', '.join(available)}"
+            )
+            raise SystemExit(1)
+        agents_to_run = [(agent, True)]
+
+    # ── Load and filter scenarios ─────────────────────────────────────────────
     scenarios_root = Path(__file__).parent.parent / "scenarios"
     all_scenarios = load_all_scenarios(str(scenarios_root))
 
-    # Apply filters
     if pillar:
         pillar_enum = f"PILLAR{pillar}"
         all_scenarios = [s for s in all_scenarios if s.pillar.value == pillar_enum]
@@ -155,39 +167,78 @@ def run(
         console.print("[yellow]No scenarios matched the given filters.[/yellow]")
         return
 
-    if dry_run:
-        console.print(
-            f"[bold cyan]DRY RUN[/bold cyan] — agent=[bold]{agent}[/bold]  "
-            f"scenarios={len(all_scenarios)}"
+    config = load_config()
+    config["dry_run"] = dry_run
+
+    # ── Run each agent ────────────────────────────────────────────────────────
+    for agent_id, is_available in agents_to_run:
+        if not is_available:
+            _write_skipped_results(agent_id, all_scenarios, output_dir)
+            console.print(
+                f"[yellow]SKIPPED[/yellow] {agent_id} — CLI or API key unavailable"
+            )
+            continue
+
+        agent_instance = get_agent(agent_id, config)
+
+        if dry_run:
+            console.print(
+                f"[bold cyan]DRY RUN[/bold cyan] — agent=[bold]{agent_id}[/bold]  "
+                f"scenarios={len(all_scenarios)}"
+            )
+            for s in all_scenarios:
+                agent_instance.respond(s)
+            continue
+
+        table = Table(
+            title=f"BuyerBench Run — {agent_id}",
+            box=box.ROUNDED,
+            show_lines=True,
         )
+        table.add_column("Scenario", style="bold cyan", no_wrap=True)
+        table.add_column("Pillar", style="magenta")
+        table.add_column("Score", justify="right")
+        table.add_column("Status", justify="center")
+
         for s in all_scenarios:
-            agent_instance.respond(s)  # prints prompt, returns empty response
-        return
+            result = run_scenario(s, agent_instance, output_dir=output_dir)
+            score = result.pillar_scores[0].score if result.pillar_scores else 0.0
+            status = "[green]PASS[/green]" if result.overall_pass else "[red]FAIL[/red]"
+            table.add_row(s.title[:50], s.pillar.value, f"{score:.2f}", status)
 
-    table = Table(
-        title=f"BuyerBench Run — {agent}",
-        box=box.ROUNDED,
-        show_lines=True,
-    )
-    table.add_column("Scenario", style="bold cyan", no_wrap=True)
-    table.add_column("Pillar", style="magenta")
-    table.add_column("Score", justify="right")
-    table.add_column("Status", justify="center")
+        console.print()
+        console.print(table)
 
-    for s in all_scenarios:
-        result = run_scenario(s, agent_instance)
-        score = result.pillar_scores[0].score if result.pillar_scores else 0.0
-        status = "[green]PASS[/green]" if result.overall_pass else "[red]FAIL[/red]"
-        table.add_row(s.title[:50], s.pillar.value, f"{score:.2f}", status)
-
-    console.print()
-    console.print(table)
     console.print()
     console.print(
-        f"[bold green]Run complete — {len(all_scenarios)} scenario(s) evaluated.[/bold green]"
+        f"[bold green]Run complete — {len(all_scenarios)} scenario(s) × "
+        f"{len(agents_to_run)} agent(s).[/bold green]"
     )
     console.print(f"Results written to [bold]{output_dir}/[/bold]")
     console.print()
+
+
+def _write_skipped_results(
+    agent_id: str,
+    scenarios,
+    output_dir: str,
+) -> None:
+    """Write status=skipped JSON files for each scenario for an unavailable agent."""
+    import json
+    from datetime import datetime
+    from pathlib import Path
+
+    base = Path(output_dir) / agent_id
+    base.mkdir(parents=True, exist_ok=True)
+    for s in scenarios:
+        payload = {
+            "status": "skipped",
+            "agent_id": agent_id,
+            "scenario_id": s.id,
+            "reason": "CLI or API key unavailable (see preflight check)",
+            "timestamp": datetime.utcnow().isoformat(),
+        }
+        (base / f"{s.id}.json").write_text(json.dumps(payload, indent=2))
 
 
 if __name__ == "__main__":

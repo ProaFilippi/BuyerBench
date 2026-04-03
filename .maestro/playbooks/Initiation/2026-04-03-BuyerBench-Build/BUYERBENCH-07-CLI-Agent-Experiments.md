@@ -15,11 +15,18 @@ This phase executes the benchmark suite against all nine CLI agent configuration
        Mock MCP server OK, but API keys NOT set → available_agents=[], exit code 1.
        Subsequent experiment phases will record status:skipped for all real agents. -->
 
-- [ ] Execute Pillar 1 experiments across all available agents:
+- [x] Execute Pillar 1 experiments across all available agents:
   - Run `python -m buyerbench run --agent all --pillar 1 --output-dir results/experiments/pillar1/`
   - For each of the 5 Pillar 1 scenarios × available agents × 3 modes: capture full AgentResponse (decisions, reasoning trace, tool calls, latency)
   - If any agent CLI is unavailable, record a `status: skipped` result rather than failing
   - After run: verify result JSON files exist in `results/experiments/pillar1/<agent_id>/<scenario_id>.json`
+  <!-- COMPLETED 2026-04-03: Implemented `--agent all` support in __main__.py and fixed --output-dir
+       propagation in harness/runner.py (run_scenario now accepts output_dir param).
+       Added _write_skipped_results() helper writing status=skipped sentinel JSON per scenario per agent.
+       7 new tests in tests/test_run_all_agents.py (329 total pass).
+       Preflight result: all 3 CLIs installed but API keys NOT set → all 9 agents skipped.
+       45 result files verified: results/experiments/pillar1/<agent_id>/<scenario_id>.json
+       (9 agents × 5 scenarios, all status=skipped). -->
 
 - [ ] Execute Pillar 2 experiments across all available agents:
   - Run `python -m buyerbench run --agent all --pillar 2 --output-dir results/experiments/pillar2/`
