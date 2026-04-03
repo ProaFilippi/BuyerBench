@@ -84,15 +84,101 @@ def _format_decisions(decisions: dict, pillar: str) -> str:
 
 
 @cli.command()
-@click.option("--agent", required=True, help="Agent name to evaluate")
+@click.option("--agent", required=True, help="Agent ID to evaluate (e.g. claude-code-baseline)")
 @click.option("--scenario", default=None, help="Specific scenario ID to run")
-@click.option("--pillar", default=None, type=click.Choice(["1", "2", "3"]), help="Pillar filter")
-def run(agent: str, scenario: str | None, pillar: str | None) -> None:
-    """Run the full benchmark suite against a named agent. (Not yet implemented.)"""
-    console.print(
-        f"[yellow]run --agent {agent!r} is not yet implemented.[/yellow]\n"
-        "Use [bold]python -m buyerbench demo[/bold] to test the pipeline."
+@click.option(
+    "--pillar",
+    default=None,
+    type=click.Choice(["1", "2", "3"]),
+    help="Pillar filter (1/2/3)",
+)
+@click.option(
+    "--dry-run",
+    is_flag=True,
+    default=False,
+    help="Print prompts without invoking the CLI agent",
+)
+@click.option(
+    "--output-dir",
+    default="results",
+    show_default=True,
+    help="Directory to write evaluation results",
+)
+def run(
+    agent: str,
+    scenario: str | None,
+    pillar: str | None,
+    dry_run: bool,
+    output_dir: str,
+) -> None:
+    """Run the benchmark suite against a named CLI agent."""
+    from pathlib import Path
+
+    from agents.registry import AGENT_REGISTRY, get_agent
+    from harness.config import load_config
+    from harness.loader import load_all_scenarios
+    from harness.runner import run_scenario
+
+    # Validate agent_id before loading any scenarios
+    if agent not in AGENT_REGISTRY:
+        available = sorted(AGENT_REGISTRY.keys())
+        console.print(
+            f"[red]Unknown agent {agent!r}.[/red]\n"
+            f"Available agents: {', '.join(available)}"
+        )
+        raise SystemExit(1)
+
+    config = load_config()
+    config["dry_run"] = dry_run
+    agent_instance = get_agent(agent, config)
+
+    scenarios_root = Path(__file__).parent.parent / "scenarios"
+    all_scenarios = load_all_scenarios(str(scenarios_root))
+
+    # Apply filters
+    if pillar:
+        pillar_enum = f"PILLAR{pillar}"
+        all_scenarios = [s for s in all_scenarios if s.pillar.value == pillar_enum]
+    if scenario:
+        all_scenarios = [s for s in all_scenarios if s.id == scenario]
+
+    if not all_scenarios:
+        console.print("[yellow]No scenarios matched the given filters.[/yellow]")
+        return
+
+    if dry_run:
+        console.print(
+            f"[bold cyan]DRY RUN[/bold cyan] — agent=[bold]{agent}[/bold]  "
+            f"scenarios={len(all_scenarios)}"
+        )
+        for s in all_scenarios:
+            agent_instance.respond(s)  # prints prompt, returns empty response
+        return
+
+    table = Table(
+        title=f"BuyerBench Run — {agent}",
+        box=box.ROUNDED,
+        show_lines=True,
     )
+    table.add_column("Scenario", style="bold cyan", no_wrap=True)
+    table.add_column("Pillar", style="magenta")
+    table.add_column("Score", justify="right")
+    table.add_column("Status", justify="center")
+
+    for s in all_scenarios:
+        result = run_scenario(s, agent_instance)
+        score = result.pillar_scores[0].score if result.pillar_scores else 0.0
+        status = "[green]PASS[/green]" if result.overall_pass else "[red]FAIL[/red]"
+        table.add_row(s.title[:50], s.pillar.value, f"{score:.2f}", status)
+
+    console.print()
+    console.print(table)
+    console.print()
+    console.print(
+        f"[bold green]Run complete — {len(all_scenarios)} scenario(s) evaluated.[/bold green]"
+    )
+    console.print(f"Results written to [bold]{output_dir}/[/bold]")
+    console.print()
 
 
 if __name__ == "__main__":

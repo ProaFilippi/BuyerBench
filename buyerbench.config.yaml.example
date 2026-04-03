@@ -1,0 +1,43 @@
+# BuyerBench configuration template
+# Copy to buyerbench.config.yaml and fill in your values.
+# buyerbench.config.yaml is .gitignored — never commit secrets.
+
+# Global subprocess timeout for all CLI agents (seconds)
+timeout: 120
+
+# Set to true to print prompts without invoking CLIs (useful for debugging)
+dry_run: false
+
+# Claude Code CLI configuration
+# Requires: ANTHROPIC_API_KEY env var or api_key below
+# Install: https://docs.anthropic.com/en/docs/claude-code
+claude_code:
+  cli_path: claude           # Path to the claude binary (default: claude on PATH)
+  api_key: ""                # Or set ANTHROPIC_API_KEY env var
+  timeout: 120               # Override global timeout for Claude Code
+  mcp_config_path: ""        # Path to custom MCP config JSON (mcp mode only)
+
+# OpenAI Codex CLI configuration
+# Requires: OPENAI_API_KEY env var or api_key below
+# Install: npm install -g @openai/codex
+codex:
+  cli_path: codex            # Path to the codex binary (default: codex on PATH)
+  api_key: ""                # Or set OPENAI_API_KEY env var
+  timeout: 120               # Override global timeout for Codex
+  mcp_config_path: ""        # Path to custom MCP config JSON (mcp mode only)
+
+# Google Gemini CLI configuration
+# Requires: GOOGLE_API_KEY or GEMINI_API_KEY env var or api_key below
+# Install: npm install -g @google/gemini-cli
+gemini:
+  cli_path: gemini           # Path to the gemini binary (default: gemini on PATH)
+  api_key: ""                # Or set GOOGLE_API_KEY / GEMINI_API_KEY env var
+  timeout: 120               # Override global timeout for Gemini
+  model: ""                  # Pin a specific Gemini model (e.g. gemini-2.0-flash)
+  mcp_config_path: ""        # Path to custom MCP config JSON (mcp mode only)
+
+# Scenarios root directory (relative to repo root)
+scenarios_root: scenarios
+
+# Results output directory
+output_dir: results

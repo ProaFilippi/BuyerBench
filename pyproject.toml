@@ -21,6 +21,9 @@ dev = [
     "pytest",
     "pytest-cov",
 ]
+llm = [
+    "anthropic>=0.25",
+]
 
 [project.scripts]
 buyerbench = "buyerbench.__main__:cli"

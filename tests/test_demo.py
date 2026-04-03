@@ -19,8 +19,15 @@ class TestDemoCommand:
         result = runner.invoke(cli, ["demo"])
         assert "3 scenarios evaluated" in result.output
 
-    def test_run_stub_not_implemented(self):
+    def test_run_unknown_agent_exits_nonzero(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ["run", "--agent", "test-agent"])
-        assert result.exit_code == 0
-        assert "not yet implemented" in result.output.lower()
+        result = runner.invoke(cli, ["run", "--agent", "nonexistent-agent"])
+        assert result.exit_code != 0
+        assert "nonexistent-agent" in result.output or "Unknown agent" in result.output
+
+    def test_run_dry_run_mock_agent(self):
+        runner = CliRunner()
+        result = runner.invoke(
+            cli, ["run", "--agent", "mock-agent-v1", "--dry-run", "--pillar", "1"]
+        )
+        assert result.exit_code == 0, f"Non-zero exit:\n{result.output}"
