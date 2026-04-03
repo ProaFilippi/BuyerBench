@@ -34,7 +34,11 @@ Top-level index of all literature review documents. Updated as each phase adds n
 
 ## Pillar 2 — Economic Decision Quality (`pillar2-economics/`)
 
-*Documents to be added in Phase 03 (BUYERBENCH-03).*
+- [[behavioral-economics-foundations]] — Prospect theory, loss aversion, anchoring, framing, status quo bias, sunk cost fallacy, decoy effect; BuyerBench scenario designs for each
+- [[bias-in-llm-agents]] — Survey (2023–2025) of empirically documented vs. theoretical cognitive biases in LLMs; evidence classification per bias category
+- [[economic-rationality-metrics]] — Optimality gap, EV regret, WARP, bias susceptibility index (BSI), controlled variant methodology
+- [[negotiation-agent-economics]] — NegMAS, GeniusWeb/Genius, ANAC competition results; Nash Bargaining Solution; LLM negotiation rationality findings; procurement-specific rationality requirements
+- [[PILLAR2-SUMMARY]] — Synthesis: 4 key findings; eight-bias taxonomy with primary sources and LLM evidence; controlled variant design methodology
 
 ---
 
