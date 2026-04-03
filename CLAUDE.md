@@ -16,17 +16,52 @@ BuyerBench is an open-source benchmark framework for evaluating AI buyer agents 
 # Install package and dev dependencies
 pip install -e ".[dev]"
 
-# Run the end-to-end demo (loads 3 scenarios, runs MockAgent, prints report)
+# Preflight check — verify CLI tools, API keys, and MCP server availability
+python -m buyerbench check
+
+# Run the end-to-end demo (loads 3 scenarios, runs MockAgent, prints rich report)
 python -m buyerbench demo
 
-# Run the full benchmark suite against a named agent
+# Run the full benchmark suite against a named agent (all 18 scenarios)
 python -m buyerbench run --agent <name>
+
+# Run against a specific agent in a specific pillar only
+python -m buyerbench run --agent claude-code-baseline --pillar 1
+
+# Run against all configured agents (preflight-checks each before running)
+python -m buyerbench run --agent all
+
+# Dry-run: print serialized prompts without invoking the CLI agent
+python -m buyerbench run --agent claude-code-baseline --dry-run
+
+# Generate FULL-REPORT.json + FULL-REPORT.md from experiment result directory
+python -m buyerbench report --experiment-dir results/experiments
+
+# Generate all paper figures from the report (requires matplotlib + numpy)
+python3 .maestro/playbooks/Working/generate_figures.py
 
 # Run tests
 pytest
 
 # Run tests with coverage
 pytest --cov=buyerbench --cov=evaluators --cov=harness --cov=agents
+
+# Run a specific test module
+pytest tests/test_evaluator_pillar3.py -v
+
+# Available agent IDs for --agent flag:
+#   mock-agent-v1            MockAgent (always available; no credentials required)
+#   claude-code-baseline     Claude Code CLI, prompt-only mode
+#   claude-code-skills       Claude Code CLI + BuyerBench skill definitions
+#   claude-code-mcp          Claude Code CLI + MCP procurement tool server
+#   codex-baseline           OpenAI Codex CLI, prompt-only mode
+#   codex-skills             OpenAI Codex CLI + skills
+#   codex-mcp                OpenAI Codex CLI + MCP
+#   gemini-baseline          Google Gemini CLI, prompt-only mode
+#   gemini-skills            Google Gemini CLI + skills
+#   gemini-mcp               Google Gemini CLI + MCP
+#   negmas                   NegMAS negotiation agent (Python-native, no credentials)
+#   stripe-toolkit           Stripe Agent Toolkit (simulation mode by default)
 ```
 
 ## Architecture
