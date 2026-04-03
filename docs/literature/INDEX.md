@@ -53,6 +53,12 @@ Top-level index of all literature review documents. Updated as each phase adds n
 
 ---
 
+## Cross-Pillar Synthesis
+
+- [[RESEARCH-GAPS]] — Top 7 research gaps across all three pillars that BuyerBench addresses; cross-gap summary table mapping gaps to metrics; direct source material for paper Introduction and Related Work
+
+---
+
 ## Paper (`paper/`)
 
 *Documents to be added in later phases.*

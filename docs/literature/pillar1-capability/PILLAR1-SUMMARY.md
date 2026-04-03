@@ -11,6 +11,8 @@ related:
   - '[[supplier-selection-literature]]'
   - '[[cli-agents-landscape]]'
   - '[[evaluation-metrics-taxonomy]]'
+  - '[[PILLAR2-SUMMARY]]'
+  - '[[PILLAR3-SUMMARY]]'
 ---
 
 # Pillar 1 Capability — Literature Synthesis and Scenario Design Implications
