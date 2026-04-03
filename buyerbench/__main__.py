@@ -222,6 +222,45 @@ def run(
             f"[bold]{bsi_path}[/bold]"
         )
 
+    # ── Post-run: Pillar 3 security/compliance summary ────────────────────────
+    if pillar == "3":
+        import json as _json
+        from evaluators.aggregate import compute_security_summary_from_experiment_dir
+
+        sec_summary = compute_security_summary_from_experiment_dir(output_dir)
+        sec_path = Path(output_dir) / "security-compliance-summary.json"
+        sec_path.write_text(_json.dumps(sec_summary, indent=2, default=str))
+        console.print(
+            f"[bold cyan]Security/compliance summary saved to[/bold cyan] "
+            f"[bold]{sec_path}[/bold]"
+        )
+        # Log injection resistance table explicitly — task requirement
+        inj_table = sec_summary.get("injection_resistance_table", [])
+        if inj_table:
+            from rich.table import Table as RichTable
+            from rich import box as rbox
+
+            inj_t = RichTable(
+                title="Prompt Injection Resistance (p3-05)",
+                box=rbox.SIMPLE,
+            )
+            inj_t.add_column("Agent", style="bold cyan")
+            inj_t.add_column("Injection Resisted", justify="center")
+            inj_t.add_column("Flagged in Reasoning", justify="center")
+            inj_t.add_column("Correct Supplier", justify="center")
+            for row in inj_table:
+                resisted = "[green]YES[/green]" if row["injected_instruction_not_followed"] else "[red]NO[/red]"
+                flagged = "[green]YES[/green]" if row["injection_flagged_in_reasoning"] else "[yellow]NO[/yellow]"
+                correct = "[green]YES[/green]" if row["correct_supplier_selected"] else "[red]NO[/red]"
+                inj_t.add_row(row["agent_id"], resisted, flagged, correct)
+            console.print()
+            console.print(inj_t)
+        else:
+            console.print(
+                "[dim]No prompt injection results to display "
+                "(all agents skipped or no p3-05 results)[/dim]"
+            )
+
     console.print()
     console.print(
         f"[bold green]Run complete — {len(all_scenarios)} scenario(s) × "

@@ -43,10 +43,25 @@ This phase executes the benchmark suite against all nine CLI agent configuration
        BSI summary at results/experiments/pillar2/bias-susceptibility-summary.json:
        total_result_files=72, skipped=72, valid=0, agents_skipped=all 9 CLI agents. -->
 
-- [ ] Execute Pillar 3 experiments across all available agents:
+- [x] Execute Pillar 3 experiments across all available agents:
   - Run `python -m buyerbench run --agent all --pillar 3 --output-dir results/experiments/pillar3/`
   - For each of the 5 Pillar 3 scenarios × available agents × 3 modes
   - Pay special attention to prompt injection scenario (p3-05): log whether each agent followed the injected instruction
+  <!-- COMPLETED 2026-04-03: Added `compute_security_summary_from_experiment_dir(experiment_dir)`
+       to evaluators/aggregate.py — reads per-agent result JSONs, filters PILLAR3 results,
+       aggregates compliance_adherence_rate and security_violation_frequency per agent,
+       and builds a dedicated injection_resistance_table for p3-05 tracking
+       (injection_followed, injected_instruction_not_followed, injection_flagged_in_reasoning,
+       correct_supplier_selected per agent). `run` command in __main__.py now calls this
+       automatically after any --pillar 3 run and writes security-compliance-summary.json
+       to the output dir; a rich injection resistance table is printed to the terminal when
+       real results are present.
+       23 new tests in tests/test_pillar3_experiments.py (370 total pass).
+       Experiment result: 9 agents × 5 scenarios = 45 status=skipped JSON files written to
+       results/experiments/pillar3/<agent_id>/<scenario_id>.json (all agents skipped — API keys not set).
+       Security/compliance summary at results/experiments/pillar3/security-compliance-summary.json:
+       total_result_files=45, skipped=45, valid=0, agents_skipped=all 9 CLI agents,
+       injection_resistance_table=[] (no live data yet). -->
 
 - [ ] Generate the results analysis report:
   - `results/report.py` (extending Phase 05 implementation): `generate_full_report(experiment_dir: str)` that reads all result JSONs and produces:

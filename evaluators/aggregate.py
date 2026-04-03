@@ -94,6 +94,155 @@ def run_suite(scenarios: list[Scenario], agent) -> list[EvaluationResult]:
     return results
 
 
+def compute_security_summary_from_experiment_dir(
+    experiment_dir: str | Path,
+) -> dict:
+    """Compute security and compliance summary by reading Pillar 3 result JSONs.
+
+    Walks ``experiment_dir`` for per-agent subdirectories, loads all non-skipped
+    result JSONs, and aggregates Pillar 3 security metrics.  Prompt injection
+    scenarios receive dedicated tracking of injection resistance — specifically
+    whether each agent followed or resisted the injected instruction.
+
+    Args:
+        experiment_dir: Directory produced by ``run --pillar 3 --output-dir``.
+            Contains one sub-directory per agent, each holding
+            ``<scenario_id>.json`` files.
+
+    Returns:
+        A structured dict with per-agent security metrics and an injection
+        resistance table, suitable for serialisation to
+        ``security-compliance-summary.json``.
+    """
+    experiment_dir = Path(experiment_dir)
+
+    total_files = 0
+    skipped_files = 0
+    valid_files = 0
+
+    # agent_id → list of EvaluationResult (Pillar 3 only)
+    per_agent_results: dict[str, list[EvaluationResult]] = {}
+
+    for agent_dir in sorted(experiment_dir.iterdir()):
+        if not agent_dir.is_dir():
+            continue
+        agent_id = agent_dir.name
+
+        for json_file in sorted(agent_dir.glob("*.json")):
+            total_files += 1
+            raw = json.loads(json_file.read_text())
+
+            if raw.get("status") == "skipped":
+                skipped_files += 1
+                continue
+
+            try:
+                result = EvaluationResult.model_validate(raw)
+            except Exception:
+                skipped_files += 1
+                continue
+
+            # Only Pillar 3 results
+            has_p3 = any(ps.pillar == Pillar.PILLAR3 for ps in result.pillar_scores)
+            if not has_p3:
+                continue
+
+            valid_files += 1
+            per_agent_results.setdefault(agent_id, []).append(result)
+
+    # ── per-agent aggregation ─────────────────────────────────────────────────
+    per_agent_security: dict[str, dict] = {}
+    injection_resistance_table: list[dict] = []
+
+    for agent_id, results in per_agent_results.items():
+        compliance_rates: list[float] = []
+        violation_freqs: list[float] = []
+        results_by_scenario: dict[str, dict] = {}
+
+        for result in results:
+            p3_score = next(
+                (ps for ps in result.pillar_scores if ps.pillar == Pillar.PILLAR3), None
+            )
+            if p3_score is None:
+                continue
+
+            metrics = p3_score.metrics
+            car = metrics.get("compliance_adherence_rate", 0.0)
+            svf = metrics.get("security_violation_frequency", 0.0)
+            compliance_rates.append(car)
+            violation_freqs.append(svf)
+
+            results_by_scenario[result.scenario_id] = {
+                "score": p3_score.score,
+                "compliance_adherence_rate": car,
+                "security_violation_frequency": svf,
+                "violations": p3_score.violations,
+                "metrics": metrics,
+            }
+
+            # Track injection resistance for prompt injection scenarios
+            if "injection_followed" in metrics:
+                injection_resistance_table.append({
+                    "agent_id": agent_id,
+                    "scenario_id": result.scenario_id,
+                    "injection_followed": metrics.get("injection_followed", 0.0) == 1.0,
+                    "injected_instruction_not_followed": (
+                        metrics.get("injected_instruction_not_followed", 0.0) == 1.0
+                    ),
+                    "injection_flagged_in_reasoning": (
+                        metrics.get("injection_flagged_in_reasoning", 0.0) == 1.0
+                    ),
+                    "correct_supplier_selected": (
+                        metrics.get("correct_supplier_selected", 0.0) == 1.0
+                    ),
+                })
+
+        mean_car = sum(compliance_rates) / len(compliance_rates) if compliance_rates else 0.0
+        mean_svf = sum(violation_freqs) / len(violation_freqs) if violation_freqs else 0.0
+
+        per_agent_security[agent_id] = {
+            "mean_compliance_adherence_rate": mean_car,
+            "mean_security_violation_frequency": mean_svf,
+            "results_by_scenario": results_by_scenario,
+        }
+
+    # ── cross-agent summary ───────────────────────────────────────────────────
+    all_cars = [v["mean_compliance_adherence_rate"] for v in per_agent_security.values()]
+    cross_mean_car = sum(all_cars) / len(all_cars) if all_cars else 0.0
+
+    injection_total = len(injection_resistance_table)
+    injection_resisted = sum(
+        1 for row in injection_resistance_table if row["injected_instruction_not_followed"]
+    )
+    injection_resistance_rate = (
+        injection_resisted / injection_total if injection_total > 0 else None
+    )
+
+    agents_skipped = sorted(
+        agent_dir.name
+        for agent_dir in experiment_dir.iterdir()
+        if agent_dir.is_dir() and agent_dir.name not in per_agent_security
+    )
+
+    return {
+        "experiment_dir": str(experiment_dir),
+        "generated_at": datetime.utcnow().isoformat(),
+        "total_result_files": total_files,
+        "skipped_result_files": skipped_files,
+        "valid_result_files": valid_files,
+        "agents_evaluated": sorted(per_agent_security.keys()),
+        "agents_skipped": agents_skipped,
+        "per_agent_security": per_agent_security,
+        "injection_resistance_table": injection_resistance_table,
+        "cross_agent_summary": {
+            "mean_compliance_adherence_rate": cross_mean_car,
+            "injection_resistance_rate": injection_resistance_rate,
+            "total_injection_evaluations": injection_total,
+            "injection_resisted_count": injection_resisted,
+        },
+    }
+
+
 def compute_bsi_from_experiment_dir(
     experiment_dir: str | Path,
     scenarios_root: str | Path | None = None,
