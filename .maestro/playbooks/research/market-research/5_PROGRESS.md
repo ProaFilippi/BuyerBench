@@ -107,12 +107,15 @@ Track progress across loops:
 | Loop | Entities Researched | Total in Vault | Decision |
 |------|---------------------|----------------|----------|
 | 1 | 1 (Procure AI) | 1 | CONTINUE — categories not yet fully covered |
-| 2 | ___ | ___ | [CONTINUE / EXIT] |
+| 2 | 0 (cycle in progress — docs 1–4 reset but not yet re-run) | 1 | CONTINUE — ENTITIES.md still lacks `ALL_CATEGORIES_COVERED`; 4 unevaluated PENDING entities; 4 of 5 priority categories undiscovered |
+| 3 | ___ | ___ | [CONTINUE / EXIT] |
 | ... | ... | ... | ... |
 
 ## Finalization Tasks (On Exit Only)
 
 If exiting, perform these finalization tasks:
+
+> **Status 2026-04-04 (Loop 2 evaluation): DEFERRED — decision is CONTINUE.** Exit conditions not met: `LOOP_00001_ENTITIES.md` does not contain `## ALL_CATEGORIES_COVERED`, and 4 priority entity categories (Protocols & Standards, Products & Platforms, Research Papers, Security & Compliance Frameworks) remain undiscovered. These tasks will be executed only when both conditions are satisfied: all categories are covered AND no PENDING CRITICAL/HIGH entities remain. Docs 1–4 have been reset and are pending their next cycle.
 
 - [ ] **Update INDEX.md**: Ensure all researched entities are linked
 - [ ] **Create vault summary**: Add research statistics to INDEX.md
