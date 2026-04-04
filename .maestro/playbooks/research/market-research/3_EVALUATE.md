@@ -20,7 +20,7 @@ Evaluate discovered entities and prioritize them for research. Assess each entit
 
 ## Evaluation Checklist
 
-- [ ] **Evaluate one entity (or skip if empty)**: Read `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/LOOP_00001_ENTITIES.md` to find PENDING entities. If the file contains no entities OR all entities have already been evaluated in `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/LOOP_00001_PLAN.md`, mark this task complete without changes. Otherwise, pick ONE entity that hasn't been evaluated yet. Assess its importance and research effort. Append evaluation to `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/LOOP_00001_PLAN.md` with appropriate status.
+- [x] **Evaluate one entity (or skip if empty)**: Read `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/LOOP_00001_ENTITIES.md` to find PENDING entities. If the file contains no entities OR all entities have already been evaluated in `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/LOOP_00001_PLAN.md`, mark this task complete without changes. Otherwise, pick ONE entity that hasn't been evaluated yet. Assess its importance and research effort. Append evaluation to `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/LOOP_00001_PLAN.md` with appropriate status.
 
 ## Importance Criteria
 

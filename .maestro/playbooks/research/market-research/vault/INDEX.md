@@ -1,7 +1,7 @@
 # AI Buyer Agents and Autonomous Procurement Research Vault
 
 > Research initiated: 2026-04-04
-> Last updated: 2026-04-04
+> Last updated: 2026-04-04 (Loop 7 — stall-break)
 > Agent: CladiBuyer Benchmarker
 
 ## Overview
@@ -50,8 +50,12 @@ _No profiles yet — research phase pending._
 > Priority: Amazon Rufus, Alexa+, ChatGPT ACP, Perplexity Comet, Salesforce Agentforce, NegMAS
 
 ### Protocols & Standards
-_No profiles yet — research phase pending._
-> Priority: ACP, AP2, UCP, x402, Visa Intelligent Commerce, Mastercard Agent Pay, Visa Trusted Agent Protocol
+_Discovered — research profiles pending._
+- ACP (Agents Commerce Protocol) — OpenAI + Stripe; Apache 2.0; live in ChatGPT as Instant Checkout (Sep 2025); partially rolled back Mar 2026
+- AP2 / UCP (Google) — 60+ partners including Mastercard, Adyen, PayPal, Coinbase; UCP with Shopify covers checkout layer
+- x402 — Coinbase HTTP-native micropayment protocol; uses HTTP 402 status code; cryptographic machine-to-machine payments
+- Visa Intelligent Commerce + Trusted Agent Protocol — launched Apr 2025 + Oct 2025; KYA identity layer; partnered with Anthropic, Microsoft, OpenAI, Perplexity
+- Mastercard Agent Pay — launched Oct 2025; tokenization + identity for agent transactions; PCI DSS-aligned
 
 ### Key People
 _No people researched yet._
@@ -84,17 +88,17 @@ _No profiles yet — research phase pending._
 
 ## Statistics
 
-| Category | Count |
-|----------|-------|
-| Companies | 1 |
-| Products | 0 |
-| Protocols | 0 |
-| People | 0 |
-| Technologies | 0 |
-| Trends | 0 |
-| Research Papers | 0 |
-| Security & Compliance | 0 |
-| **Total Entities** | 1 |
+| Category | Discovered | Researched |
+|----------|------------|------------|
+| Companies | 5 | 1 |
+| Protocols & Standards | 5 | 0 |
+| Products & Platforms | 0 | 0 |
+| People | 0 | 0 |
+| Technologies | 0 | 0 |
+| Trends | 0 | 0 |
+| Research Papers | 0 | 0 |
+| Security & Compliance Frameworks | 0 | 0 |
+| **Total Entities** | **10** | **1** |
 
 ---
 *This vault was initialized by the Maestro Market Research Playbook*

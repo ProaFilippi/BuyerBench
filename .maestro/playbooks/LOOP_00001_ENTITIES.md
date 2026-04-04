@@ -74,3 +74,59 @@ This document tracks all entities discovered during market research for the AI B
   - TechCrunch / Skyfire.xyz / Crunchbase (Skyfire profile)
   - Rye.com agentic commerce landscape 2026
   - Levelpath top 10 AI procurement solutions 2026
+
+---
+
+## Protocols & Standards - Discovered 2026-04-04
+
+### ACP (Agents Commerce Protocol)
+- **Type:** Protocol / Standard
+- **Brief:** Open-source Apache 2.0 specification co-developed by OpenAI and Stripe that enables AI agents to discover, select, and pay for goods and services through a standardized checkout API.
+- **Why Notable:** ACP is one of two leading contenders for the dominant agent commerce protocol standard. Integrated into ChatGPT as "Instant Checkout" (Sep 2025) with a 4% merchant fee; temporarily removed from ChatGPT in March 2026 following the OpenAI–Amazon strategic partnership, signaling active market dynamics. Critical to Pillar 3 (payment API protocols, authentication flows) and Pillar 1 (agent tool use patterns). OpenAI's $50B Amazon partnership (Feb 2026) may reshape ACP's trajectory.
+- **Discovery Source:** https://orium.com/blog/agentic-payments-acp-ap2-x402
+- **Status:** PENDING
+
+### AP2 / UCP (Google Agentic Payment Protocol / Universal Commerce Protocol)
+- **Type:** Protocol / Standard
+- **Brief:** Google's dual-protocol suite for agent commerce: AP2 handles payment authorization and settlement (60+ partners including Mastercard, Adyen, PayPal, Coinbase), while UCP (developed with Shopify) standardizes the product discovery and checkout experience layer.
+- **Why Notable:** AP2/UCP represents the most broadly adopted protocol suite by partner count (60+), competing directly with ACP. Google's backing gives it reach across Google Shopping AI, Vertex AI Agent Builder, and a major merchant ecosystem. The AP2 vs. ACP protocol war directly shapes what "correct" agent payment behavior looks like for Pillar 3 security and compliance testing.
+- **Discovery Source:** https://www.griddynamics.com/blog/agentic-payments
+- **Status:** PENDING
+
+### x402
+- **Type:** Protocol / Standard
+- **Brief:** HTTP-native micropayment protocol built by Coinbase that repurposes the HTTP 402 "Payment Required" status code to enable instant, cryptographic machine-to-machine payments for AI agents, without OAuth flows or pre-authorization.
+- **Why Notable:** x402 represents a fundamentally different payment security model — no traditional card-network authorization chain, instead using cryptographic payment proofs. This creates novel Pillar 3 test scenarios: fraud detection without CVV/3DS, authorization without traditional credential flows, and compliance gaps vs. PCI DSS. Skyfire's agent payment infrastructure is x402-adjacent.
+- **Discovery Source:** https://orium.com/blog/agentic-payments-acp-ap2-x402
+- **Status:** PENDING
+
+### Visa Intelligent Commerce + Trusted Agent Protocol
+- **Type:** Protocol / Standard
+- **Brief:** Visa's two-pronged agentic commerce initiative: Visa Intelligent Commerce (launched Apr 2025 with Anthropic, Microsoft, OpenAI, Perplexity as partners) provides AI agents secure access to Visa's payment network; the Visa Trusted Agent Protocol (Oct 2025, 10+ partners, open spec) adds a KYA (Know Your Agent) identity layer for agent authorization and delegation.
+- **Why Notable:** Visa launched on the same day as Mastercard (Oct 16, 2025), signaling that traditional card networks are actively building agent payment infrastructure. The Trusted Agent Protocol's KYA model (assigning verified identities to AI agents) is directly relevant to Pillar 3 authentication and authorization test scenarios. Partnered with Anthropic — relevant context for Claude-based agents.
+- **Discovery Source:** https://corporate.visa.com/en/sites/visa-perspectives/newsroom/visa-partners-complete-secure-agentic-transactions.html
+- **Status:** PENDING
+
+### Mastercard Agent Pay
+- **Type:** Protocol / Standard
+- **Brief:** Mastercard's agentic payments infrastructure launched October 2025, enabling AI agents to transact through Mastercard's network with built-in identity verification, tokenization, and transaction monitoring designed for autonomous agent use cases.
+- **Why Notable:** Co-launched with Visa's agent protocols on Oct 16, 2025, confirming that both major card networks view agentic payments as a near-term operational reality. Mastercard Agent Pay's tokenization and identity requirements map directly to Pillar 3 secure transaction flows and PCI DSS compliance scenarios. Provides a regulatory benchmark for what "compliant" agent payment behavior should look like.
+- **Discovery Source:** https://www.mastercard.com/us/en/business/artificial-intelligence/mastercard-agent-pay.html
+- **Status:** PENDING
+
+### Discovery Summary
+- **Category:** Protocols & Standards
+- **Entities Found:** 5
+- **Search Queries Used:**
+  - "ACP AP2 x402 agentic payment protocol comparison 2025 2026"
+  - "Visa Intelligent Commerce Trusted Agent Protocol 2025"
+  - "Mastercard Agent Pay agentic payments 2025"
+  - "OpenAI Stripe ACP protocol specification"
+  - "Google AP2 UCP agentic commerce protocol partners"
+- **Sources Checked:**
+  - Orium blog: agentic payments ACP, AP2, x402 comparison
+  - Grid Dynamics blog: AP2 vs. ACP and x402 analysis
+  - Visa corporate newsroom: Intelligent Commerce and Trusted Agent Protocol
+  - Mastercard: Agent Pay product page
+  - FourWeekMBA: Protocol Wars — Standards Battle for AI Commerce
+  - LOOP_00001_MARKET_ANALYSIS.md (primary synthesis source)

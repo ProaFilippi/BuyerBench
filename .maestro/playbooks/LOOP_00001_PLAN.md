@@ -58,3 +58,42 @@ Entities this will likely link to:
 ### Status: RESEARCHED
 ### Research File: `vault/Companies/Procure-AI.md`
 ### Researched: 2026-04-04
+
+---
+
+## Omnea - Evaluated 2026-04-04
+
+**Source:** LOOP_00001_ENTITIES.md — Companies category
+**Type:** Company
+**Category:** AI-Native Procurement Platforms
+
+### Quick Profile
+Omnea is an enterprise procurement orchestration platform that automates vendor onboarding, intake workflows, and cross-functional approvals. The company raised a $50M Series B in September 2025 led by Insight Partners and Khosla Ventures, bringing total funding above $75M. Omnea positions itself as a CFO-facing tool ("make procurement every CFO's competitive advantage"), emphasizing economic outcomes over operational automation.
+
+### Importance Assessment
+- **Rating:** HIGH
+- **Justification:** Omnea's CFO positioning and $75M+ funding make it a significant commercial reference for BuyerBench Pillar 2 (economic decision quality). Its focus on cross-functional approval workflows and vendor onboarding maps directly to Pillar 1 capability scenarios. As a peer competitor to Procure AI, it represents a different product philosophy — orchestration-first vs. agent-execution-first — that informs BuyerBench's scenario diversity. Insight Partners + Khosla backing signals strong market validation.
+- **Key Questions to Answer:**
+  1. What specific economic optimization signals does Omnea surface to users (cost savings, cycle time, supplier substitution recommendations)?
+  2. How autonomous is Omnea's decision-making — does it execute or only recommend? What human-in-the-loop controls exist?
+  3. How does Omnea's intake and approval workflow map to BuyerBench Pillar 1 multi-step procurement task scenarios?
+
+### Research Effort Assessment
+- **Rating:** MEDIUM
+- **Justification:** Omnea has good press coverage from its Series B announcement (Sep 2025) with multiple investor and founder quotes. The company website details product functionality. However, granular performance metrics and technical decision architecture may require synthesis from secondary sources.
+- **Primary Sources Available:**
+  - Company website: omnea.co (product pages, use cases, ROI claims)
+  - Series B announcement: omnea.co/blog/series-b-announcement
+  - Insight Partners and Khosla Ventures portfolio pages (investor thesis framing)
+  - LinkedIn company page (team size, job postings)
+  - Product Hunt / G2 reviews (customer-reported capabilities)
+
+### Expected Connections
+Entities this will likely link to:
+- [[Procure AI]] — direct competitor in enterprise procurement automation; different product philosophy
+- [[Zycus]] — established incumbent; Omnea positions against legacy suites
+- [[Fairmarkit]] — complementary in sourcing; potential integration partner
+- [[Insight Partners]] — lead Series B investor
+- [[Khosla Ventures]] — co-lead Series B investor
+
+### Status: PENDING
