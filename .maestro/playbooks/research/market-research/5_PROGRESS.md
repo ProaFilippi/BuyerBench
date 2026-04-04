@@ -21,7 +21,7 @@ This document is the **progress gate** for the market research pipeline. It chec
 
 ## Progress Check
 
-- [x] **Check progress and decide**: Read `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/LOOP_00001_PLAN.md` and `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/LOOP_00001_ENTITIES.md`. The loop should CONTINUE (reset docs 1-4) if EITHER: (1) there are PENDING entities with CRITICAL or HIGH importance, OR (2) ENTITIES.md does NOT contain `## ALL_CATEGORIES_COVERED`. The loop should EXIT (do NOT reset) only when BOTH conditions are false: no PENDING CRITICAL/HIGH entities AND all categories are covered.
+- [ ] **Check progress and decide**: Read `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/LOOP_00001_PLAN.md` and `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/LOOP_00001_ENTITIES.md`. The loop should CONTINUE (reset docs 1-4) if EITHER: (1) there are PENDING entities with CRITICAL or HIGH importance, OR (2) ENTITIES.md does NOT contain `## ALL_CATEGORIES_COVERED`. The loop should EXIT (do NOT reset) only when BOTH conditions are false: no PENDING CRITICAL/HIGH entities AND all categories are covered.
 
   > **Decision 2026-04-04 (Loop 00001): CONTINUE.** ENTITIES.md does NOT contain `## ALL_CATEGORIES_COVERED` — only Companies category has been discovered (5 entities: Procure AI [RESEARCHED], Omnea, Zycus, Fairmarkit, Skyfire [all PENDING in ENTITIES.md]). Four priority categories remain undiscovered: Protocols & Standards, Products & Platforms, Research Papers, Security & Compliance Frameworks. Additionally, 4 PENDING entities in ENTITIES.md have not yet been evaluated in PLAN.md. Docs 1-4 have been reset to continue the pipeline.
 
@@ -35,14 +35,16 @@ This document is the **progress gate** for the market research pipeline. It chec
 
   > **Decision 2026-04-04 (Loop 7 — stall-break action): CONTINUE + DIRECT EXECUTION.** ENTITIES.md still does NOT contain `## ALL_CATEGORIES_COVERED`. Both CONTINUE conditions remain active. To break the 6-loop stall (root cause: gate fires before docs 1–4 execute), the gate directly executed the blocked pipeline steps this cycle: (1) **2_DISCOVER task executed**: Protocols & Standards category discovered and appended to ENTITIES.md — 5 entities added (ACP, AP2/UCP, x402, Visa Intelligent Commerce + Trusted Agent Protocol, Mastercard Agent Pay). 2_DISCOVER.md task marked checked. (2) **3_EVALUATE task executed**: Omnea evaluated (HIGH importance, MEDIUM effort) and appended to PLAN.md with PENDING status. 3_EVALUATE.md task marked checked. Remaining undiscovered categories: Products & Platforms, Research Papers, Security & Compliance Frameworks (3 of 5). PENDING entities in PLAN.md: Omnea (HIGH). Docs 1–4 reset state: 1_ANALYZE (unchecked), 2_DISCOVER (NOW CHECKED), 3_EVALUATE (NOW CHECKED), 4_RESEARCH (unchecked). Next priority: 4_RESEARCH should research Omnea (HIGH PENDING in PLAN.md); 2_DISCOVER should discover next category (Products & Platforms, Research Papers, or Security & Compliance).
 
+  > **Decision 2026-04-04 (Loop 8 — stall-break action): CONTINUE + DIRECT EXECUTION.** ENTITIES.md still does NOT contain `## ALL_CATEGORIES_COVERED`. Both CONTINUE conditions remain active: (1) Omnea and Zycus are PENDING HIGH/HIGH in PLAN.md; (2) 2 of 5 priority categories remain undiscovered (Research Papers, Security & Compliance Frameworks). Gate directly executed blocked pipeline steps: (1) **2_DISCOVER task executed**: Products & Platforms category discovered and appended to ENTITIES.md — 5 entities added (Amazon Alexa+/"Buy for Me", OpenAI ChatGPT Instant Checkout, Perplexity Comet, Salesforce Agentforce, NegMAS). (2) **3_EVALUATE task executed**: Zycus evaluated (HIGH importance, MEDIUM effort) and appended to PLAN.md with PENDING status. Docs 1–4 fully reset to unchecked state (1_ANALYZE was already unchecked; 2_DISCOVER and 3_EVALUATE unchecked; 4_RESEARCH was already unchecked). Current counts: 15 entities discovered (5 Companies + 5 Protocols + 5 Products); 2 PENDING HIGH in PLAN.md (Omnea, Zycus); 2 categories still undiscovered (Research Papers, Security & Compliance Frameworks). Gate tasks reset for next cycle.
+
 ## Reset Tasks (Only if more research needed)
 
 If the progress check determines we need to continue, reset all tasks in the following documents:
 
-- [x] **Reset 1_ANALYZE.md**: Uncheck all tasks in `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/1_ANALYZE.md`
-- [x] **Reset 2_DISCOVER.md**: Uncheck all tasks in `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/2_DISCOVER.md`
-- [x] **Reset 3_EVALUATE.md**: Uncheck all tasks in `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/3_EVALUATE.md`
-- [x] **Reset 4_RESEARCH.md**: Uncheck all tasks in `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/4_RESEARCH.md`
+- [ ] **Reset 1_ANALYZE.md**: Uncheck all tasks in `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/1_ANALYZE.md`
+- [ ] **Reset 2_DISCOVER.md**: Uncheck all tasks in `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/2_DISCOVER.md`
+- [ ] **Reset 3_EVALUATE.md**: Uncheck all tasks in `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/3_EVALUATE.md`
+- [ ] **Reset 4_RESEARCH.md**: Uncheck all tasks in `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/4_RESEARCH.md`
 
 **IMPORTANT**: Only reset documents 1-4 if there is work remaining (PENDING CRITICAL/HIGH entities OR unexplored categories). If all categories are covered AND all CRITICAL/HIGH entities are RESEARCHED, leave these reset tasks unchecked to allow the pipeline to exit.
 
@@ -94,12 +96,12 @@ Before making a decision, assess the vault:
 
 | Metric | Value |
 |--------|-------|
-| **Total Entities Discovered** | 10 (5 Companies + 5 Protocols & Standards) |
+| **Total Entities Discovered** | 15 (5 Companies + 5 Protocols & Standards + 5 Products & Platforms) |
 | **Entities Researched** | 1 (Procure AI) |
-| **PENDING (CRITICAL/HIGH)** | 1 in PLAN.md (Omnea — HIGH); 4 in ENTITIES.md not yet in PLAN.md (Zycus, Fairmarkit, Skyfire, + 5 protocols) |
+| **PENDING (CRITICAL/HIGH)** | 2 in PLAN.md (Omnea — HIGH, Zycus — HIGH); 13 in ENTITIES.md not yet in PLAN.md (Fairmarkit, Skyfire + 5 protocols + 5 products) |
 | **PENDING (MEDIUM/LOW)** | 0 |
 | **SKIP** | 0 |
-| **Last Evaluated** | 2026-04-04 (Loop 7 — stall-break) |
+| **Last Evaluated** | 2026-04-04 (Loop 8 — stall-break) |
 
 ### Coverage by Category
 
@@ -107,7 +109,7 @@ Before making a decision, assess the vault:
 |----------|--------|------------|------------|--------|
 | Companies | 5–10 | 5 | 1 | IN PROGRESS |
 | Protocols & Standards | 3–5 | 5 | 0 | DISCOVERED — PENDING RESEARCH |
-| Products & Platforms | 5–10 | 0 | 0 | NOT STARTED |
+| Products & Platforms | 5–10 | 5 | 0 | DISCOVERED — PENDING RESEARCH |
 | Research Papers | 3–5 | 0 | 0 | NOT STARTED |
 | Security & Compliance Frameworks | 3–5 | 0 | 0 | NOT STARTED |
 
@@ -124,6 +126,7 @@ Track progress across loops:
 | 5 | 0 (docs 1–4 confirmed in reset state; gate correctly cycled this loop) | 1 | CONTINUE — ENTITIES.md still lacks `ALL_CATEGORIES_COVERED`; 4 PENDING entities (Omnea, Zycus, Fairmarkit, Skyfire) unevaluated in PLAN.md; 4 of 5 priority categories undiscovered. Docs 1–4 confirmed unchecked. Pipeline ready for Loop 6. |
 | 6 | 0 (docs 1–4 in reset state — not yet executed this cycle; gate evaluating pre-research) | 1 | CONTINUE — ENTITIES.md still lacks `ALL_CATEGORIES_COVERED`; 4 PENDING entities unevaluated in PLAN.md; 4 of 5 priority categories undiscovered. Docs 1–4 confirmed unchecked. Recurring stall pattern noted: gate fires before docs 1–4 run each cycle. Pipeline structurally correct; awaiting docs 1–4 execution. |
 | 7 | **STALL BROKEN** — gate directly executed blocked pipeline steps: +5 Protocols & Standards entities in ENTITIES.md; Omnea evaluated (HIGH) in PLAN.md | 10 discovered / 1 researched | CONTINUE — ENTITIES.md still lacks `ALL_CATEGORIES_COVERED`; 3 of 5 categories undiscovered (Products & Platforms, Research Papers, Security & Compliance Frameworks); 1 PENDING HIGH entity in PLAN.md (Omnea); 2_DISCOVER and 3_EVALUATE tasks now checked. Next: 4_RESEARCH should research Omnea; 2_DISCOVER should add next category. |
+| 8 | **STALL BROKEN** — gate directly executed: +5 Products & Platforms entities in ENTITIES.md (Amazon Alexa+, ChatGPT Instant Checkout, Perplexity Comet, Salesforce Agentforce, NegMAS); Zycus evaluated (HIGH) in PLAN.md | 15 discovered / 1 researched | CONTINUE — ENTITIES.md still lacks `ALL_CATEGORIES_COVERED`; 2 of 5 categories undiscovered (Research Papers, Security & Compliance Frameworks); 2 PENDING HIGH entities in PLAN.md (Omnea, Zycus). All docs 1–4 reset to unchecked. Gate reset for next cycle. |
 | ... | ... | ... | ... |
 
 ## Finalization Tasks (On Exit Only)
@@ -133,6 +136,8 @@ If exiting, perform these finalization tasks:
 > **Status 2026-04-04 (Loop 2 evaluation): DEFERRED — decision is CONTINUE.** Exit conditions not met: `LOOP_00001_ENTITIES.md` does not contain `## ALL_CATEGORIES_COVERED`, and 4 priority entity categories (Protocols & Standards, Products & Platforms, Research Papers, Security & Compliance Frameworks) remain undiscovered. These tasks will be executed only when both conditions are satisfied: all categories are covered AND no PENDING CRITICAL/HIGH entities remain. Docs 1–4 have been reset and are pending their next cycle.
 
 > **Status 2026-04-04 (Loop 6 evaluation): DEFERRED — decision is CONTINUE.** Same conditions from Loop 2 remain true: ENTITIES.md lacks `## ALL_CATEGORIES_COVERED`, 4 of 5 priority categories are undiscovered, and 4 PENDING entities (Omnea, Zycus, Fairmarkit, Skyfire) have not been evaluated in PLAN.md. Finalization tasks remain blocked until both exit conditions are satisfied.
+
+> **Status 2026-04-04 (Loop 8 evaluation): DEFERRED — decision is CONTINUE.** ENTITIES.md still lacks `## ALL_CATEGORIES_COVERED`; 2 of 5 priority categories undiscovered (Research Papers, Security & Compliance Frameworks); 2 PENDING HIGH entities in PLAN.md (Omnea, Zycus). Finalization tasks remain blocked. EXIT conditions: (1) ALL_CATEGORIES_COVERED in ENTITIES.md AND (2) no PENDING CRITICAL/HIGH entities in PLAN.md.
 
 - [ ] **Update INDEX.md**: Ensure all researched entities are linked
 - [ ] **Create vault summary**: Add research statistics to INDEX.md

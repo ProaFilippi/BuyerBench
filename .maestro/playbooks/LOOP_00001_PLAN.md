@@ -97,3 +97,41 @@ Entities this will likely link to:
 - [[Khosla Ventures]] — co-lead Series B investor
 
 ### Status: PENDING
+
+---
+
+## Zycus - Evaluated 2026-04-04
+
+**Source:** LOOP_00001_ENTITIES.md — Companies category
+**Type:** Company
+**Category:** AI-Native Procurement Platforms
+
+### Quick Profile
+Zycus is a global source-to-pay suite that has embedded agentic AI across its Merlin platform. Key components include Merlin Intake (AI-powered procurement intake orchestration), Merlin Autonomous Negotiation Agent (ANA — a production-deployed system that conducts price negotiations with suppliers autonomously without constant human intervention), and Merlin Copilot (user-facing assistant). Zycus serves enterprise customers in manufacturing, retail, and financial services globally, with approximately 2,500 employees.
+
+### Importance Assessment
+- **Rating:** HIGH
+- **Justification:** Zycus is among the first established procurement vendors to publicly deploy an *autonomous negotiation agent* (Merlin ANA) in production. This is a direct commercial reference implementation of agent-driven price negotiation — precisely the scenario type BuyerBench Pillar 1 is designed to evaluate. Merlin ANA's existence allows BuyerBench to calibrate negotiation task scenarios against real-world deployed capabilities. Zycus also provides a useful contrast to pure-play startups (Procure AI, Omnea): it illustrates how incumbents add agentic AI to existing source-to-pay suites rather than building agent-native from scratch, which informs scenario design breadth.
+- **Key Questions to Answer:**
+  1. What negotiation protocol does Merlin ANA use — formal alternating-offer mechanisms, LLM-prompt-driven negotiation, or a hybrid? How does its approach compare to NegMAS?
+  2. What economic performance metrics does Zycus publish for Merlin ANA (savings rate, deal closure time, supplier win/concession rates)? How do these compare to human buyer baselines?
+  3. What human oversight and fallback controls govern Merlin ANA — under what conditions does it escalate to a human buyer, and what authorization boundaries exist?
+
+### Research Effort Assessment
+- **Rating:** MEDIUM
+- **Justification:** Zycus is a large, established private company with a mature website, product documentation, and meaningful press coverage from its Merlin ANA launch. Procurement trade press (Spend Matters, CPO Rising) and analyst platforms (Gartner Peer Insights, G2) cover Zycus. Technical architecture details and independent performance benchmarks will require synthesis from product pages, press releases, and analyst commentary.
+- **Primary Sources Available:**
+  - Company website: zycus.com (Merlin product pages, ANA feature descriptions)
+  - Spend Matters / CPO Rising analyst coverage (Merlin ANA launch)
+  - G2 / Gartner Peer Insights (customer reviews citing Merlin capabilities)
+  - Zycus press releases (Merlin ANA GA announcement)
+  - LinkedIn company page (team size, AI team hiring signals)
+
+### Expected Connections
+Entities this will likely link to:
+- [[Procure AI]] — startup competitor; agent-native architecture vs. Zycus suite add-on
+- [[Omnea]] — competitor in procurement orchestration; Omnea positions against legacy suites like Zycus
+- [[Fairmarkit]] — overlapping sourcing automation for tail-spend workflows
+- [[NegMAS]] — open-source negotiation framework Merlin ANA may be architecturally comparable to
+
+### Status: PENDING

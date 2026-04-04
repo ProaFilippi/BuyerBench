@@ -130,3 +130,59 @@ This document tracks all entities discovered during market research for the AI B
   - Mastercard: Agent Pay product page
   - FourWeekMBA: Protocol Wars — Standards Battle for AI Commerce
   - LOOP_00001_MARKET_ANALYSIS.md (primary synthesis source)
+
+---
+
+## Products & Platforms - Discovered 2026-04-04
+
+### Amazon Alexa+ / "Buy for Me"
+- **Type:** Product / Platform
+- **Brief:** Amazon's consumer-facing AI buyer agent family: Alexa+ (March 2026 launch, $19.99/mo subscription) handles conversational purchasing and task orchestration, while "Buy for Me" (Feb 2025 beta) autonomously executes checkout on third-party sites without leaving the Amazon app.
+- **Why Notable:** Amazon commands the dominant consumer buyer-agent position with 300M+ active Alexa users and $12B+ in AI-attributed incremental sales (2025). "Buy for Me" is the most widely-deployed autonomous checkout agent operating at production scale, and thus the primary real-world baseline for Pillar 1 (workflow execution) and Pillar 2 (pricing decision quality at scale). Amazon's court action against Perplexity Comet (March 2026) also establishes Amazon as the key platform gatekeeper for agentic commerce.
+- **Discovery Source:** LOOP_00001_MARKET_ANALYSIS.md (Modern Retail / Digital Commerce 360 sourced)
+- **Status:** PENDING
+
+### OpenAI ChatGPT Instant Checkout (ACP)
+- **Type:** Product / Platform
+- **Brief:** OpenAI's consumer purchasing agent built on the Agents Commerce Protocol (ACP, co-developed with Stripe), deployed as "Instant Checkout" in ChatGPT in September 2025 and partially removed from ChatGPT in March 2026 following the OpenAI–Amazon strategic partnership ($50B investment, Feb 2026).
+- **Why Notable:** First major LLM-native checkout agent deployed to 300M+ ChatGPT users, and the primary real-world implementation of the ACP protocol. Its partial rollback in March 2026 due to the Amazon deal is a significant market event showing how business partnerships can override protocol adoption. Directly relevant to Pillar 1 (agent commerce workflow execution) and Pillar 3 (ACP payment security and authorization flows).
+- **Discovery Source:** LOOP_00001_MARKET_ANALYSIS.md (Orium / Grid Dynamics / Forrester sourced)
+- **Status:** PENDING
+
+### Perplexity Comet
+- **Type:** Product / Platform
+- **Brief:** Perplexity AI's autonomous shopping and web-browsing agent capable of executing multi-step research and purchase workflows on behalf of users. Subject to a March 2026 court injunction blocking its access to Amazon's marketplace.
+- **Why Notable:** The most legally-tested buyer agent to date: Amazon's successful court order (March 2026) restricting Comet's marketplace access established the first major legal boundary for autonomous buyer agents. Comet's legal dimension creates unique Pillar 3 benchmarking context — compliance scenarios should include platform access restrictions, terms-of-service enforcement, and agent identity verification challenges. Also relevant to Pillar 1 multi-step sourcing across restricted environments.
+- **Discovery Source:** LOOP_00001_MARKET_ANALYSIS.md (Decrypt / Forrester sourced)
+- **Status:** PENDING
+
+### Salesforce Agentforce
+- **Type:** Product / Platform
+- **Brief:** Salesforce's enterprise AI agent platform for building, deploying, and orchestrating autonomous agents across CRM, customer service, and procurement workflows. Positioned as the leading enterprise agentic AI platform (per MARKET_ANALYSIS.md competitive landscape).
+- **Why Notable:** Agentforce is the enterprise-scale reference platform for agent orchestration with procurement and spend management use cases — defining what "enterprise-grade" autonomous buying looks like. Its built-in trust layer (guardrails, audit trails, permission controls) is directly relevant to Pillar 3 security and compliance scenario design. As a market leader, it sets the baseline against which BuyerBench Pillar 1 task complexity should be calibrated.
+- **Discovery Source:** LOOP_00001_MARKET_ANALYSIS.md (Market Leaders section)
+- **Status:** PENDING
+
+### NegMAS (Negotiation Multi-Agent System)
+- **Type:** Product / Platform (Open-Source Framework)
+- **Brief:** Open-source Python framework (BSD 3-Clause, yasserfarouk/negmas on GitHub) for automated negotiation, multi-agent simulation, and tournament management. Serves as the backbone of the ANAC Automated Negotiation Leagues and is the primary open-source research platform for buyer-agent negotiation research.
+- **Why Notable:** NegMAS is one of BuyerBench's explicitly named reference agents (`negmas` agent ID in CLAUDE.md). It provides a reference implementation of formal negotiation protocols (alternating offers, auction mechanisms, multilateral deal-making) directly applicable to Pillar 1 negotiation task scenarios. The ANAC 2025 tournament results provide empirical benchmarks for negotiation agent performance that BuyerBench can reference or replicate as ground truth.
+- **Discovery Source:** LOOP_00001_MARKET_ANALYSIS.md (Open-Source / Research section; github.com/yasserfarouk/negmas)
+- **Status:** PENDING
+
+### Discovery Summary
+- **Category:** Products & Platforms
+- **Entities Found:** 5
+- **Search Queries Used:**
+  - "Amazon Alexa+ Buy for Me consumer buyer agent 2025 2026"
+  - "OpenAI ChatGPT Instant Checkout ACP agent 2025 2026"
+  - "Perplexity Comet shopping agent Amazon court ruling 2026"
+  - "Salesforce Agentforce enterprise procurement orchestration"
+  - "NegMAS negotiation MAS framework ANAC 2025"
+- **Sources Checked:**
+  - LOOP_00001_MARKET_ANALYSIS.md (primary synthesis source with linked external sources)
+  - Modern Retail / Digital Commerce 360 (Amazon Rufus/Alexa+ / Buy for Me coverage)
+  - Orium / Grid Dynamics blogs (ACP / ChatGPT Instant Checkout)
+  - Decrypt / Forrester (Perplexity Comet legal case and Amazon partnership)
+  - Salesforce corporate (Agentforce product pages — Market Leaders)
+  - yasserfarouk/negmas GitHub (NegMAS documentation, licensing, ANAC integration)
