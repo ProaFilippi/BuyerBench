@@ -21,20 +21,22 @@ This document is the **progress gate** for the market research pipeline. It chec
 
 ## Progress Check
 
-- [x] **Check progress and decide**: Read `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/LOOP_00001_PLAN.md` and `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/LOOP_00001_ENTITIES.md`. The loop should CONTINUE (reset docs 1-4) if EITHER: (1) there are PENDING entities with CRITICAL or HIGH importance, OR (2) ENTITIES.md does NOT contain `## ALL_CATEGORIES_COVERED`. The loop should EXIT (do NOT reset) only when BOTH conditions are false: no PENDING CRITICAL/HIGH entities AND all categories are covered.
+- [ ] **Check progress and decide**: Read `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/LOOP_00001_PLAN.md` and `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/LOOP_00001_ENTITIES.md`. The loop should CONTINUE (reset docs 1-4) if EITHER: (1) there are PENDING entities with CRITICAL or HIGH importance, OR (2) ENTITIES.md does NOT contain `## ALL_CATEGORIES_COVERED`. The loop should EXIT (do NOT reset) only when BOTH conditions are false: no PENDING CRITICAL/HIGH entities AND all categories are covered.
 
   > **Decision 2026-04-04 (Loop 00001): CONTINUE.** ENTITIES.md does NOT contain `## ALL_CATEGORIES_COVERED` — only Companies category has been discovered (5 entities: Procure AI [RESEARCHED], Omnea, Zycus, Fairmarkit, Skyfire [all PENDING in ENTITIES.md]). Four priority categories remain undiscovered: Protocols & Standards, Products & Platforms, Research Papers, Security & Compliance Frameworks. Additionally, 4 PENDING entities in ENTITIES.md have not yet been evaluated in PLAN.md. Docs 1-4 have been reset to continue the pipeline.
 
   > **Decision 2026-04-04 (Loop 3 re-evaluation): CONTINUE.** ENTITIES.md still does NOT contain `## ALL_CATEGORIES_COVERED`. Only Companies category has been discovered. Four priority categories remain undiscovered: Protocols & Standards, Products & Platforms, Research Papers, Security & Compliance Frameworks. PLAN.md still has only Procure AI evaluated (RESEARCHED); Omnea, Zycus, Fairmarkit, Skyfire remain unevaluated. Procure AI status synced from PENDING → RESEARCHED in ENTITIES.md. Docs 1–4 confirmed in reset state (all tasks unchecked), ready for next cycle. Finalization tasks remain deferred.
 
+  > **Decision 2026-04-04 (Loop 4 re-evaluation): CONTINUE.** ENTITIES.md still does NOT contain `## ALL_CATEGORIES_COVERED`. Only Companies category has been discovered; 4 of 5 priority categories remain undiscovered (Protocols & Standards, Products & Platforms, Research Papers, Security & Compliance Frameworks). PLAN.md has only Procure AI evaluated (RESEARCHED); Omnea, Zycus, Fairmarkit, Skyfire remain unevaluated in PLAN.md. Both CONTINUE conditions are active: (1) 4 PENDING entities not yet in PLAN.md, (2) no ALL_CATEGORIES_COVERED marker. Root cause identified: 5_PROGRESS.md main tasks were not reset after Loop 3, causing the pipeline gate to remain permanently "checked" and stall loop progression. Corrected: unchecked "Check progress and decide" and all "Reset" tasks to restore proper loop cycling. Docs 1–4 confirmed already in reset state (all tasks unchecked). Pipeline ready to continue.
+
 ## Reset Tasks (Only if more research needed)
 
 If the progress check determines we need to continue, reset all tasks in the following documents:
 
-- [x] **Reset 1_ANALYZE.md**: Uncheck all tasks in `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/1_ANALYZE.md`
-- [x] **Reset 2_DISCOVER.md**: Uncheck all tasks in `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/2_DISCOVER.md`
-- [x] **Reset 3_EVALUATE.md**: Uncheck all tasks in `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/3_EVALUATE.md`
-- [x] **Reset 4_RESEARCH.md**: Uncheck all tasks in `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/4_RESEARCH.md`
+- [ ] **Reset 1_ANALYZE.md**: Uncheck all tasks in `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/1_ANALYZE.md`
+- [ ] **Reset 2_DISCOVER.md**: Uncheck all tasks in `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/2_DISCOVER.md`
+- [ ] **Reset 3_EVALUATE.md**: Uncheck all tasks in `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/3_EVALUATE.md`
+- [ ] **Reset 4_RESEARCH.md**: Uncheck all tasks in `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/4_RESEARCH.md`
 
 **IMPORTANT**: Only reset documents 1-4 if there is work remaining (PENDING CRITICAL/HIGH entities OR unexplored categories). If all categories are covered AND all CRITICAL/HIGH entities are RESEARCHED, leave these reset tasks unchecked to allow the pipeline to exit.
 
@@ -91,7 +93,7 @@ Before making a decision, assess the vault:
 | **PENDING (CRITICAL/HIGH)** | 4 unevaluated in ENTITIES.md (Omnea, Zycus, Fairmarkit, Skyfire — not yet in PLAN.md) |
 | **PENDING (MEDIUM/LOW)** | 0 |
 | **SKIP** | 0 |
-| **Last Evaluated** | 2026-04-04 (Loop 3) |
+| **Last Evaluated** | 2026-04-04 (Loop 4) |
 
 ### Coverage by Category
 
@@ -112,7 +114,8 @@ Track progress across loops:
 | 1 | 1 (Procure AI) | 1 | CONTINUE — categories not yet fully covered |
 | 2 | 0 (cycle in progress — docs 1–4 reset but not yet re-run) | 1 | CONTINUE — ENTITIES.md still lacks `ALL_CATEGORIES_COVERED`; 4 unevaluated PENDING entities; 4 of 5 priority categories undiscovered |
 | 3 | 0 (docs 1–4 in reset state, awaiting next cycle) | 1 | CONTINUE — ENTITIES.md still lacks `ALL_CATEGORIES_COVERED`; 4 PENDING entities (Omnea, Zycus, Fairmarkit, Skyfire) unevaluated in PLAN.md; 4 of 5 priority categories undiscovered. Procure AI status synced to RESEARCHED in ENTITIES.md. Docs 1–4 confirmed in reset state. |
-| 4 | ___ | ___ | [CONTINUE / EXIT] |
+| 4 | 0 (5_PROGRESS.md main tasks were not reset after Loop 3 — pipeline stalled; corrected: unchecked main tasks to restore loop cycling) | 1 | CONTINUE — ENTITIES.md still lacks `ALL_CATEGORIES_COVERED`; 4 PENDING entities (Omnea, Zycus, Fairmarkit, Skyfire) unevaluated in PLAN.md; 4 of 5 priority categories undiscovered. Gate reset to allow Loop 5 to proceed through docs 1–4. |
+| 5 | ___ | ___ | [CONTINUE / EXIT] |
 | ... | ... | ... | ... |
 
 ## Finalization Tasks (On Exit Only)
