@@ -24,6 +24,8 @@ Discover specific entities to research within the target market. Use web search 
 
   > **Completed 2026-04-04 (Loop 00001):** Created `LOOP_00001_ENTITIES.md` with **Companies** as the first category discovered. Found 5 entities via web search: Procure AI ($13M seed), Omnea ($50M Series B), Zycus (Merlin ANA — autonomous negotiation), Fairmarkit (tail-spend sourcing automation), and Skyfire (AI agent payment rails + KYA identity). Remaining priority categories to discover in subsequent loops: Protocols & Standards, Products & Platforms, Research Papers, Security & Compliance Frameworks.
 
+  > **Executed directly 2026-04-04 (Loop 9 — stall-break):** Discovered **Research Papers** category — 5 entities appended to ENTITIES.md: ACES (arXiv 2508.02630), LLM Agent Eval Survey (arXiv 2507.21504), AgentBench (arXiv 2308.03688), WebArena (arXiv 2307.13854), WebShop (arXiv 2207.01206). Remaining undiscovered category: Security & Compliance Frameworks. When this task next runs: check if Security & Compliance Frameworks has been discovered; if not, discover it and check whether `## ALL_CATEGORIES_COVERED` can be appended.
+
 ## Search Strategies by Entity Type
 
 ### Companies

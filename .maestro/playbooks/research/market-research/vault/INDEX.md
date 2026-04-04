@@ -1,7 +1,7 @@
 # AI Buyer Agents and Autonomous Procurement Research Vault
 
 > Research initiated: 2026-04-04
-> Last updated: 2026-04-04 (Loop 7 — stall-break)
+> Last updated: 2026-04-04 (Loop 9 — stall-break)
 > Agent: CladiBuyer Benchmarker
 
 ## Overview
@@ -43,7 +43,8 @@ This vault contains structured research about the **AI Buyer Agents and Autonomo
 
 ### Companies
 - [[Companies/Procure-AI|Procure AI]] — AI-native procurement automation platform; 50+ autonomous agents across source-to-pay; $13M seed (Headline, Nov 2025); founded 2020; London/Paris/Frankfurt
-> Remaining priorities: Amazon, OpenAI, Google, Salesforce, Microsoft, Stripe, Perplexity, Omnea, Coinbase
+- [[Companies/Omnea|Omnea]] — AI SRM / procurement orchestration; vendor onboarding + cross-functional approval workflows; $50M Series B (Insight Partners + Khosla Ventures, Sep 2025); founded 2022; London
+> Remaining priorities: Amazon, OpenAI, Google, Salesforce, Microsoft, Stripe, Perplexity, Coinbase; Fairmarkit, Zycus, Skyfire (discovered, not yet researched)
 
 ### Products & Services
 _No profiles yet — research phase pending._
@@ -67,8 +68,12 @@ _No technologies researched yet._
 _No trends researched yet._
 
 ### Research Papers
-_No papers profiled yet._
-> Priority: arXiv 2508.02630 (ACES — agent buying biases), arXiv 2507.21504 (LLM eval survey)
+_Discovered — research profiles pending._
+- arXiv 2508.02630 — ACES: What Is Your AI Agent Buying? (buyer agent biases, VLM shopping agent evaluation)
+- arXiv 2507.21504 — Evaluation and Benchmarking of LLM Agents: A Survey (methodology for all pillars)
+- arXiv 2308.03688 — AgentBench: Evaluating LLMs as Agents (ICLR 2024; web shopping + web browsing tasks)
+- arXiv 2307.13854 — WebArena: Realistic Web Environment for Autonomous Agents (e-commerce domain)
+- arXiv 2207.01206 — WebShop: AI Shopping Agent Benchmark (NeurIPS 2022; 1.18M Amazon products)
 
 ### Security & Compliance
 _No profiles yet — research phase pending._
@@ -90,15 +95,15 @@ _No profiles yet — research phase pending._
 
 | Category | Discovered | Researched |
 |----------|------------|------------|
-| Companies | 5 | 1 |
+| Companies | 5 | 2 |
 | Protocols & Standards | 5 | 0 |
-| Products & Platforms | 0 | 0 |
+| Products & Platforms | 5 | 0 |
 | People | 0 | 0 |
 | Technologies | 0 | 0 |
 | Trends | 0 | 0 |
-| Research Papers | 0 | 0 |
+| Research Papers | 5 | 0 |
 | Security & Compliance Frameworks | 0 | 0 |
-| **Total Entities** | **10** | **1** |
+| **Total Entities** | **20** | **2** |
 
 ---
 *This vault was initialized by the Maestro Market Research Playbook*

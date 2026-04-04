@@ -96,7 +96,9 @@ Entities this will likely link to:
 - [[Insight Partners]] — lead Series B investor
 - [[Khosla Ventures]] — co-lead Series B investor
 
-### Status: PENDING
+### Status: RESEARCHED
+### Research File: `vault/Companies/Omnea.md`
+### Researched: 2026-04-04
 
 ---
 
@@ -133,5 +135,44 @@ Entities this will likely link to:
 - [[Omnea]] — competitor in procurement orchestration; Omnea positions against legacy suites like Zycus
 - [[Fairmarkit]] — overlapping sourcing automation for tail-spend workflows
 - [[NegMAS]] — open-source negotiation framework Merlin ANA may be architecturally comparable to
+
+### Status: PENDING
+
+---
+
+## Fairmarkit - Evaluated 2026-04-04
+
+**Source:** LOOP_00001_ENTITIES.md — Companies category
+**Type:** Company
+**Category:** AI-Native Procurement Platforms (Tail-Spend Automation)
+
+### Quick Profile
+Fairmarkit is an AI-powered sourcing platform that automates tail-spend and low-value procurement through demand-to-award automation and supplier recommendation. The platform handles thousands of small sourcing events autonomously — automating RFQ creation, supplier matching, bid collection, and award decisions. Fairmarkit published a "2025 AI in Procurement Index" documenting AI adoption trends and buyer behavior patterns in procurement organizations.
+
+### Importance Assessment
+- **Rating:** HIGH
+- **Justification:** Tail-spend automation represents the highest-frequency, most repetitive segment of buyer-agent workflows — exactly the scenario type where BuyerBench Pillar 1 capability benchmarks are most meaningful (supplier discovery, quote comparison, bid evaluation at scale). Fairmarkit's autonomous demand-to-award workflow makes it a direct commercial reference implementation for "sourcing cycle" scenarios in BuyerBench. The 2025 AI in Procurement Index may also contain adoption/bias data relevant to Pillar 2 scenario design. As a direct competitor to Procure AI and peer of Omnea/Zycus, it completes the competitive landscape mapping for this benchmark domain.
+- **Key Questions to Answer:**
+  1. How autonomous is Fairmarkit's award decision — does it fully auto-award, or does it surface a ranked recommendation requiring human approval?
+  2. What supplier selection and bid evaluation criteria does the AI use (price alone, quality scores, delivery terms, risk ratings)? How do these map to BuyerBench Pillar 1 multi-criteria scoring scenarios?
+  3. What does the 2025 AI in Procurement Index report about bias or consistency patterns in how AI-assisted procurement teams make sourcing decisions?
+
+### Research Effort Assessment
+- **Rating:** MEDIUM
+- **Justification:** Fairmarkit is a Boston-based, VC-backed startup with solid press coverage, published thought leadership (the 2025 Index), and an active website with product documentation and customer case studies. Procurement trade press (Spend Matters, CPO Rising) covers Fairmarkit. Independent financial data (funding rounds, ARR) may require synthesis from multiple sources.
+- **Primary Sources Available:**
+  - Company website: fairmarkit.com (product pages, use case descriptions, customer stories)
+  - 2025 AI in Procurement Index: fairmarkit.com/resource/2025-ai-in-procurement
+  - Spend Matters / CPO Rising analyst coverage (product reviews, competitive quadrant placements)
+  - Crunchbase profile (funding history, founding team, investor details)
+  - G2 / Gartner Peer Insights (customer reviews and feature ratings)
+
+### Expected Connections
+Entities this will likely link to:
+- [[Procure AI]] — direct competitor; both target autonomous sourcing execution
+- [[Omnea]] — complementary in intake orchestration; Fairmarkit focuses downstream on sourcing events
+- [[Zycus]] — overlapping tail-spend sourcing use case; Fairmarkit positions against legacy suite limitations
+- [[NegMAS]] — theoretical comparison for multi-supplier bidding optimization mechanisms
+- [[SAP Ariba]] — incumbent tail-spend platform Fairmarkit displaces
 
 ### Status: PENDING

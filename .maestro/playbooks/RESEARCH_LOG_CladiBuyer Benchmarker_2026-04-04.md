@@ -2,6 +2,45 @@
 
 ---
 
+## [2026-04-04 Loop 9] - Researched: Omnea
+
+**Loop:** 00001 (Loop 9 — stall-break direct execution)
+**Entity Type:** Company
+**Importance:** HIGH
+**File Created:** `vault/Companies/Omnea.md`
+
+### Research Summary
+Omnea is an AI SRM (Supplier Relationship Management) platform founded in 2022 by Ben Freeman (CEO), with ex-Tessian executives Abhirukt Sapru (CCO) and Sabrina Castiglione (CFO). Raised $50M Series B (Sep 2025, Insight Partners + Khosla Ventures lead; total >$75M). Key insight: Omnea's "orchestration-first" architecture contrasts sharply with Procure AI's "execution-first" approach — Omnea routes and recommends rather than autonomously executing, which is a foundational design dimension for BuyerBench Pillar 1 scenario breadth.
+
+### Key Facts Discovered
+- Founded 2022, London; team from Tessian (acquired by Proofpoint)
+- 5× revenue growth and 3× headcount growth in the year before Series B
+- Enterprise customers: Spotify, Adecco Group, Entrust, Wise, MongoDB, Monzo
+- Product = single front door for procurement requests + two-way finance tech stack orchestration
+- CFO positioning: procurement as strategic financial intelligence tool, not just operational automation
+- "AI SRM" category framing — positions Omnea above point solutions in vendor relationship lifecycle
+
+### Links Created
+- [[Procure-AI]] — direct competitor; execution-first vs. orchestration-first architecture
+- [[Zycus]] — incumbent contrast; Omnea as modern overlay vs. legacy suite
+- [[Fairmarkit]] — peer; different workflow layer focus (sourcing events vs. intake/approval)
+- [[Insight Partners]] — lead Series B investor
+- [[Khosla Ventures]] — co-lead Series B investor
+
+### Sources Used
+1. [Omnea Series B Blog](https://www.omnea.co/blog/series-b-announcement)
+2. [PR Newswire — Omnea $50M](https://www.prnewswire.com/news-releases/omnea-raises-50m-to-make-procurement-every-cfos-competitive-advantage-302559153.html)
+3. [Procurement Magazine — Omnea Series B](https://procurementmag.com/news/omnea-series-b-funding)
+4. [TechStartups — Omnea $50M](https://techstartups.com/2025/09/17/omnea-raises-50m-from-insight-and-khosla-to-transform-enterprise-procurement-with-ai/)
+
+### Research Notes
+- No public API documentation, agent architecture internals, or technical specs found
+- Specific ARR or revenue figures not disclosed; "5× growth" is the only financial performance metric
+- Founder Ben Freeman's prior background before Omnea not confirmed from public sources
+- Follow-up recommended: research Zycus (PENDING HIGH in PLAN.md); then Fairmarkit, Skyfire
+
+---
+
 ## [2026-04-04 00:00] - Researched: Procure AI
 
 **Loop:** 00001

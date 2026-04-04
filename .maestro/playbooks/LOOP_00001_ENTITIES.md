@@ -35,7 +35,9 @@ This document tracks all entities discovered during market research for the AI B
 - **Brief:** Enterprise procurement orchestration platform automating vendor onboarding, intake workflows, and cross-functional approvals.
 - **Why Notable:** Raised $50M Series B (Sep 2025, led by Insight Partners + Khosla Ventures) with total funding >$75M; backed by Accel, First Round, Point Nine, Prosus. CFO-positioning ("make procurement every CFO's competitive advantage") suggests strong economic optimization angle — relevant to Pillar 2 decision quality evaluation.
 - **Discovery Source:** https://www.omnea.co/blog/series-b-announcement
-- **Status:** PENDING
+- **Status:** RESEARCHED
+- **Research File:** `vault/Companies/Omnea.md`
+- **Researched:** 2026-04-04
 
 ### Zycus
 - **Type:** Company
@@ -186,3 +188,58 @@ This document tracks all entities discovered during market research for the AI B
   - Decrypt / Forrester (Perplexity Comet legal case and Amazon partnership)
   - Salesforce corporate (Agentforce product pages — Market Leaders)
   - yasserfarouk/negmas GitHub (NegMAS documentation, licensing, ANAC integration)
+
+---
+
+## Research Papers - Discovered 2026-04-04
+
+### ACES: What Is Your AI Agent Buying?
+- **Type:** Research Paper
+- **Brief:** Evaluation framework (Agentic e-CommercE Simulator) pairing a VLM shopping agent with a fully programmable mock e-commerce application to study AI agent purchasing biases in agentic commerce scenarios.
+- **Why Notable:** The most directly relevant academic work to BuyerBench — systematically documents AI buyer agent biases including position bias, anchoring, decoy susceptibility, and choice homogeneity. Published arXiv 2508.02630 (Aug 2025). Provides empirical grounding for BuyerBench Pillar 2 bias test scenario design.
+- **Discovery Source:** https://arxiv.org/abs/2508.02630
+- **Status:** PENDING
+
+### Evaluation and Benchmarking of LLM Agents: A Survey
+- **Type:** Research Paper
+- **Brief:** Comprehensive survey of evaluation methodologies for LLM-based agents, covering task design, metrics, environment types, and benchmark limitations across dozens of agent evaluation frameworks published through mid-2025.
+- **Why Notable:** Provides the methodological foundation for BuyerBench's evaluation design. Directly applicable for validating the scoring approach across all three pillars. arXiv 2507.21504 (Jul 2025). Covers both capability benchmarks (Pillar 1) and behavioral evaluation designs (Pillar 2 bias testing).
+- **Discovery Source:** https://arxiv.org/html/2507.21504v1
+- **Status:** PENDING
+
+### AgentBench: Evaluating LLMs as Agents
+- **Type:** Research Paper
+- **Brief:** Multi-dimensional LLM agent benchmark consisting of 8 distinct task environments (OS, DB, knowledge graphs, digital card games, lateral thinking puzzles, house-holding, web shopping, web browsing) to assess reasoning and decision-making ability. ICLR 2024.
+- **Why Notable:** Established benchmark demonstrating that most LLMs perform significantly worse as agents than as pure text generators — with web shopping and web browsing tasks most relevant to BuyerBench Pillar 1 buyer workflow scenarios. arXiv 2308.03688. Provides baseline performance expectations for LLM-based buyer agents before fine-tuning.
+- **Discovery Source:** https://arxiv.org/abs/2308.03688
+- **Status:** PENDING
+
+### WebArena: A Realistic Web Environment for Building Autonomous Agents
+- **Type:** Research Paper
+- **Brief:** Self-hosted realistic web benchmark comprising four simulated domains (e-commerce, social forums, collaborative code development, content management) with 812 templated tasks. Tests end-to-end web task completion including shopping and purchasing workflows.
+- **Why Notable:** The e-commerce domain in WebArena provides a direct analog to BuyerBench Pillar 1 sourcing and purchasing scenarios. Establishes the standard methodology for realistic web-based agent evaluation: faithful simulation environments, templated task variants, and execution-grounded success criteria — all patterns BuyerBench adopts. arXiv 2307.13854 (2023).
+- **Discovery Source:** https://webarena.dev/
+- **Status:** PENDING
+
+### WebShop: Towards Scalable Real-World Web Interaction with Grounded Language Agents
+- **Type:** Research Paper
+- **Brief:** Pioneering AI shopping agent benchmark (Princeton, NeurIPS 2022) with 1.18M real Amazon products and 12,087 crowd-sourced instructions. Agents must search, navigate, and purchase products matching user specifications. Established the first large-scale evaluation environment for language-grounded buyer agents.
+- **Why Notable:** Foundational work establishing that web shopping is a valid and scalable evaluation environment for language agents. WebShop's reward structure (product attribute matching + pricing adherence) directly informs BuyerBench Pillar 1 scoring methodology. First paper to operationalize "buyer agent quality" as a measurable, reproducible metric. arXiv 2207.01206.
+- **Discovery Source:** https://arxiv.org/abs/2207.01206
+- **Status:** PENDING
+
+### Discovery Summary
+- **Category:** Research Papers
+- **Entities Found:** 5
+- **Search Queries Used:**
+  - "AI buyer agent research papers evaluation benchmark 2024 2025 WebShop AgentBench"
+  - "ACES agentic e-commerce simulator arXiv 2508.02630"
+  - "LLM agent evaluation survey arXiv 2507.21504"
+  - "WebArena WebShop AI agent web shopping benchmark NeurIPS"
+- **Sources Checked:**
+  - arXiv: 2508.02630 (ACES), 2507.21504 (LLM Agent Eval Survey), 2308.03688 (AgentBench), 2307.13854 (WebArena), 2207.01206 (WebShop)
+  - LOOP_00001_MARKET_ANALYSIS.md (primary synthesis source citing ACES and LLM eval survey)
+  - OpenReview: AgentBench ICLR 2024 paper page
+  - WebArena project site (webarena.dev)
+  - o-mega.ai: 2025 AI agent benchmarks guide
+  - evidentlyai.com: 10 AI agent benchmarks overview
