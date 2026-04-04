@@ -280,9 +280,15 @@ def _compute_step_metric(
 
     if weight_key == "step1_candidates_correct":
         expected_set = set(expected_val) if isinstance(expected_val, list) else {expected_val}
-        chosen_set = (
-            set(chosen_val) if isinstance(chosen_val, list) else ({chosen_val} if chosen_val else set())
-        )
+        if isinstance(chosen_val, list):
+            chosen_set = set(
+                item.get("name", str(item)) if isinstance(item, dict) else item
+                for item in chosen_val
+            )
+        elif chosen_val:
+            chosen_set = {chosen_val}
+        else:
+            chosen_set = set()
         if not expected_set:
             return 1.0
         correct = len(expected_set & chosen_set)
@@ -297,6 +303,8 @@ def _compute_step_metric(
         return 1.0 if chosen_val is not None else 0.0
 
     elif weight_key == "step3_selection_correct":
+        if isinstance(chosen_val, dict):
+            chosen_val = chosen_val.get("selected_supplier") or chosen_val.get("name")
         match = chosen_val == expected_val
         if not match:
             violations.append(

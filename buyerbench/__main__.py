@@ -482,5 +482,47 @@ def _write_skipped_results(
         (base / f"{s.id}.json").write_text(json.dumps(payload, indent=2))
 
 
+@cli.command()
+@click.option(
+    "--results-dir",
+    default="results/claude-code-baseline",
+    show_default=True,
+    help="Directory containing per-scenario result JSON files",
+)
+@click.option(
+    "--output",
+    default=None,
+    help="Path to write the review Markdown (default: REVIEW.md inside --results-dir)",
+)
+def review(results_dir: str, output: str | None) -> None:
+    """Generate a deep AI-written analytical review of benchmark results."""
+    from pathlib import Path
+    from buyerbench.review import generate_review
+
+    results_path = Path(results_dir)
+    if not results_path.exists():
+        console.print(f"[red]Results directory not found: {results_path}[/red]")
+        raise SystemExit(1)
+
+    out_path = Path(output) if output else results_path / "REVIEW.md"
+
+    console.print(
+        f"[bold cyan]Generating deep review from[/bold cyan] [bold]{results_path}[/bold] ..."
+    )
+    console.print("[dim]Invoking Claude CLI — this may take 30–90 seconds.[/dim]")
+    console.print()
+
+    review_text = generate_review(str(results_path))
+
+    if review_text.startswith("ERROR:"):
+        console.print(f"[red]{review_text}[/red]")
+        raise SystemExit(1)
+
+    out_path.write_text(review_text)
+    console.print(f"[bold green]Review saved →[/bold green] [bold]{out_path}[/bold]")
+    console.print()
+    console.print(review_text)
+
+
 if __name__ == "__main__":
     cli()

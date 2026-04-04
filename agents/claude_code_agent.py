@@ -82,7 +82,7 @@ class ClaudeCodeAgent(CLIAgent):
         """Construct the ``claude`` invocation for the current mode."""
         # --print  → non-interactive; output goes to stdout
         # --message → the user turn content
-        cmd = [self.cli_path, "--print", "--message", prompt]
+        cmd = [self.cli_path, "--print", prompt]
 
         if self.mode == "baseline":
             # No tools; keep the invocation as clean as possible
