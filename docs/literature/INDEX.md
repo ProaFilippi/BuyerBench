@@ -48,7 +48,12 @@ Top-level index of all literature review documents. Updated as each phase adds n
 - [[ai-governance-standards]] — ISO/IEC 42001:2023 (AI management system), ISO/IEC 23894:2023 (AI risk management), NIST AI RMF 1.0; mapped to BuyerBench audit and governance requirements
 - [[agentic-commerce-protocols]] — AP2, UCP, and ACP in depth; governance models, spec maturity, security profiles, interoperability positioning; testable behaviors per protocol
 - [[network-initiatives]] — Visa Intelligent Commerce + Trusted Agent Protocol (TAP), Mastercard Agent Pay; authentication patterns, tokenization flows, trust boundary requirements
+- [[network-rules-amex-unionpay-jcb]] — American Express (DSOP, SafeKey, closed-loop model, dispute lifecycle), UnionPay International (PBOC, PIPL, Discover partnership, IFR co-badging), JCB (DSP, J/Secure, Discover access, APPI); cross-network comparison table
 - [[fraud-patterns-and-attacks]] — Catalogue of six attack categories (prompt injection, economic manipulation, refund/chargeback, credential theft, protocol abuse, authorization bypass); BuyerBench scenario mappings
+- [[regulatory-frameworks-usa]] — GLBA Safeguards Rule (2023), EFTA/Regulation E, Regulation Z, Durbin Amendment, BSA/AML/OFAC, FedNow, 21-state privacy law table; testable agent behaviors per law
+- [[regulatory-frameworks-eu]] — GDPR (incl. extraterritorial scope, breach notification, international transfers), UK GDPR, NIS2, IFR interchange caps, AMLD6/AMLA, SEPA Instant (mandatory Oct 2024, VoP), eIDAS 2.0/EUDI Wallet
+- [[regulatory-frameworks-brazil]] — LGPD (10 lawful bases, ANPD, cross-border transfers), PIX (DICT key resolution, nighttime limits, Pix Garantido), Open Finance Brazil (4 phases, FAPI), Brazilian AML (COAF, BACEN Circular 3.978, PEP screening)
+- [[regulatory-cross-jurisdiction-matrix]] — Master compliance matrix: 65+ regulations × scenario category × test type × scoring × existing scenario ID; gap analysis; priority new scenarios; jurisdiction clustering for variant design
 - [[PILLAR3-SUMMARY]] — Synthesis: 5 key findings; scenario category taxonomy; compliance gap analysis; Security Degradation Score methodology
 
 ---

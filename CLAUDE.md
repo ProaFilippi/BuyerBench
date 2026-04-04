@@ -109,11 +109,29 @@ Agents must enforce policies correctly — not just avoid violations, but active
 
 BuyerBench produces a **multi-dimensional evaluation profile** per agent run, not a single score. Metrics are reported separately per pillar to allow targeted analysis.
 
-### Expected Code Organization (when built out)
+### Code Organization
 
-When adding code, follow this conceptual structure:
-- `scenarios/` — scenario definitions (one file or directory per scenario, organized by pillar)
-- `evaluators/` — per-pillar scoring logic (pillar1, pillar2, pillar3 as separate modules)
-- `runner/` or `harness/` — agent interface, scenario execution, result collection
-- `agents/` — reference or example agent implementations for testing
-- `results/` — output schema definitions and result aggregation
+- `scenarios/` — YAML scenario definitions organized by pillar (`pillar1/`, `pillar2/`, `pillar3/`)
+- `evaluators/` — per-pillar scoring logic (`pillar1.py`, `pillar2.py`, `pillar3.py`, `aggregate.py`)
+- `harness/` — scenario loading, prompt serialization, agent invocation, preflight checks
+- `agents/` — agent adapters (CLI subprocess-based: Claude Code, Codex, Gemini; Python-native: NegMAS, Stripe)
+- `results/` — output schemas, report generation, experiment result storage
+
+### Literature and Regulatory Reference (`docs/literature/`)
+
+The `docs/literature/` directory contains the research and regulatory knowledge base used to design scenarios:
+
+- `eval-methodology/` — agent benchmarking methodology, metrics taxonomy, LLM-as-judge, reproducibility
+- `pillar1-capability/` — procurement AI survey, supplier selection algorithms, CLI agent landscape
+- `pillar2-economics/` — behavioral economics foundations, LLM bias survey, rationality metrics, negotiation
+- `pillar3-security/` — payment security standards, network rules, regulatory frameworks, fraud patterns:
+  - `payment-security-standards.md` — PCI DSS v4.0.1, EMV 3DS, EMV Tokenisation, PCI 3DS SDK
+  - `network-initiatives.md` — Visa TAP, Mastercard Agent Pay
+  - `network-rules-amex-unionpay-jcb.md` — Amex DSOP/SafeKey, UnionPay PBOC/PIPL, JCB DSP/J/Secure
+  - `regulatory-frameworks-usa.md` — GLBA, EFTA/Reg E, Reg Z, Durbin, BSA/AML/OFAC, state privacy laws
+  - `regulatory-frameworks-eu.md` — GDPR, UK GDPR, NIS2, IFR, AMLD6/AMLA, SEPA Instant, eIDAS 2.0
+  - `regulatory-frameworks-brazil.md` — LGPD, PIX, Open Finance Brazil, COAF/BACEN AML
+  - `regulatory-cross-jurisdiction-matrix.md` — master matrix: 65+ regulations × scenario × test type × existing scenario IDs
+  - `fraud-patterns-and-attacks.md` — 6 attack categories including prompt injection
+  - `ai-governance-standards.md` — ISO 42001, ISO 23894, NIST AI RMF
+  - `agentic-commerce-protocols.md` — AP2, UCP, ACP
