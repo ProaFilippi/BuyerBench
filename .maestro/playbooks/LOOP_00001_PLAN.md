@@ -55,4 +55,6 @@ Entities this will likely link to:
 - [[Skyfire]] — Procure AI autonomous agents will eventually need payment execution rails that Skyfire provides
 - [[Headline VC]] — lead investor; may have portfolio companies that interact with Procure AI
 
-### Status: PENDING
+### Status: RESEARCHED
+### Research File: `vault/Companies/Procure-AI.md`
+### Researched: 2026-04-04

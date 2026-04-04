@@ -2,9 +2,9 @@
 
 ## Context
 - **Playbook:** Market Research
-- **Agent:** {{AGENT_NAME}}
-- **Auto Run Folder:** {{AUTORUN_FOLDER}}
-- **Loop:** {{LOOP_NUMBER}}
+- **Agent:** CladiBuyer Benchmarker
+- **Auto Run Folder:** /home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks
+- **Loop:** 00001
 
 ## Objective
 
@@ -13,18 +13,19 @@ Research ONE entity from the plan and create a comprehensive markdown profile in
 ## Instructions
 
 1. **Read the Agent-Prompt.md** to get the OUTPUT_FOLDER location
-2. **Read the research plan** from `{{AUTORUN_FOLDER}}/LOOP_{{LOOP_NUMBER}}_PLAN.md`
+2. **Read the research plan** from `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/LOOP_00001_PLAN.md`
 3. **Select ONE PENDING entity** (prioritize CRITICAL/HIGH importance)
 4. **Research thoroughly** using web search
 5. **Create the entity profile** in the vault using the appropriate template
 6. **Add inter-page links** to related entities
 7. **Update INDEX.md** with the new entity
 8. **Update status** to RESEARCHED in the plan
-9. **Log the research** to `{{AUTORUN_FOLDER}}/RESEARCH_LOG_{{AGENT_NAME}}_{{DATE}}.md`
+9. **Log the research** to `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/RESEARCH_LOG_CladiBuyer Benchmarker_2026-04-04.md`
 
 ## Research Checklist
 
-- [ ] **Research one entity (or skip if none)**: Read `{{AUTORUN_FOLDER}}/LOOP_{{LOOP_NUMBER}}_PLAN.md`. If the file doesn't exist OR contains no PENDING entities with CRITICAL or HIGH importance, mark this task complete without changes. Otherwise, pick ONE PENDING entity with CRITICAL or HIGH importance. Use web search to gather comprehensive information. Create the entity profile in the vault following the template from the market analysis. Add `[[wiki-style]]` links to related entities. Update INDEX.md. Mark as RESEARCHED in the plan. Log to `{{AUTORUN_FOLDER}}/RESEARCH_LOG_{{AGENT_NAME}}_{{DATE}}.md`.
+- [x] **Research one entity (or skip if none)**: Read `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/LOOP_00001_PLAN.md`. If the file doesn't exist OR contains no PENDING entities with CRITICAL or HIGH importance, mark this task complete without changes. Otherwise, pick ONE PENDING entity with CRITICAL or HIGH importance. Use web search to gather comprehensive information. Create the entity profile in the vault following the template from the market analysis. Add `[[wiki-style]]` links to related entities. Update INDEX.md. Mark as RESEARCHED in the plan. Log to `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/RESEARCH_LOG_CladiBuyer Benchmarker_2026-04-04.md`.
+  <!-- Completed 2026-04-04: Researched Procure AI (CRITICAL). Profile at vault/Companies/Procure-AI.md. Three-tier agent architecture (autonomous/collaborative/ambient) maps directly to BuyerBench pillars. Key benchmarks: 4.9% savings, 47% faster award decisions, 60% autonomous intake. $13M seed led by Headline (Nov 2025). Competitors: Omnea, Fairmarkit, Zycus. -->
 
 ## Research Process
 
@@ -115,7 +116,7 @@ Use web search to find:
 3. ...
 
 ---
-*Last updated: {{DATE}}*
+*Last updated: 2026-04-04*
 ```
 
 ### Product Profile
@@ -163,7 +164,7 @@ Use web search to find:
 2. ...
 
 ---
-*Last updated: {{DATE}}*
+*Last updated: 2026-04-04*
 ```
 
 ### Person Profile
@@ -205,19 +206,19 @@ Use web search to find:
 2. ...
 
 ---
-*Last updated: {{DATE}}*
+*Last updated: 2026-04-04*
 ```
 
 ## Log Format
 
-Append to `{{AUTORUN_FOLDER}}/RESEARCH_LOG_{{AGENT_NAME}}_{{DATE}}.md`:
+Append to `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/RESEARCH_LOG_CladiBuyer Benchmarker_2026-04-04.md`:
 
 ```markdown
 ---
 
 ## [YYYY-MM-DD HH:MM] - Researched: [Entity Name]
 
-**Loop:** {{LOOP_NUMBER}}
+**Loop:** 00001
 **Entity Type:** [Company | Product | Person | etc.]
 **Importance:** [CRITICAL | HIGH | MEDIUM]
 **File Created:** `vault/[Category]/[Entity-Name].md`
@@ -257,14 +258,14 @@ Append to `{{AUTORUN_FOLDER}}/RESEARCH_LOG_{{AGENT_NAME}}_{{DATE}}.md`:
 This task is complete when ONE of the following is true:
 
 **Option A - Researched an entity:**
-1. You've researched exactly ONE entity from `{{AUTORUN_FOLDER}}/LOOP_{{LOOP_NUMBER}}_PLAN.md`
+1. You've researched exactly ONE entity from `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/LOOP_00001_PLAN.md`
 2. You've created the entity profile in the vault
 3. You've updated INDEX.md with a link to the new entity
-4. You've appended the research details to `{{AUTORUN_FOLDER}}/RESEARCH_LOG_{{AGENT_NAME}}_{{DATE}}.md`
-5. You've updated the entity status in `{{AUTORUN_FOLDER}}/LOOP_{{LOOP_NUMBER}}_PLAN.md` to `RESEARCHED`
+4. You've appended the research details to `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/RESEARCH_LOG_CladiBuyer Benchmarker_2026-04-04.md`
+5. You've updated the entity status in `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/LOOP_00001_PLAN.md` to `RESEARCHED`
 
 **Option B - No PENDING entities available:**
-1. `LOOP_{{LOOP_NUMBER}}_PLAN.md` doesn't exist, OR
+1. `LOOP_00001_PLAN.md` doesn't exist, OR
 2. It contains no entities with status PENDING and importance CRITICAL or HIGH
 3. Mark this task complete without making changes
 

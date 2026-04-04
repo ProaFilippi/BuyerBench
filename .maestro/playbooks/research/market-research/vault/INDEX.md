@@ -42,8 +42,8 @@ This vault contains structured research about the **AI Buyer Agents and Autonomo
 ## Quick Navigation
 
 ### Companies
-_No profiles yet — research phase pending._
-> Priority: Amazon, OpenAI, Google, Salesforce, Microsoft, Stripe, Perplexity, Procure AI, Omnea, Coinbase
+- [[Companies/Procure-AI|Procure AI]] — AI-native procurement automation platform; 50+ autonomous agents across source-to-pay; $13M seed (Headline, Nov 2025); founded 2020; London/Paris/Frankfurt
+> Remaining priorities: Amazon, OpenAI, Google, Salesforce, Microsoft, Stripe, Perplexity, Omnea, Coinbase
 
 ### Products & Services
 _No profiles yet — research phase pending._
@@ -86,7 +86,7 @@ _No profiles yet — research phase pending._
 
 | Category | Count |
 |----------|-------|
-| Companies | 0 |
+| Companies | 1 |
 | Products | 0 |
 | Protocols | 0 |
 | People | 0 |
@@ -94,7 +94,7 @@ _No profiles yet — research phase pending._
 | Trends | 0 |
 | Research Papers | 0 |
 | Security & Compliance | 0 |
-| **Total Entities** | 0 |
+| **Total Entities** | 1 |
 
 ---
 *This vault was initialized by the Maestro Market Research Playbook*
