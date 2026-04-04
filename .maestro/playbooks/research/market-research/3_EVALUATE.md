@@ -2,9 +2,9 @@
 
 ## Context
 - **Playbook:** Market Research
-- **Agent:** {{AGENT_NAME}}
-- **Auto Run Folder:** {{AUTORUN_FOLDER}}
-- **Loop:** {{LOOP_NUMBER}}
+- **Agent:** CladiBuyer Benchmarker
+- **Auto Run Folder:** /home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks
+- **Loop:** 00001
 
 ## Objective
 
@@ -12,15 +12,15 @@ Evaluate discovered entities and prioritize them for research. Assess each entit
 
 ## Instructions
 
-1. **Read discovered entities** from `{{AUTORUN_FOLDER}}/LOOP_{{LOOP_NUMBER}}_ENTITIES.md`
-2. **Read the research plan** from `{{AUTORUN_FOLDER}}/LOOP_{{LOOP_NUMBER}}_PLAN.md` (if it exists)
+1. **Read discovered entities** from `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/LOOP_00001_ENTITIES.md`
+2. **Read the research plan** from `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/LOOP_00001_PLAN.md` (if it exists)
 3. **Select ONE unevaluated entity** (status = PENDING, not yet in plan)
 4. **Evaluate importance and research effort**
 5. **Add to research plan** with priority rating
 
 ## Evaluation Checklist
 
-- [ ] **Evaluate one entity (or skip if empty)**: Read `{{AUTORUN_FOLDER}}/LOOP_{{LOOP_NUMBER}}_ENTITIES.md` to find PENDING entities. If the file contains no entities OR all entities have already been evaluated in `{{AUTORUN_FOLDER}}/LOOP_{{LOOP_NUMBER}}_PLAN.md`, mark this task complete without changes. Otherwise, pick ONE entity that hasn't been evaluated yet. Assess its importance and research effort. Append evaluation to `{{AUTORUN_FOLDER}}/LOOP_{{LOOP_NUMBER}}_PLAN.md` with appropriate status.
+- [x] **Evaluate one entity (or skip if empty)**: Read `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/LOOP_00001_ENTITIES.md` to find PENDING entities. If the file contains no entities OR all entities have already been evaluated in `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/LOOP_00001_PLAN.md`, mark this task complete without changes. Otherwise, pick ONE entity that hasn't been evaluated yet. Assess its importance and research effort. Append evaluation to `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/LOOP_00001_PLAN.md` with appropriate status.
 
 ## Importance Criteria
 
@@ -57,7 +57,7 @@ Evaluate discovered entities and prioritize them for research. Assess each entit
 
 ## Output Format
 
-Append to `{{AUTORUN_FOLDER}}/LOOP_{{LOOP_NUMBER}}_PLAN.md`:
+Append to `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/LOOP_00001_PLAN.md`:
 
 ```markdown
 ---
@@ -123,14 +123,14 @@ Entities this will likely link to:
 This task is complete when ONE of the following is true:
 
 **Option A - Evaluated an entity:**
-1. You've evaluated exactly ONE entity from `{{AUTORUN_FOLDER}}/LOOP_{{LOOP_NUMBER}}_ENTITIES.md`
-2. You've appended a complete evaluation to `{{AUTORUN_FOLDER}}/LOOP_{{LOOP_NUMBER}}_PLAN.md`
+1. You've evaluated exactly ONE entity from `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/LOOP_00001_ENTITIES.md`
+2. You've appended a complete evaluation to `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/LOOP_00001_PLAN.md`
 3. The evaluation includes both importance and research effort ratings
 4. The status is set according to the decision matrix above
 
 **Option B - No entities to evaluate:**
-1. `LOOP_{{LOOP_NUMBER}}_ENTITIES.md` contains no entities, OR
-2. All entities have already been evaluated in `LOOP_{{LOOP_NUMBER}}_PLAN.md`
+1. `LOOP_00001_ENTITIES.md` contains no entities, OR
+2. All entities have already been evaluated in `LOOP_00001_PLAN.md`
 3. Mark this task complete without making changes
 
 This graceful handling of empty states prevents the pipeline from stalling when discovery yields no entities.
