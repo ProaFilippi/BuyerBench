@@ -31,6 +31,8 @@ This document is the **progress gate** for the market research pipeline. It chec
 
   > **Decision 2026-04-04 (Loop 5 re-evaluation): CONTINUE.** ENTITIES.md still does NOT contain `## ALL_CATEGORIES_COVERED`. Only Companies category has been discovered; 4 of 5 priority categories remain undiscovered (Protocols & Standards, Products & Platforms, Research Papers, Security & Compliance Frameworks). PLAN.md still has only Procure AI evaluated (RESEARCHED); Omnea, Zycus, Fairmarkit, Skyfire remain PENDING (present in ENTITIES.md but not yet in PLAN.md). Both CONTINUE conditions are active: (1) 4 PENDING entities unevaluated in PLAN.md, (2) no ALL_CATEGORIES_COVERED marker. Docs 1–4 confirmed in reset state (all tasks unchecked). Proceeding to reset Reset tasks to allow pipeline to continue.
 
+  > **Decision 2026-04-04 (Loop 6 re-evaluation): CONTINUE.** ENTITIES.md still does NOT contain `## ALL_CATEGORIES_COVERED`. Only Companies category has been discovered; 4 of 5 priority categories remain undiscovered (Protocols & Standards, Products & Platforms, Research Papers, Security & Compliance Frameworks). PLAN.md still has only Procure AI evaluated (RESEARCHED); Omnea, Zycus, Fairmarkit, Skyfire remain PENDING in ENTITIES.md but unevaluated in PLAN.md. Both CONTINUE conditions are active: (1) 4 PENDING entities not yet in PLAN.md, (2) no ALL_CATEGORIES_COVERED marker. Docs 1–4 confirmed in reset state (all tasks unchecked) — pipeline structurally ready for the next research cycle. Finalization tasks remain deferred. Note: the recurring stall pattern (0 new entities per loop since Loop 1) suggests Maestro is invoking 5_PROGRESS.md before docs 1–4 execute in each cycle. The gate correctly evaluates CONTINUE but docs 1–4 must run before the next gate evaluation is meaningful.
+
 ## Reset Tasks (Only if more research needed)
 
 If the progress check determines we need to continue, reset all tasks in the following documents:
@@ -95,7 +97,7 @@ Before making a decision, assess the vault:
 | **PENDING (CRITICAL/HIGH)** | 4 unevaluated in ENTITIES.md (Omnea, Zycus, Fairmarkit, Skyfire — not yet in PLAN.md) |
 | **PENDING (MEDIUM/LOW)** | 0 |
 | **SKIP** | 0 |
-| **Last Evaluated** | 2026-04-04 (Loop 5) |
+| **Last Evaluated** | 2026-04-04 (Loop 6) |
 
 ### Coverage by Category
 
@@ -118,7 +120,7 @@ Track progress across loops:
 | 3 | 0 (docs 1–4 in reset state, awaiting next cycle) | 1 | CONTINUE — ENTITIES.md still lacks `ALL_CATEGORIES_COVERED`; 4 PENDING entities (Omnea, Zycus, Fairmarkit, Skyfire) unevaluated in PLAN.md; 4 of 5 priority categories undiscovered. Procure AI status synced to RESEARCHED in ENTITIES.md. Docs 1–4 confirmed in reset state. |
 | 4 | 0 (5_PROGRESS.md main tasks were not reset after Loop 3 — pipeline stalled; corrected: unchecked main tasks to restore loop cycling) | 1 | CONTINUE — ENTITIES.md still lacks `ALL_CATEGORIES_COVERED`; 4 PENDING entities (Omnea, Zycus, Fairmarkit, Skyfire) unevaluated in PLAN.md; 4 of 5 priority categories undiscovered. Gate reset to allow Loop 5 to proceed through docs 1–4. |
 | 5 | 0 (docs 1–4 confirmed in reset state; gate correctly cycled this loop) | 1 | CONTINUE — ENTITIES.md still lacks `ALL_CATEGORIES_COVERED`; 4 PENDING entities (Omnea, Zycus, Fairmarkit, Skyfire) unevaluated in PLAN.md; 4 of 5 priority categories undiscovered. Docs 1–4 confirmed unchecked. Pipeline ready for Loop 6. |
-| 6 | ___ | ___ | [CONTINUE / EXIT] |
+| 6 | 0 (docs 1–4 in reset state — not yet executed this cycle; gate evaluating pre-research) | 1 | CONTINUE — ENTITIES.md still lacks `ALL_CATEGORIES_COVERED`; 4 PENDING entities unevaluated in PLAN.md; 4 of 5 priority categories undiscovered. Docs 1–4 confirmed unchecked. Recurring stall pattern noted: gate fires before docs 1–4 run each cycle. Pipeline structurally correct; awaiting docs 1–4 execution. |
 | ... | ... | ... | ... |
 
 ## Finalization Tasks (On Exit Only)
@@ -126,6 +128,8 @@ Track progress across loops:
 If exiting, perform these finalization tasks:
 
 > **Status 2026-04-04 (Loop 2 evaluation): DEFERRED — decision is CONTINUE.** Exit conditions not met: `LOOP_00001_ENTITIES.md` does not contain `## ALL_CATEGORIES_COVERED`, and 4 priority entity categories (Protocols & Standards, Products & Platforms, Research Papers, Security & Compliance Frameworks) remain undiscovered. These tasks will be executed only when both conditions are satisfied: all categories are covered AND no PENDING CRITICAL/HIGH entities remain. Docs 1–4 have been reset and are pending their next cycle.
+
+> **Status 2026-04-04 (Loop 6 evaluation): DEFERRED — decision is CONTINUE.** Same conditions from Loop 2 remain true: ENTITIES.md lacks `## ALL_CATEGORIES_COVERED`, 4 of 5 priority categories are undiscovered, and 4 PENDING entities (Omnea, Zycus, Fairmarkit, Skyfire) have not been evaluated in PLAN.md. Finalization tasks remain blocked until both exit conditions are satisfied.
 
 - [ ] **Update INDEX.md**: Ensure all researched entities are linked
 - [ ] **Create vault summary**: Add research statistics to INDEX.md
