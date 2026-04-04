@@ -2,9 +2,9 @@
 
 ## Context
 - **Playbook:** Market Research
-- **Agent:** {{AGENT_NAME}}
-- **Auto Run Folder:** {{AUTORUN_FOLDER}}
-- **Loop:** {{LOOP_NUMBER}}
+- **Agent:** CladiBuyer Benchmarker
+- **Auto Run Folder:** /home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks
+- **Loop:** 00001
 
 ## Purpose
 
@@ -12,7 +12,7 @@ This document is the **progress gate** for the market research pipeline. It chec
 
 ## Instructions
 
-1. **Read the research plan** from `{{AUTORUN_FOLDER}}/LOOP_{{LOOP_NUMBER}}_PLAN.md`
+1. **Read the research plan** from `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/LOOP_00001_PLAN.md`
 2. **Count entities by status** (PENDING vs RESEARCHED)
 3. **Check coverage** against targets from market analysis
 4. **Decide whether to continue or exit**
@@ -21,29 +21,31 @@ This document is the **progress gate** for the market research pipeline. It chec
 
 ## Progress Check
 
-- [ ] **Check progress and decide**: Read `{{AUTORUN_FOLDER}}/LOOP_{{LOOP_NUMBER}}_PLAN.md` and `{{AUTORUN_FOLDER}}/LOOP_{{LOOP_NUMBER}}_ENTITIES.md`. The loop should CONTINUE (reset docs 1-4) if EITHER: (1) there are PENDING entities with CRITICAL or HIGH importance, OR (2) ENTITIES.md does NOT contain `## ALL_CATEGORIES_COVERED`. The loop should EXIT (do NOT reset) only when BOTH conditions are false: no PENDING CRITICAL/HIGH entities AND all categories are covered.
+- [x] **Check progress and decide**: Read `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/LOOP_00001_PLAN.md` and `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/LOOP_00001_ENTITIES.md`. The loop should CONTINUE (reset docs 1-4) if EITHER: (1) there are PENDING entities with CRITICAL or HIGH importance, OR (2) ENTITIES.md does NOT contain `## ALL_CATEGORIES_COVERED`. The loop should EXIT (do NOT reset) only when BOTH conditions are false: no PENDING CRITICAL/HIGH entities AND all categories are covered.
+
+  > **Decision 2026-04-04 (Loop 00001): CONTINUE.** ENTITIES.md does NOT contain `## ALL_CATEGORIES_COVERED` — only Companies category has been discovered (5 entities: Procure AI [RESEARCHED], Omnea, Zycus, Fairmarkit, Skyfire [all PENDING in ENTITIES.md]). Four priority categories remain undiscovered: Protocols & Standards, Products & Platforms, Research Papers, Security & Compliance Frameworks. Additionally, 4 PENDING entities in ENTITIES.md have not yet been evaluated in PLAN.md. Docs 1-4 have been reset to continue the pipeline.
 
 ## Reset Tasks (Only if more research needed)
 
 If the progress check determines we need to continue, reset all tasks in the following documents:
 
-- [ ] **Reset 1_ANALYZE.md**: Uncheck all tasks in `{{AUTORUN_FOLDER}}/1_ANALYZE.md`
-- [ ] **Reset 2_DISCOVER.md**: Uncheck all tasks in `{{AUTORUN_FOLDER}}/2_DISCOVER.md`
-- [ ] **Reset 3_EVALUATE.md**: Uncheck all tasks in `{{AUTORUN_FOLDER}}/3_EVALUATE.md`
-- [ ] **Reset 4_RESEARCH.md**: Uncheck all tasks in `{{AUTORUN_FOLDER}}/4_RESEARCH.md`
+- [x] **Reset 1_ANALYZE.md**: Uncheck all tasks in `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/1_ANALYZE.md`
+- [x] **Reset 2_DISCOVER.md**: Uncheck all tasks in `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/2_DISCOVER.md`
+- [x] **Reset 3_EVALUATE.md**: Uncheck all tasks in `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/3_EVALUATE.md`
+- [x] **Reset 4_RESEARCH.md**: Uncheck all tasks in `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/4_RESEARCH.md`
 
 **IMPORTANT**: Only reset documents 1-4 if there is work remaining (PENDING CRITICAL/HIGH entities OR unexplored categories). If all categories are covered AND all CRITICAL/HIGH entities are RESEARCHED, leave these reset tasks unchecked to allow the pipeline to exit.
 
 ## Decision Logic
 
 ```
-IF LOOP_{{LOOP_NUMBER}}_PLAN.md doesn't exist:
+IF LOOP_00001_PLAN.md doesn't exist:
     → Do NOT reset anything (PIPELINE JUST STARTED - LET IT RUN)
 
 ELSE IF PENDING entities with CRITICAL or HIGH importance exist:
     → Reset documents 1-4 (CONTINUE TO RESEARCH PENDING ENTITIES)
 
-ELSE IF LOOP_{{LOOP_NUMBER}}_ENTITIES.md does NOT contain "ALL_CATEGORIES_COVERED":
+ELSE IF LOOP_00001_ENTITIES.md does NOT contain "ALL_CATEGORIES_COVERED":
     → Reset documents 1-4 (CONTINUE TO DISCOVER MORE ENTITIES)
 
 ELSE:
@@ -64,7 +66,7 @@ This document controls loop continuation through resets:
 ### Exit Conditions (Do NOT Reset)
 
 Exit when ALL of these are true:
-1. **Categories covered**: `LOOP_{{LOOP_NUMBER}}_ENTITIES.md` contains `## ALL_CATEGORIES_COVERED`
+1. **Categories covered**: `LOOP_00001_ENTITIES.md` contains `## ALL_CATEGORIES_COVERED`
 2. **No PENDING CRITICAL/HIGH**: All CRITICAL and HIGH importance entities are RESEARCHED or SKIP
 
 Also exit if:
@@ -73,8 +75,8 @@ Also exit if:
 ### Continue Conditions (Reset Documents 1-4)
 
 Continue if EITHER is true:
-1. There are PENDING entities with CRITICAL or HIGH importance in LOOP_{{LOOP_NUMBER}}_PLAN.md
-2. `LOOP_{{LOOP_NUMBER}}_ENTITIES.md` does NOT contain `## ALL_CATEGORIES_COVERED` (more categories to discover)
+1. There are PENDING entities with CRITICAL or HIGH importance in LOOP_00001_PLAN.md
+2. `LOOP_00001_ENTITIES.md` does NOT contain `## ALL_CATEGORIES_COVERED` (more categories to discover)
 
 ## Current Status
 
@@ -82,21 +84,21 @@ Before making a decision, assess the vault:
 
 | Metric | Value |
 |--------|-------|
-| **Total Entities Discovered** | ___ |
-| **Entities Researched** | ___ |
-| **PENDING (CRITICAL/HIGH)** | ___ |
-| **PENDING (MEDIUM/LOW)** | ___ |
-| **SKIP** | ___ |
+| **Total Entities Discovered** | 5 (Companies only) |
+| **Entities Researched** | 1 (Procure AI) |
+| **PENDING (CRITICAL/HIGH)** | 0 in PLAN.md; 4 unevaluated in ENTITIES.md |
+| **PENDING (MEDIUM/LOW)** | 0 |
+| **SKIP** | 0 |
 
 ### Coverage by Category
 
 | Category | Target | Researched | Status |
 |----------|--------|------------|--------|
-| Companies | [X] | [Y] | [MET/BELOW] |
-| Products | [X] | [Y] | [MET/BELOW] |
-| People | [X] | [Y] | [MET/BELOW] |
-| Technologies | [X] | [Y] | [MET/BELOW] |
-| Trends | [X] | [Y] | [MET/BELOW] |
+| Companies | 5–10 | 1 | BELOW |
+| Protocols & Standards | 3–5 | 0 | NOT STARTED |
+| Products & Platforms | 5–10 | 0 | NOT STARTED |
+| Research Papers | 3–5 | 0 | NOT STARTED |
+| Security & Compliance Frameworks | 3–5 | 0 | NOT STARTED |
 
 ## Research History
 
@@ -104,7 +106,7 @@ Track progress across loops:
 
 | Loop | Entities Researched | Total in Vault | Decision |
 |------|---------------------|----------------|----------|
-| 1 | ___ | ___ | [CONTINUE / EXIT] |
+| 1 | 1 (Procure AI) | 1 | CONTINUE — categories not yet fully covered |
 | 2 | ___ | ___ | [CONTINUE / EXIT] |
 | ... | ... | ... | ... |
 
@@ -124,9 +126,9 @@ Add to INDEX.md on exit:
 ```markdown
 ## Research Summary
 
-**Research Period:** [Start Date] - {{DATE}}
-**Total Loops:** {{LOOP_NUMBER}}
-**Agent:** {{AGENT_NAME}}
+**Research Period:** [Start Date] - 2026-04-04
+**Total Loops:** 00001
+**Agent:** CladiBuyer Benchmarker
 
 ### Coverage Statistics
 | Category | Count |
