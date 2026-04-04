@@ -26,7 +26,9 @@ This document tracks all entities discovered during market research for the AI B
 - **Brief:** AI-native enterprise procurement platform deploying 50+ autonomous agents across the full source-to-pay lifecycle.
 - **Why Notable:** One of the clearest pure-play "AI buyer agent" companies in enterprise procurement; raised $13M seed in Nov 2025 led by Headline (C4 Ventures, Futury Capital). Agents span three tiers: autonomous execution, human-collaborative, and ambient/proactive. Directly benchmarkable as an AI buyer agent system.
 - **Discovery Source:** https://siliconangle.com/2025/11/27/procure-ai-lands-13m-funding-automate-business-procurement-tasks/
-- **Status:** PENDING
+- **Status:** RESEARCHED
+- **Research File:** `vault/Companies/Procure-AI.md`
+- **Researched:** 2026-04-04
 
 ### Omnea
 - **Type:** Company

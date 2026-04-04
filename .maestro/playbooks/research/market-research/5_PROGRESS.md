@@ -25,6 +25,8 @@ This document is the **progress gate** for the market research pipeline. It chec
 
   > **Decision 2026-04-04 (Loop 00001): CONTINUE.** ENTITIES.md does NOT contain `## ALL_CATEGORIES_COVERED` — only Companies category has been discovered (5 entities: Procure AI [RESEARCHED], Omnea, Zycus, Fairmarkit, Skyfire [all PENDING in ENTITIES.md]). Four priority categories remain undiscovered: Protocols & Standards, Products & Platforms, Research Papers, Security & Compliance Frameworks. Additionally, 4 PENDING entities in ENTITIES.md have not yet been evaluated in PLAN.md. Docs 1-4 have been reset to continue the pipeline.
 
+  > **Decision 2026-04-04 (Loop 3 re-evaluation): CONTINUE.** ENTITIES.md still does NOT contain `## ALL_CATEGORIES_COVERED`. Only Companies category has been discovered. Four priority categories remain undiscovered: Protocols & Standards, Products & Platforms, Research Papers, Security & Compliance Frameworks. PLAN.md still has only Procure AI evaluated (RESEARCHED); Omnea, Zycus, Fairmarkit, Skyfire remain unevaluated. Procure AI status synced from PENDING → RESEARCHED in ENTITIES.md. Docs 1–4 confirmed in reset state (all tasks unchecked), ready for next cycle. Finalization tasks remain deferred.
+
 ## Reset Tasks (Only if more research needed)
 
 If the progress check determines we need to continue, reset all tasks in the following documents:
@@ -86,9 +88,10 @@ Before making a decision, assess the vault:
 |--------|-------|
 | **Total Entities Discovered** | 5 (Companies only) |
 | **Entities Researched** | 1 (Procure AI) |
-| **PENDING (CRITICAL/HIGH)** | 0 in PLAN.md; 4 unevaluated in ENTITIES.md |
+| **PENDING (CRITICAL/HIGH)** | 4 unevaluated in ENTITIES.md (Omnea, Zycus, Fairmarkit, Skyfire — not yet in PLAN.md) |
 | **PENDING (MEDIUM/LOW)** | 0 |
 | **SKIP** | 0 |
+| **Last Evaluated** | 2026-04-04 (Loop 3) |
 
 ### Coverage by Category
 
@@ -108,7 +111,8 @@ Track progress across loops:
 |------|---------------------|----------------|----------|
 | 1 | 1 (Procure AI) | 1 | CONTINUE — categories not yet fully covered |
 | 2 | 0 (cycle in progress — docs 1–4 reset but not yet re-run) | 1 | CONTINUE — ENTITIES.md still lacks `ALL_CATEGORIES_COVERED`; 4 unevaluated PENDING entities; 4 of 5 priority categories undiscovered |
-| 3 | ___ | ___ | [CONTINUE / EXIT] |
+| 3 | 0 (docs 1–4 in reset state, awaiting next cycle) | 1 | CONTINUE — ENTITIES.md still lacks `ALL_CATEGORIES_COVERED`; 4 PENDING entities (Omnea, Zycus, Fairmarkit, Skyfire) unevaluated in PLAN.md; 4 of 5 priority categories undiscovered. Procure AI status synced to RESEARCHED in ENTITIES.md. Docs 1–4 confirmed in reset state. |
+| 4 | ___ | ___ | [CONTINUE / EXIT] |
 | ... | ... | ... | ... |
 
 ## Finalization Tasks (On Exit Only)
