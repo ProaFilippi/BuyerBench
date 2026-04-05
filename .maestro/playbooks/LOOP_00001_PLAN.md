@@ -223,3 +223,44 @@ Entities this will likely link to:
 ### Status: RESEARCHED
 ### Research File: `vault/Companies/Skyfire.md`
 ### Researched: 2026-04-04
+
+---
+
+## ACP (Agents Commerce Protocol) - Evaluated 2026-04-04
+
+**Source:** LOOP_00001_ENTITIES.md — Protocols & Standards category
+**Type:** Protocol / Standard
+**Category:** Agentic Commerce Protocols
+
+### Quick Profile
+ACP (Agents Commerce Protocol) is an open-source Apache 2.0 specification co-developed by OpenAI and Stripe that provides a standardized checkout API enabling AI agents to discover, select, and pay for goods and services autonomously. It was deployed at scale as ChatGPT "Instant Checkout" in September 2025 (charging merchants a 4% fee), but was partially removed from ChatGPT in March 2026 following OpenAI's $50B strategic partnership with Amazon. ACP competes directly with Google's AP2/UCP protocol suite and represents one of the two leading candidates for becoming the dominant agent commerce standard.
+
+### Importance Assessment
+- **Rating:** HIGH
+- **Justification:** ACP is the most prominent real-world deployed agent payment protocol — OpenAI + Stripe co-authorship, 300M+ ChatGPT user distribution, and a live merchant fee model make it the reference implementation for agentic checkout flows. Its authentication architecture, authorization flow, and merchant onboarding model directly inform what "correct" agent payment API behavior looks like for BuyerBench Pillar 3. The March 2026 rollback event — driven by business partnership rather than technical failure — also provides a unique scenario: protocol governance and business-layer overrides of technical agent capabilities, a compliance boundary type BuyerBench should model. The 4% merchant fee structure and session-based authorization model are specific enough to design concrete test cases against.
+- **Key Questions to Answer:**
+  1. What is ACP's authentication and authorization flow — how does an agent obtain payment authorization, and what data elements (session tokens, merchant IDs, spending caps) are part of the protocol spec?
+  2. How does ACP handle fraud detection and transaction limits — what safeguards are defined in the spec vs. left to implementing platforms (OpenAI / Stripe)?
+  3. What does the March 2026 partial removal from ChatGPT reveal about ACP's governance model — is the spec truly open and decentralized, or does OpenAI retain protocol control that creates compliance risks for third-party implementers?
+
+### Research Effort Assessment
+- **Rating:** MEDIUM
+- **Justification:** ACP is well-documented in the developer and fintech press (Orium, Grid Dynamics, Forrester blogs), and the Apache 2.0 open-source license means the spec itself should be publicly available on GitHub or an official documentation site. Stripe's involvement means developer-facing documentation should be available. The March 2026 ChatGPT rollback has generated significant commentary. However, the spec's current status (post-rollback) and whether OpenAI is still actively maintaining it will require careful corroboration.
+- **Primary Sources Available:**
+  - ACP specification repository (GitHub — Apache 2.0 license; search under Stripe or OpenAI org)
+  - Orium blog: "Agentic Payments: ACP, AP2, x402" (protocol comparison analysis)
+  - Grid Dynamics blog: AP2 vs. ACP and x402 competitive analysis
+  - Stripe developer documentation (ACP integration guide, if published)
+  - The Information / TechCrunch: ChatGPT Instant Checkout launch (Sep 2025) and Amazon partnership rollback (Mar 2026)
+
+### Expected Connections
+Entities this will likely link to:
+- [[OpenAI ChatGPT Instant Checkout (ACP)]] — primary production implementation of this protocol; same entity from different perspectives (protocol spec vs. deployed product)
+- [[AP2 / UCP (Google Agentic Payment Protocol)]] — direct protocol competitor; AP2 vs. ACP is the central protocol war in agentic commerce
+- [[x402]] — alternative payment protocol from Coinbase targeting different security model (crypto-native vs. card-network-based)
+- [[Skyfire]] — Skyfire's payment rails could serve as an ACP execution layer; KYA identity model maps to ACP agent authorization
+- [[Visa Intelligent Commerce + Trusted Agent Protocol]] — Visa is a likely ACP partner or integration target given Stripe/Visa alignment
+- [[Stripe]] — ACP co-creator; Stripe's payment infrastructure underpins the protocol's settlement layer
+- [[PCI DSS v4.0]] — ACP card-based payments must comply with PCI DSS; protocol design choices affect cardholder data scope
+
+### Status: PENDING

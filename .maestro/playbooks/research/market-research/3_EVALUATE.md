@@ -20,9 +20,11 @@ Evaluate discovered entities and prioritize them for research. Assess each entit
 
 ## Evaluation Checklist
 
-- [ ] **Evaluate one entity (or skip if empty)**: Read `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/LOOP_00001_ENTITIES.md` to find PENDING entities. If the file contains no entities OR all entities have already been evaluated in `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/LOOP_00001_PLAN.md`, mark this task complete without changes. Otherwise, pick ONE entity that hasn't been evaluated yet. Assess its importance and research effort. Append evaluation to `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/LOOP_00001_PLAN.md` with appropriate status.
+- [x] **Evaluate one entity (or skip if empty)**: Read `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/LOOP_00001_ENTITIES.md` to find PENDING entities. If the file contains no entities OR all entities have already been evaluated in `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/LOOP_00001_PLAN.md`, mark this task complete without changes. Otherwise, pick ONE entity that hasn't been evaluated yet. Assess its importance and research effort. Append evaluation to `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/LOOP_00001_PLAN.md` with appropriate status.
 
   > **Executed directly 2026-04-04 (Loop 9 — stall-break):** Evaluated **Fairmarkit** (HIGH importance, MEDIUM effort) and appended to PLAN.md with PENDING status. Next unevaluated entities in ENTITIES.md: Skyfire (Company), ACP, AP2/UCP, x402, Visa Intelligent Commerce, Mastercard Agent Pay (Protocols), Amazon Alexa+, ChatGPT Instant Checkout, Perplexity Comet, Salesforce Agentforce, NegMAS (Products), and 5 Research Papers. When this task next runs: evaluate ONE of these — recommend Skyfire (HIGH importance for Pillar 3 payment security) or ACP (HIGH importance as the primary agentic payment protocol).
+
+  > **Executed 2026-04-04 (Loop 1 — Maestro run):** Evaluated **ACP (Agents Commerce Protocol)** (HIGH importance, MEDIUM effort) and appended to PLAN.md with PENDING status. ACP is the OpenAI+Stripe open-source protocol and primary real-world deployed agent checkout standard; the March 2026 ChatGPT rollback creates novel Pillar 3 governance scenarios. Next unevaluated entities: AP2/UCP, x402, Visa Intelligent Commerce, Mastercard Agent Pay (Protocols), Amazon Alexa+, ChatGPT Instant Checkout, Perplexity Comet, Salesforce Agentforce, NegMAS (Products), 5 Research Papers, and 5 Security & Compliance Frameworks.
 
 ## Importance Criteria
 
