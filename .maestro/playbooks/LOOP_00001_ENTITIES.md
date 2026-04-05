@@ -62,7 +62,9 @@ This document tracks all entities discovered during market research for the AI B
 - **Brief:** AI agent payment infrastructure providing KYA (Know Your Agent) identity verification and autonomous payment execution for AI agents.
 - **Why Notable:** Raised $9.5–10M (Neuberger Berman, a16z CSX, Coinbase Ventures); partnered with Visa Intelligent Commerce. Skyfire enables AI agents to spend money without human intervention and is one of the few companies building the *financial rails* layer — critical context for Pillar 3 (payment security, authorization, fraud detection). Demonstrated a live end-to-end agent purchase (Consumer Reports agent buying Bose headphones).
 - **Discovery Source:** https://techcrunch.com/2024/08/21/skyfire-lets-ai-agents-spend-your-money/
-- **Status:** PENDING
+- **Status:** RESEARCHED
+- **Research File:** `vault/Companies/Skyfire.md`
+- **Researched:** 2026-04-04
 
 ### Discovery Summary
 - **Category:** Companies

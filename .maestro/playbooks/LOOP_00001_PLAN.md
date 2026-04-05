@@ -220,4 +220,6 @@ Entities this will likely link to:
 - [[PCI DSS v4.0]] — Skyfire's card payment handling must comply with PCI DSS
 - [[FATF Guidance on AML/CFT]] — Skyfire's crypto rails involvement triggers FATF compliance obligations
 
-### Status: PENDING
+### Status: RESEARCHED
+### Research File: `vault/Companies/Skyfire.md`
+### Researched: 2026-04-04
