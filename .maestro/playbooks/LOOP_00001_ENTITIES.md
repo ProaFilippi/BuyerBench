@@ -53,7 +53,9 @@ This document tracks all entities discovered during market research for the AI B
 - **Brief:** AI-powered sourcing platform automating tail-spend and low-value procurement through demand-to-award automation and supplier recommendation.
 - **Why Notable:** Handles thousands of small sourcing events autonomously — a high-volume, repeatable buyer-agent workflow ideal for Pillar 1 capability benchmarking (supplier discovery, quote comparison, bid evaluation). Published a "2025 AI in Procurement Index" which may contain adoption/bias data relevant to benchmark design.
 - **Discovery Source:** https://www.fairmarkit.com/resource/2025-ai-in-procurement
-- **Status:** PENDING
+- **Status:** RESEARCHED
+- **Research File:** `vault/Companies/Fairmarkit.md`
+- **Researched:** 2026-04-04
 
 ### Skyfire
 - **Type:** Company

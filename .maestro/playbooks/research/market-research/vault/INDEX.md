@@ -1,7 +1,7 @@
 # AI Buyer Agents and Autonomous Procurement Research Vault
 
 > Research initiated: 2026-04-04
-> Last updated: 2026-04-04 (Loop 10 — stall-break)
+> Last updated: 2026-04-04 (Loop 11 — stall-break)
 > Agent: CladiBuyer Benchmarker
 
 ## Overview
@@ -45,7 +45,8 @@ This vault contains structured research about the **AI Buyer Agents and Autonomo
 - [[Companies/Procure-AI|Procure AI]] — AI-native procurement automation platform; 50+ autonomous agents across source-to-pay; $13M seed (Headline, Nov 2025); founded 2020; London/Paris/Frankfurt
 - [[Companies/Omnea|Omnea]] — AI SRM / procurement orchestration; vendor onboarding + cross-functional approval workflows; $50M Series B (Insight Partners + Khosla Ventures, Sep 2025); founded 2022; London
 - [[Companies/Zycus|Zycus]] — Global source-to-pay suite; Merlin ANA (Autonomous Negotiation Agent) is first enterprise-deployed autonomous supplier negotiation agent; ~2,500 employees; founded 1998; Princeton NJ / Mumbai
-> Remaining priorities: Fairmarkit, Skyfire (discovered, pending research); Amazon, OpenAI, Google, Salesforce, Microsoft, Stripe, Perplexity, Coinbase (not yet profiled)
+- [[Companies/Fairmarkit|Fairmarkit]] — AI agents for autonomous sourcing (demand-to-award); $78M raised; 150,000+ events with zero human touch per year at enterprise scale; Boston, founded 2017; 5× ProcureTech100
+> Remaining priorities: Skyfire (discovered, pending research); Amazon, OpenAI, Google, Salesforce, Microsoft, Stripe, Perplexity, Coinbase (not yet profiled)
 
 ### Products & Services
 _No profiles yet — research phase pending._
@@ -100,7 +101,7 @@ _Discovered — research profiles pending._
 
 | Category | Discovered | Researched |
 |----------|------------|------------|
-| Companies | 5 | 3 |
+| Companies | 5 | 4 |
 | Protocols & Standards | 5 | 0 |
 | Products & Platforms | 5 | 0 |
 | People | 0 | 0 |
@@ -108,7 +109,7 @@ _Discovered — research profiles pending._
 | Trends | 0 | 0 |
 | Research Papers | 5 | 0 |
 | Security & Compliance Frameworks | 5 | 0 |
-| **Total Entities** | **25** | **3** |
+| **Total Entities** | **25** | **4** |
 
 ---
 *This vault was initialized by the Maestro Market Research Playbook*

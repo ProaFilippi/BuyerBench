@@ -177,7 +177,9 @@ Entities this will likely link to:
 - [[NegMAS]] — theoretical comparison for multi-supplier bidding optimization mechanisms
 - [[SAP Ariba]] — incumbent tail-spend platform Fairmarkit displaces
 
-### Status: PENDING
+### Status: RESEARCHED
+### Research File: `vault/Companies/Fairmarkit.md`
+### Researched: 2026-04-04
 
 ---
 

@@ -124,3 +124,46 @@ Procure AI is a European AI-native procurement automation platform founded in 20
 - Security certifications (ISO 27001, SOC 2) referenced via trust.procure.ai but specific certification status not confirmed from public sources
 - Founding year stated as "spring 2020" in one source but not consistently confirmed across all coverage
 - Follow-up recommended: research Omnea, Fairmarkit, Zycus for competitive landscape depth; research Headline VC thesis for market context
+
+---
+
+## [2026-04-04 Loop 11] - Researched: Fairmarkit
+
+**Loop:** 00001 (Loop 11 — stall-break direct execution)
+**Entity Type:** Company
+**Importance:** HIGH
+**File Created:** `vault/Companies/Fairmarkit.md`
+
+### Research Summary
+Fairmarkit is a Boston-based enterprise AI sourcing platform (founded 2017, $78M raised, ~147 employees) that has evolved from tail-spend automation into a full autonomous sourcing platform. Its adaptive RFx architecture lets purpose-built AI agents run RFQ, RFP, and RFI workflows demand-to-award with zero human touch — some enterprise customers (Amazon, BP, Goodyear, Nestle) have run 150,000+ events fully autonomously in a single year. The 2025 AI in Procurement Index revealed 94% of suppliers now use AI in negotiations, directly informing Pillar 2 adversarial scenario design.
+
+### Key Facts Discovered
+- **Full auto-award capability in production**: Auto-send + auto-award confirmed in Snowflake case study; 31.8% of Snowflake's events run autonomously (15× YoY increase)
+- **150,000+ zero-touch events per year**: Most extensively documented production-scale autonomous buyer agent workflow — direct Pillar 1 calibration data
+- **2025 AI in Procurement Index**: 43% of leaders fear inaccurate AI data; 39% fear AI lock-in in fast-moving negotiations; 94% of suppliers use AI — adversarial negotiation context for Pillar 2
+- **Gartner recognition**: Three Hype Cycle categories (Tail Spend Solutions, Supplier Discovery, Autonomous Sourcing) and three agentic AI reports — confirms analyst validation
+- **Multi-model AI agent network**: Kit Co-pilot, Strategy Builder, AI Bid Analysis Agent — specialized agents per workflow phase, not a monolithic LLM
+- **SAP Store integration**: Native integration for SAP customers; service revenue moat against incumbents
+
+### Links Created
+- [[Procure AI]] — direct competitor (autonomous sourcing execution)
+- [[Omnea]] — complementary in intake orchestration
+- [[Zycus]] — overlapping tail-spend / autonomous award features
+- [[NegMAS]] — theoretical comparison for multi-supplier bidding optimization
+- [[Mastercard Agent Pay]] — potential payment execution layer for autonomous award at scale
+
+### Sources Used
+1. [Fairmarkit Homepage](https://www.fairmarkit.com/)
+2. [Series C Announcement — BusinessWire](https://www.businesswire.com/news/home/20220901005138/en/Fairmarkit-Secures-%2435.6-Million-Series-C-Funding-to-Help-More-Enterprises-Optimize-Tail-Spend)
+3. [TechCrunch Series C Coverage](https://techcrunch.com/2022/09/01/fairmarkits-ai-fueled-platform-delivers-autonomous-procurement-sourcing/)
+4. [2025 AI in Procurement Index](https://www.fairmarkit.com/resource/2025-ai-in-procurement)
+5. [Gartner Reports Recognition — BusinessWire Nov 2025](https://www.businesswire.com/news/home/20251120635979/en/Fairmarkit-Recognized-in-Three-Gartner-Reports-Covering-Agentic-AI-and-AIs-Impact-on-Procurement)
+6. [2025 Year in Review Blog](https://www.fairmarkit.com/blog/2025-year-in-review)
+7. [Snowflake Case Study](https://www.fairmarkit.com/case-studies/snowflake)
+8. [CPO Rising: AI in Action with Fairmarkit](https://cporising.com/2026/01/07/best-of-2025-ai-in-action-procurement-a-conversation-with-fairmarkit/)
+
+### Research Notes
+- No public funding after September 2022 Series C; total $78M is based on Tracxn/Pitchbook data
+- Auto-award scope: fully autonomous for qualifying events, but the exact criteria for autonomous vs. human-reviewed award remain undocumented publicly
+- The 150,000+ zero-touch events stat comes from the 2025 Year in Review — specific customer not named (generic "some customers")
+- Fairmarkit has no crypto/alternative payment rail exposure; purely card/ACH/enterprise payment territory — no Pillar 3 crypto scenarios apply directly
