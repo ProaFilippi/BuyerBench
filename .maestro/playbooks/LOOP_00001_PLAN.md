@@ -263,4 +263,6 @@ Entities this will likely link to:
 - [[Stripe]] — ACP co-creator; Stripe's payment infrastructure underpins the protocol's settlement layer
 - [[PCI DSS v4.0]] — ACP card-based payments must comply with PCI DSS; protocol design choices affect cardholder data scope
 
-### Status: PENDING
+### Status: RESEARCHED
+### Research File: `vault/Technologies/ACP.md`
+### Researched: 2026-04-04

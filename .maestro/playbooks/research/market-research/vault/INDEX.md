@@ -54,8 +54,11 @@ _No profiles yet — research phase pending._
 > Priority: Amazon Rufus, Alexa+, ChatGPT ACP, Perplexity Comet, Salesforce Agentforce, NegMAS
 
 ### Protocols & Standards
-_Discovered — research profiles pending._
-- ACP (Agents Commerce Protocol) — OpenAI + Stripe; Apache 2.0; live in ChatGPT as Instant Checkout (Sep 2025); partially rolled back Mar 2026
+- [[Technologies/ACP|ACP (Agentic Commerce Protocol)]] — OpenAI + Stripe; Apache 2.0; four-step checkout API + SharedPaymentToken + Stripe Radar fraud detection; live as ChatGPT Instant Checkout Sep 2025; removed Mar 2026 (poor adoption); spec ongoing under community governance; **Pillar 3 reference implementation**
+- AP2 / UCP (Google) — 60+ partners including Mastercard, Adyen, PayPal, Coinbase; UCP with Shopify covers checkout layer
+- x402 — Coinbase HTTP-native micropayment protocol; uses HTTP 402 status code; cryptographic machine-to-machine payments
+- Visa Intelligent Commerce + Trusted Agent Protocol — launched Apr 2025 + Oct 2025; KYA identity layer; partnered with Anthropic, Microsoft, OpenAI, Perplexity
+- Mastercard Agent Pay — launched Oct 2025; tokenization + identity for agent transactions; PCI DSS-aligned
 - AP2 / UCP (Google) — 60+ partners including Mastercard, Adyen, PayPal, Coinbase; UCP with Shopify covers checkout layer
 - x402 — Coinbase HTTP-native micropayment protocol; uses HTTP 402 status code; cryptographic machine-to-machine payments
 - Visa Intelligent Commerce + Trusted Agent Protocol — launched Apr 2025 + Oct 2025; KYA identity layer; partnered with Anthropic, Microsoft, OpenAI, Perplexity
@@ -103,14 +106,14 @@ _Discovered — research profiles pending._
 | Category | Discovered | Researched |
 |----------|------------|------------|
 | Companies | 5 | 5 |
-| Protocols & Standards | 5 | 0 |
+| Protocols & Standards | 5 | 1 |
 | Products & Platforms | 5 | 0 |
 | People | 0 | 0 |
 | Technologies | 0 | 0 |
 | Trends | 0 | 0 |
 | Research Papers | 5 | 0 |
 | Security & Compliance Frameworks | 5 | 0 |
-| **Total Entities** | **25** | **5** |
+| **Total Entities** | **25** | **6** |
 
 ## Research Summary
 
@@ -123,11 +126,11 @@ _Discovered — research profiles pending._
 | Category | Discovered | Researched | Gap |
 |----------|------------|------------|-----|
 | Companies | 5 | 5 | 0 — all 5 companies fully profiled |
-| Protocols & Standards | 5 | 0 | ACP, AP2/UCP, x402, Visa, Mastercard — profiles pending future cycle |
+| Protocols & Standards | 5 | 1 | **ACP profiled** (`vault/Technologies/ACP.md`); AP2/UCP, x402, Visa, Mastercard — pending |
 | Products & Platforms | 5 | 0 | Amazon Alexa+, ChatGPT, Perplexity Comet, Agentforce, NegMAS — pending |
 | Research Papers | 5 | 0 | ACES, LLM Eval Survey, AgentBench, WebArena, WebShop — pending |
 | Security & Compliance Frameworks | 5 | 0 | PCI DSS, 3DS2, NIST AI RMF, ISO 42001, FATF — pending |
-| **Total** | **25** | **5** | 20 entities discovered but not yet deeply profiled |
+| **Total** | **25** | **6** | 19 entities discovered but not yet deeply profiled |
 
 ### Researched Entities (with Research Files)
 
@@ -138,6 +141,7 @@ _Discovered — research profiles pending._
 | Zycus | Company | `vault/Companies/Zycus.md` | Pillar 1 + 2 (Merlin ANA autonomous negotiation) |
 | Fairmarkit | Company | `vault/Companies/Fairmarkit.md` | Pillar 1 + 2 (150K+ zero-touch events, 2025 Index) |
 | Skyfire | Company | `vault/Companies/Skyfire.md` | **Pillar 3** (KYA, KYAPay, multi-rail, fraud detection) |
+| ACP | Protocol | `vault/Technologies/ACP.md` | **Pillar 3** (4-step checkout API, SPT credential model, Stripe Radar fraud, protocol governance rollback scenario) |
 
 ### Research Notes
 
