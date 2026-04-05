@@ -1,7 +1,7 @@
 # AI Buyer Agents and Autonomous Procurement Research Vault
 
 > Research initiated: 2026-04-04
-> Last updated: 2026-04-04 (Loop 9 — stall-break)
+> Last updated: 2026-04-04 (Loop 10 — stall-break)
 > Agent: CladiBuyer Benchmarker
 
 ## Overview
@@ -44,7 +44,8 @@ This vault contains structured research about the **AI Buyer Agents and Autonomo
 ### Companies
 - [[Companies/Procure-AI|Procure AI]] — AI-native procurement automation platform; 50+ autonomous agents across source-to-pay; $13M seed (Headline, Nov 2025); founded 2020; London/Paris/Frankfurt
 - [[Companies/Omnea|Omnea]] — AI SRM / procurement orchestration; vendor onboarding + cross-functional approval workflows; $50M Series B (Insight Partners + Khosla Ventures, Sep 2025); founded 2022; London
-> Remaining priorities: Amazon, OpenAI, Google, Salesforce, Microsoft, Stripe, Perplexity, Coinbase; Fairmarkit, Zycus, Skyfire (discovered, not yet researched)
+- [[Companies/Zycus|Zycus]] — Global source-to-pay suite; Merlin ANA (Autonomous Negotiation Agent) is first enterprise-deployed autonomous supplier negotiation agent; ~2,500 employees; founded 1998; Princeton NJ / Mumbai
+> Remaining priorities: Fairmarkit, Skyfire (discovered, pending research); Amazon, OpenAI, Google, Salesforce, Microsoft, Stripe, Perplexity, Coinbase (not yet profiled)
 
 ### Products & Services
 _No profiles yet — research phase pending._
@@ -75,9 +76,13 @@ _Discovered — research profiles pending._
 - arXiv 2307.13854 — WebArena: Realistic Web Environment for Autonomous Agents (e-commerce domain)
 - arXiv 2207.01206 — WebShop: AI Shopping Agent Benchmark (NeurIPS 2022; 1.18M Amazon products)
 
-### Security & Compliance
-_No profiles yet — research phase pending._
-> Priority: PCI DSS v4.0 AI controls, EMV 3DS, PCI SSC AI guidance
+### Security & Compliance Frameworks
+_Discovered — research profiles pending._
+- **PCI DSS v4.0** — Payment Card Industry Data Security Standard; full enforcement from April 2025; primary baseline for any AI buyer agent executing card transactions
+- **EMV 3-D Secure (3DS2)** — Card-not-present authentication protocol; governs online card payment authorization flows for agent-initiated transactions
+- **NIST AI Risk Management Framework (AI RMF 1.0)** — Voluntary AI governance framework (Jan 2023); GOVERN/MAP/MEASURE/MANAGE functions applicable to enterprise AI procurement compliance
+- **ISO/IEC 42001:2023 AI Management System** — First international certifiable AI management standard (Dec 2023); enterprise AI governance certification pathway
+- **FATF Guidance on AML/CFT for Virtual Assets** — Anti-money laundering framework for crypto rails; Travel Rule obligations for x402/Coinbase-based agent payments
 
 ## Research Tools
 
@@ -95,15 +100,15 @@ _No profiles yet — research phase pending._
 
 | Category | Discovered | Researched |
 |----------|------------|------------|
-| Companies | 5 | 2 |
+| Companies | 5 | 3 |
 | Protocols & Standards | 5 | 0 |
 | Products & Platforms | 5 | 0 |
 | People | 0 | 0 |
 | Technologies | 0 | 0 |
 | Trends | 0 | 0 |
 | Research Papers | 5 | 0 |
-| Security & Compliance Frameworks | 0 | 0 |
-| **Total Entities** | **20** | **2** |
+| Security & Compliance Frameworks | 5 | 0 |
+| **Total Entities** | **25** | **3** |
 
 ---
 *This vault was initialized by the Maestro Market Research Playbook*

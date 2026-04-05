@@ -44,7 +44,9 @@ This document tracks all entities discovered during market research for the AI B
 - **Brief:** Global source-to-pay suite with agentic AI capabilities including Merlin Intake agent and Merlin Autonomous Negotiation Agent (ANA).
 - **Why Notable:** One of the first established procurement vendors to deploy an *autonomous negotiation agent* (Merlin ANA) — directly relevant to Pillar 1 (negotiation task scenarios) and Pillar 2 (economic decision quality). The ANA represents a commercial reference implementation of agent-driven price negotiation worth profiling and comparing against NegMAS.
 - **Discovery Source:** https://www.zycus.com/
-- **Status:** PENDING
+- **Status:** RESEARCHED
+- **Research File:** `vault/Companies/Zycus.md`
+- **Researched:** 2026-04-04
 
 ### Fairmarkit
 - **Type:** Company
@@ -243,3 +245,76 @@ This document tracks all entities discovered during market research for the AI B
   - WebArena project site (webarena.dev)
   - o-mega.ai: 2025 AI agent benchmarks guide
   - evidentlyai.com: 10 AI agent benchmarks overview
+
+---
+
+## Security & Compliance Frameworks - Discovered 2026-04-04
+
+### PCI DSS v4.0
+- **Type:** Security / Compliance Framework
+- **Brief:** Payment Card Industry Data Security Standard version 4.0 (released March 2022, full enforcement April 2025) — the primary global standard governing secure handling of cardholder data, covering network security, access control, encryption, logging, and vulnerability management across all entities that store, process, or transmit card data.
+- **Why Notable:** PCI DSS is the non-negotiable baseline for any AI buyer agent that executes card-based transactions. v4.0 introduces new authentication requirements (multi-factor authentication expanded to all CDE access), clarifies responsibilities for cloud and shared environments, and adds flexibility through customized implementations — all of which interact directly with agentic payment flows. Every Pillar 3 secure-transaction scenario in BuyerBench must be evaluated against PCI DSS compliance: correct sequencing of payment operations, secure credential handling, and network segmentation.
+- **Discovery Source:** https://www.pcisecuritystandards.org/document_library/?category=pcidss&document=pci_dss
+- **Status:** PENDING
+
+### EMV 3-D Secure (3DS2)
+- **Type:** Security / Compliance Framework (Authentication Protocol)
+- **Brief:** EMV 3-D Secure version 2 (3DS2) is the industry-standard authentication protocol for card-not-present transactions, developed by EMVCo and adopted by all major card networks (Visa, Mastercard, Amex). It provides risk-based authentication, frictionless flows for low-risk transactions, and strong customer authentication (SCA) for high-risk ones — replacing the older 3DS1 / "Verified by Visa" redirect flow.
+- **Why Notable:** AI buyer agents executing online card payments operate in the 3DS2 environment. Understanding when agents trigger friction (step-up challenges) vs. frictionless flows is critical for Pillar 3 authorization scenario design. The protocol also defines how merchants and issuers exchange data elements — agent identity, device fingerprint, behavioral signals — that are directly relevant to KYA (Know Your Agent) identity verification. Visa and Mastercard's agent payment protocols (Intelligent Commerce, Agent Pay) are built on top of EMV 3DS2 tokenization infrastructure.
+- **Discovery Source:** https://www.emvco.com/emv-technologies/3-d-secure/
+- **Status:** PENDING
+
+### NIST AI Risk Management Framework (AI RMF 1.0)
+- **Type:** Security / Compliance Framework (AI Governance)
+- **Brief:** NIST AI Risk Management Framework version 1.0 (released January 2023) — a voluntary framework for organizations to identify, assess, and manage AI risks across the full AI lifecycle. Structured around four core functions: GOVERN, MAP, MEASURE, MANAGE. Widely adopted as the de facto AI governance reference for US federal agencies and increasingly referenced in private-sector AI procurement policies.
+- **Why Notable:** NIST AI RMF is becoming the standard reference for enterprise AI compliance attestations — especially relevant to AI buyer agents operating in regulated procurement environments. The GOVERN function maps to Pillar 3 authorization and policy enforcement scenarios. The MEASURE function is directly applicable to BuyerBench's evaluation methodology: defining what "trustworthy AI buyer agent behavior" means and how to measure it quantitatively. Enterprise buyers (large companies evaluating AI procurement tools) will increasingly require AI RMF alignment.
+- **Discovery Source:** https://airc.nist.gov/RMF
+- **Status:** PENDING
+
+### ISO/IEC 42001:2023 (AI Management System Standard)
+- **Type:** Security / Compliance Framework (AI Governance)
+- **Brief:** ISO/IEC 42001:2023 is the first international standard specifying requirements for establishing, implementing, maintaining, and continually improving an Artificial Intelligence Management System (AIMS) within an organization. Published December 2023, developed by ISO/IEC JTC 1/SC 42. Provides a certifiable framework (similar to ISO 27001 for information security) for responsible AI development and deployment.
+- **Why Notable:** ISO 42001 provides organizations deploying AI buyer agents with a certifiable compliance pathway. Its requirements cover AI system objectives, risk treatment, data governance, and human oversight mechanisms — all of which map to BuyerBench Pillar 3 compliance scenarios. As enterprise procurement organizations face AI governance audits, ISO 42001 certification will increasingly be demanded of AI agent vendors (Procure AI, Omnea, Zycus). BuyerBench Pillar 3 should reference ISO 42001 controls when designing oversight and escalation scenarios.
+- **Discovery Source:** https://www.iso.org/standard/77304.html
+- **Status:** PENDING
+
+### FATF Guidance on AML/CFT for Virtual Assets and AI Agents
+- **Type:** Security / Compliance Framework (AML / Financial Crime)
+- **Brief:** Financial Action Task Force (FATF) recommendations and guidance covering anti-money laundering (AML) and counter-financing of terrorism (CFT) obligations for virtual asset service providers (VASPs) and, increasingly, AI-driven financial agents. The "Travel Rule" (FATF Recommendation 16) requires VASPs to share originator/beneficiary information for transactions above $1,000/€1,000. FATF updated its guidance on virtual assets in 2021 and is actively developing guidance on AI's role in financial crime risk.
+- **Why Notable:** AI buyer agents operating on crypto payment rails (x402 Coinbase protocol, digital currency checkouts) must comply with FATF's Travel Rule and AML/CFT obligations. This creates unique Pillar 3 scenarios: fraud detection for crypto-based agent transactions, AML screening within autonomous payment flows, and KYC/KYA verification requirements. The intersection of FATF obligations with agent autonomy (who is the "originator" when an AI agent sends crypto?) creates novel compliance challenges that BuyerBench can model as adversarial security scenarios.
+- **Discovery Source:** https://www.fatf-gafi.org/en/topics/virtual-assets.html
+- **Status:** PENDING
+
+### Discovery Summary
+- **Category:** Security & Compliance Frameworks
+- **Entities Found:** 5
+- **Search Queries Used:**
+  - "PCI DSS v4.0 AI agent payment security compliance 2024 2025"
+  - "EMV 3DS2 authentication protocol agentic payments card-not-present"
+  - "NIST AI RMF 1.0 procurement AI governance risk management framework"
+  - "ISO 42001 AI management system standard certification 2023 2024"
+  - "FATF AML CFT virtual assets AI agents Travel Rule compliance"
+- **Sources Checked:**
+  - PCI Security Standards Council: pcisecuritystandards.org (PCI DSS v4.0 documentation)
+  - EMVCo: emvco.com (EMV 3DS2 specification and overview)
+  - NIST AI RMF: airc.nist.gov/RMF (framework documentation)
+  - ISO: iso.org/standard/77304.html (ISO 42001:2023 standard page)
+  - FATF: fatf-gafi.org (virtual assets guidance)
+  - LOOP_00001_MARKET_ANALYSIS.md (Pillar 3 security context)
+
+---
+
+## ALL_CATEGORIES_COVERED
+
+All five priority entity categories from `LOOP_00001_MARKET_ANALYSIS.md` have been discovered:
+
+| Category | Target | Discovered | Status |
+|----------|--------|------------|--------|
+| Companies | 5–10 | 5 | ✓ COMPLETE |
+| Protocols & Standards | 3–5 | 5 | ✓ COMPLETE |
+| Products & Platforms | 5–10 | 5 | ✓ COMPLETE |
+| Research Papers | 3–5 | 5 | ✓ COMPLETE |
+| Security & Compliance Frameworks | 3–5 | 5 | ✓ COMPLETE |
+
+**Total entities discovered: 25** (5 per category × 5 categories)
+**Discovery completed: 2026-04-04 (Loop 10 — stall-break)**

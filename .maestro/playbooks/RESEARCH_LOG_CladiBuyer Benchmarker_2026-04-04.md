@@ -2,6 +2,46 @@
 
 ---
 
+## [2026-04-04 Loop 10] - Researched: Zycus
+
+**Loop:** 00001 (Loop 10 — stall-break direct execution)
+**Entity Type:** Company
+**Importance:** HIGH
+**File Created:** `vault/Companies/Zycus.md`
+
+### Research Summary
+Zycus is a global source-to-pay procurement suite founded in 1998 (Princeton NJ / Mumbai), with ~2,500 employees and 250+ enterprise clients. Its Merlin AI platform includes **Merlin ANA (Autonomous Negotiation Agent)** — one of the first production enterprise deployments of an autonomous supplier price negotiation agent. ANA operates within buyer-defined parameters using LLM-driven negotiation (not formal alternating-offer protocols), making it the key commercial reference for BuyerBench Pillar 1 negotiation scenarios.
+
+### Key Facts Discovered
+- **Merlin ANA** conducts multi-round supplier price negotiations autonomously; buyer sets floor/target/concession strategy upfront; ANA executes and escalates only at boundary conditions
+- **LLM-driven, not game-theoretic**: ANA uses large language models for counter-offer generation and supplier intent parsing — contrasts architecturally with NegMAS's formal alternating-offer protocol
+- **Rule-bounded autonomy**: Hard guardrails prevent ANA from exceeding authorized price floors or deal terms; full audit trail logged for compliance
+- **Marketing claim of bias elimination**: Zycus claims ANA "eliminates anchoring bias" vs. human negotiators — a directly testable hypothesis for BuyerBench Pillar 2
+- **Bootstrapped / no public VC**: Unlike Procure AI and Omnea, Zycus is self-funded; stronger profit discipline but slower AI-native iteration
+- **Competitor to Pactum AI** (Walmart/Maersk) — dedicated autonomous negotiation specialist; most direct ANA competitor (not yet profiled in vault)
+- Spend Matters and Gartner Magic Quadrant for S2P Suites both cover Zycus; G2 customer reviews confirm Merlin capabilities in production
+
+### Links Created
+- [[Procure-AI]] — AI-native startup competitor; agent-first vs. suite-embedded AI
+- [[Omnea]] — procurement orchestration competitor; Omnea positions against legacy Zycus workflows
+- [[Fairmarkit]] — tail-spend sourcing competitor; overlapping RFQ/bid automation
+- [[NegMAS]] — formal negotiation framework reference; architectural contrast to Merlin ANA's LLM approach
+
+### Sources Used
+1. [Zycus Merlin AI Platform](https://www.zycus.com/merlin) — product pages
+2. [Zycus About Us](https://www.zycus.com/about-us) — company overview
+3. [Spend Matters](https://spendmatters.com/) — analyst coverage of Merlin ANA
+4. [G2 Zycus Reviews](https://www.g2.com/products/zycus/reviews) — customer reviews
+5. [Crunchbase: Zycus](https://www.crunchbase.com/organization/zycus) — company data
+
+### Research Notes
+- Specific ANA performance metrics (exact savings rate, escalation rate) not publicly disclosed; Zycus uses case studies with directional data only
+- Pactum AI (Walmart, Maersk) is ANA's most direct competitor and worth profiling in a future loop
+- No public technical architecture paper or API documentation; Merlin ANA is proprietary
+- Revenue and funding details not publicly disclosed; no VC rounds reported
+
+---
+
 ## [2026-04-04 Loop 9] - Researched: Omnea
 
 **Loop:** 00001 (Loop 9 — stall-break direct execution)

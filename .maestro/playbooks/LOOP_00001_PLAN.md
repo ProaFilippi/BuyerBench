@@ -136,7 +136,9 @@ Entities this will likely link to:
 - [[Fairmarkit]] — overlapping sourcing automation for tail-spend workflows
 - [[NegMAS]] — open-source negotiation framework Merlin ANA may be architecturally comparable to
 
-### Status: PENDING
+### Status: RESEARCHED
+### Research File: `vault/Companies/Zycus.md`
+### Researched: 2026-04-04
 
 ---
 
@@ -174,5 +176,46 @@ Entities this will likely link to:
 - [[Zycus]] — overlapping tail-spend sourcing use case; Fairmarkit positions against legacy suite limitations
 - [[NegMAS]] — theoretical comparison for multi-supplier bidding optimization mechanisms
 - [[SAP Ariba]] — incumbent tail-spend platform Fairmarkit displaces
+
+### Status: PENDING
+
+---
+
+## Skyfire - Evaluated 2026-04-04
+
+**Source:** LOOP_00001_ENTITIES.md — Companies category
+**Type:** Company
+**Category:** AI Agent Payment Infrastructure
+
+### Quick Profile
+Skyfire is an AI agent payment infrastructure company that provides KYA (Know Your Agent) identity verification and autonomous payment execution for AI agents — essentially acting as the financial rails layer enabling agents to transact without human intervention at each step. The company raised $9.5–10M led by Neuberger Berman with a16z CSX and Coinbase Ventures participating. Skyfire partnered with Visa Intelligent Commerce and demonstrated a live end-to-end agent purchase (a Consumer Reports agent buying Bose headphones) as proof of concept.
+
+### Importance Assessment
+- **Rating:** HIGH
+- **Justification:** Skyfire occupies a unique position in the AI buyer agent ecosystem: it is the *payment rails* layer, not an application-layer buyer agent itself. This makes it directly relevant to BuyerBench Pillar 3 — its KYA identity model, agent wallet architecture, and autonomous payment authorization patterns define what "secure agent transaction infrastructure" looks like in practice. BuyerBench Pillar 3 scenarios involving payment authorization, fraud detection, and credential handling should be calibrated against Skyfire's production implementation. The a16z CSX and Coinbase Ventures participation also connects Skyfire to the x402 crypto payment protocol ecosystem, expanding its relevance to non-card payment scenarios.
+- **Key Questions to Answer:**
+  1. How does Skyfire's KYA (Know Your Agent) identity model work — what credentials does it assign to agents, how are they verified, and how do they map to traditional KYC (Know Your Customer) obligations under financial regulations?
+  2. What authorization boundaries does Skyfire enforce — can buyers set spending limits, category restrictions, or vendor allow-lists? How are these controls enforced and audited?
+  3. How does Skyfire handle fraud detection for autonomous agent transactions — what signals trigger review or rejection, and how does it differ from traditional fraud models built for human cardholders?
+
+### Research Effort Assessment
+- **Rating:** MEDIUM
+- **Justification:** Skyfire has solid press coverage from TechCrunch (funding announcement), the live Bose headphones demo, and its Visa partnership announcement. The company website (skyfire.xyz) describes its product architecture and KYA model. However, as an early-stage funded startup, detailed technical specification, audit trail mechanics, and independent security assessments are likely not yet publicly available.
+- **Primary Sources Available:**
+  - TechCrunch funding announcement (Aug 2024): "Skyfire Lets AI Agents Spend Your Money"
+  - Company website: skyfire.xyz (product architecture, KYA documentation, developer docs)
+  - Visa Intelligent Commerce partnership press release
+  - Coinbase Ventures portfolio announcement
+  - a16z CSX portfolio page (positioning language and investment thesis)
+
+### Expected Connections
+Entities this will likely link to:
+- [[Visa Intelligent Commerce + Trusted Agent Protocol]] — Skyfire is a Visa partner; KYA directly implements Visa's Trusted Agent Protocol identity model
+- [[x402]] — Coinbase Ventures investment links Skyfire to the x402 crypto payment protocol ecosystem
+- [[Mastercard Agent Pay]] — indirect competitor at the payment rails level
+- [[ACP (Agents Commerce Protocol)]] — Skyfire could serve as a payment execution layer for ACP-based transactions
+- [[Procure AI]] — potential integration partner; Procure AI autonomous agents need Skyfire-style payment rails
+- [[PCI DSS v4.0]] — Skyfire's card payment handling must comply with PCI DSS
+- [[FATF Guidance on AML/CFT]] — Skyfire's crypto rails involvement triggers FATF compliance obligations
 
 ### Status: PENDING
