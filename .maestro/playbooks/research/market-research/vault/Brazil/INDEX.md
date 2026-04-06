@@ -13,7 +13,7 @@ related:
 # Brazil AI Buyer Agent Market Index
 
 > Research initiated: 2026-04-05
-> Last updated: 2026-04-06 (Phase 05 Task 5 complete — Brazil-Procurement-Regulation.md added to Regulatory section)
+> Last updated: 2026-04-06 (Phase 05 Task 6 complete — Brazil-Compliance-Overview.md added to Regulatory section; all 6 regulatory files indexed)
 > Agent: CladiBuyer Benchmarker
 
 ## Overview
@@ -166,3 +166,4 @@ Brazil's agribusiness sector (responsible for ~25% of GDP) and manufacturing bas
 - [[Open-Finance-Brazil]] — Phases 1–4 (Phase 4 complete April 2024); Payment Initiation API V1–V4; FAPI 1.0 + ICP-Brasil mTLS; Contactless Pix / Enrollments API; LGPD consent coupling; 8 Pillar 3 scenario mappings
 - [[BACEN-AI-Governance]] — BACEN "monitor first, regulate later" posture; no AI-specific rules before 2027; PL 2338/2023 strict liability framework; Circular 3.978/2020 AML/KYC; COAF reporting thresholds; 7 Pillar 3 scenario mappings; gap analysis vs FATF/NIST
 - [[Brazil-Procurement-Regulation]] — NF-e / NFS-e mandatory e-invoicing (SEFAZ real-time government clearance); Nova Lei de Licitações (Lei 14.133/2021); NFC-e→NF-e B2B restriction (Nov 2025); IBS/CBS tax reform (2025.002); 8 Pillar 3 scenario mappings; compliance checklist (10 items)
+- [[Brazil-Compliance-Overview]] — Cross-reference synthesis of all 5 regulatory profiles; four-plane compliance architecture (data/authorization/settlement/audit); compliance stack table; global comparison (PCI DSS vs. Pix, GDPR vs. LGPD, FATF vs. BACEN); 15-item priority action list; cross-framework scenario dependency map; regulatory horizon dates
