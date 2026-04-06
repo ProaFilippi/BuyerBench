@@ -22,11 +22,12 @@ This phase profiles the 9 highest-priority entities that were discovered but nev
   - Create `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/research/market-research/vault/Protocols/x402.md` with YAML front matter (type: protocol, tags: [payment-protocol, coinbase, micropayments, http, crypto]) and sections: Overview, HTTP 402 Mechanism, Cryptographic Payment Model, Use Cases for AI Agents, Adoption Status, Comparison to ACP and AP2, BuyerBench Pillar Relevance, wiki-links to [[ACP]], [[AP2-UCP]]
   <!-- Completed 2026-04-05: Created Protocols/x402.md. Key findings: launched Sep 2025 by Coinbase+Cloudflare; revives HTTP 402 status code for pay-per-request USDC micropayments; uses EIP-712/EIP-3009 gasless signing; ~2s settlement on Base; x402 Foundation (Coinbase, Cloudflare, AWS, Anthropic, Circle); native AP2 crypto extension; early adoption — ~$28K/day volume with ~50% artificial activity per CoinDesk Mar 2026; complementary to ACP/AP2 (different layers). -->
 
-- [ ] Research and profile Visa Intelligent Commerce + Trusted Agent Protocol:
+- [x] Research and profile Visa Intelligent Commerce + Trusted Agent Protocol:
   - Web search: "Visa Intelligent Commerce agentic payment 2025 KYA identity"
   - Web search: "Visa Trusted Agent Protocol October 2025 tokenization"
   - Web search: "Visa AI agent payment launch April 2025 partners"
   - Create `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/research/market-research/vault/Protocols/Visa-Intelligent-Commerce.md` with YAML front matter (type: protocol, tags: [payment-protocol, visa, tokenization, identity, KYA]) and sections: Overview, KYA (Know Your Agent) Identity Layer, Launch Timeline (Apr 2025 initial + Oct 2025 Trusted Agent Protocol), Partner Ecosystem, Token Model, Comparison to Mastercard Agent Pay, BuyerBench Pillar Relevance, wiki-links to [[Mastercard-Agent-Pay]], [[ACP]], [[Skyfire]]
+  <!-- Completed 2026-04-05: Created Protocols/Visa-Intelligent-Commerce.md. Key findings: VIC launched Apr 30 2025 with 100+ partners incl. Anthropic, OpenAI, Microsoft, Stripe, Samsung; TAP launched Oct 14 2025 — open framework (HTTP Message Signatures + WebAuthn) with 3-element payload (Agent Intent + Consumer Recognition + Payment Info); KYA = cryptographic root-of-trust linking principal→agent→credential→scope; tens of billions of existing Visa tokens extended to agent use cases; Skyfire KYAPay integration demonstrated Dec 2025; AWS Bedrock AgentCore integration Dec 2025; TAP is direct Pillar 3 reference standard for BuyerBench authentication/authorization scenarios. -->
 
 - [ ] Research and profile Mastercard Agent Pay:
   - Web search: "Mastercard Agent Pay October 2025 tokenization AI agents"
