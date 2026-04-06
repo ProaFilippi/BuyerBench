@@ -10,12 +10,13 @@ This phase expands coverage beyond the original 25 discovered entities to profil
   - Scan `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/LOOP_00001_ENTITIES.md` for any notes on major platform entities already captured
   - **Completed 2026-04-06**: Vault has 25/25 entities (100%). Companies dir has Procure-AI, Omnea, Zycus, Fairmarkit, Skyfire. No Amazon/OpenAI/Google/Stripe/Coinbase company-level profiles exist yet. LOOP_00001_ENTITIES.md confirms Amazon Alexa+/Buy for Me, OpenAI ChatGPT ACP, and Perplexity Comet are noted as Products (researched in Phase 01) — but no standalone company-level profiles for Amazon, OpenAI, Google, Stripe, or Coinbase. Profile format confirmed from Salesforce-Agentforce.md: YAML front matter → Overview → Quick Facts table → Feature sections → Pricing (tabular) → Limitations → BuyerBench Pillar Relevance → Related Entities → Sources.
 
-- [ ] Research and profile Amazon's agentic commerce platform:
+- [x] Research and profile Amazon's agentic commerce platform:
   - Web search: "Amazon Bedrock Agents pricing 2025 2026 per token"
   - Web search: "Amazon Nova agentic capabilities procurement enterprise 2025"
   - Web search: "Amazon Supply Chain AI agent capabilities pricing 2025"
   - Web search: "Amazon B2B procurement AI agent capabilities 2025 Business"
   - Create `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/research/market-research/vault/Companies/Amazon-Agentic-Commerce.md` with YAML front matter (type: company, tags: [amazon, platform, ai-agents, cloud, e-commerce, pricing]) and sections: Overview, Key Products (Bedrock Agents, Nova, Supply Chain, Amazon Business), Agentic Commerce Strategy (Buy for Me, Rufus, Alexa+ as consumer layer), Pricing (Bedrock per-token rates, agent invocation costs), Strategic Moves (OpenAI partnership Feb 2026, Perplexity injunction Mar 2026), BuyerBench Pillar Relevance, wiki-links to [[Amazon-Rufus-BuyForMe]], [[ACP]]
+  - **Completed 2026-04-06**: Full profile created. Nova pricing documented (Micro $0.035/$0.14 → Pro $0.80/$3.20 per M tokens). AgentCore Runtime at $0.0895/vCPU-hour. Bedrock Flows at $0.035/1K node transitions. Amazon Business AI tools (Assistant, Savings Insights, Anomaly Monitoring) profiled as no-charge bundled capabilities. Key strategic moves: OpenAI $50B partnership (Feb 2026), Perplexity CFAA injunction (Mar 2026) establishing dual-authorization precedent for Pillar 3. Agent cost-multiplier effect (5–10× token consumption per user query) documented. Wiki-links to [[Amazon-Rufus-BuyForMe]], [[ACP]], [[OpenAI-Agent-Platform]], [[Perplexity-Comet]], [[Skyfire]], [[AP2-UCP]].
 
 - [ ] Research and profile OpenAI's agent platform and pricing:
   - Web search: "OpenAI Responses API Agents SDK pricing 2025 2026"
