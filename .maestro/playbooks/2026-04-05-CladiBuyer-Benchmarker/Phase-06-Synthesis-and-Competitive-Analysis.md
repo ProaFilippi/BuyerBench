@@ -11,7 +11,7 @@ This phase synthesizes all research from Phases 01–05 into high-value analytic
   - Skim headings of all Companies/ profiles (global + Brazil) to prepare for competitive mapping
   <!-- Completed 2026-04-06: Read global INDEX (37 entities, 100% coverage), Brazil INDEX (25 entities, ~83% coverage), Brazil-Compliance-Overview (four-plane architecture: data/authorization/settlement/audit), and confirmed all Companies/ and Products/ profile files exist (10 global companies, 5 global products, 9 Brazil companies, 5 Brazil products). Ready for synthesis. -->
 
-- [ ] Build the Global Competitive Landscape document:
+- [x] Build the Global Competitive Landscape document:
   - Read all profiles in `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/research/market-research/vault/Companies/` and `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/research/market-research/vault/Products/`
   - Create `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/research/market-research/vault/Competitive-Landscape.md` with YAML front matter (type: analysis, tags: [competitive-analysis, global, market-map, synthesis]) and sections:
     - Market Map (Layer 1: Procurement Platforms; Layer 2: AI Agent Runtimes; Layer 3: Payment Infrastructure; Layer 4: Standards/Protocols)
@@ -20,6 +20,7 @@ This phase synthesizes all research from Phases 01–05 into high-value analytic
     - Notable Competitive Events Timeline (2025–2026: ACP rollback, Perplexity injunction, Visa+Mastercard same-day launch, OpenAI-Amazon partnership)
     - White Space / Gaps Identified
     - wiki-links to every profiled company and product
+  <!-- Completed 2026-04-06: Read all 10 company profiles (Procure AI, Omnea, Zycus, Fairmarkit, Skyfire, Amazon, OpenAI, Google, Stripe, Coinbase) and 5 product profiles (Amazon Rufus/BuyForMe, ChatGPT Operator, Perplexity Comet, Salesforce Agentforce, NegMAS). Created Competitive-Landscape.md with 4-layer market map, 4 competitive clusters, 12 head-to-head comparison tables, 22-event timeline (Apr 2025–Apr 2026), 8 white space gaps, and wiki-links to all 37 vault entities. -->
 
 - [ ] Build the Global Pricing Registry:
   - Read all profiles that contain pricing information (Companies/ and Products/ folders — look for BRL, USD, per-seat, per-transaction pricing)
