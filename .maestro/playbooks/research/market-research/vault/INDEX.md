@@ -1,7 +1,7 @@
 # AI Buyer Agents and Autonomous Procurement Research Vault
 
 > Research initiated: 2026-04-04
-> Last updated: 2026-04-05 (Phase 02 Complete — all 10 new profiles created; vault now at 25/25 entities, 100% coverage)
+> Last updated: 2026-04-06 (Phase 03 In Progress — 5 major platform company profiles + 7 people profiles added; vault now at 37/37 entities, 100% coverage)
 > Agent: CladiBuyer Benchmarker
 
 ## Overview
@@ -63,7 +63,13 @@ This vault contains structured research about the **AI Buyer Agents and Autonomo
 - [[Protocols/Mastercard-Agent-Pay|Mastercard Agent Pay]] — Launched Oct 14 2025 (same day as Visa TAP); 3-layer model (Agent Registration → Agentic Tokens → Verifiable Intent open-source spec); US cardholders enabled mid-Nov 2025; Web Bot Auth via Cloudflare CDN; Verifiable Intent immutable audit trail; **Pillar 3 dispute resolution + audit trail reference**
 
 ### Key People
-_No people researched yet._
+- [[People/Amine-Allouah|Amine Allouah]] — Lead author, ACES paper (arXiv:2508.02630); Columbia Business School PhD; designed the RCT benchmark that documented 5× position bias and endorsement effects in AI buyer agents; **Pillar 2 empirical foundation**
+- [[People/Omar-Besbes|Omar Besbes]] — Senior author, ACES paper; Columbia Business School professor (DRO division); revenue management and market microstructure expert; **Pillar 2 theoretical grounding**
+- [[People/Yasser-Mohammad|Yasser Mohammad]] — Creator of NegMAS + SCML; official ANAC engine (16 years, IJCAI); NEC/AIST researcher; configurable utility functions for bias research; **BuyerBench `negmas` agent reference implementation**
+- [[People/Kevin-Frechette|Kevin Frechette]] — CEO and Co-Founder of Fairmarkit (Boston, 2017); 150,000+ zero-human-touch events/year; prior IBM/Dell; lead practitioner voice on autonomous procurement at enterprise scale; **Pillar 1 scenario design reference**
+- [[People/Amir-Sarhangi|Amir Sarhangi]] — CEO and Co-Founder of Skyfire; prior VP Product at Ripple ($50B+ processed) and Jibe Mobile (acq. by Google → Android RCS); designed KYAPay open protocol for AI agent identity; **Pillar 3 identity-first payment architecture**
+- [[People/Rubail-Birwadker|Rubail Birwadker]] — SVP Head of Growth Products & Partnerships, Visa; oversees Visa Intelligent Commerce (100+ partners), Trusted Agent Protocol, crypto/stablecoins; at Visa since 2011; **Pillar 3 VIC/TAP authorization reference**
+- [[People/Jorn-Lambert|Jorn Lambert]] — Chief Product Officer, Mastercard; launched Agent Pay (Apr 2025) + Verifiable Intent open-source spec + Web Bot Auth (Cloudflare CDN); formerly CDO at Mastercard since 2002; **Pillar 3 audit trail and dispute resolution reference**
 
 ### Technologies
 _No technologies researched yet._
@@ -101,15 +107,15 @@ _No trends researched yet._
 
 | Category | Discovered | Researched |
 |----------|------------|------------|
-| Companies | 5 | 5 (100%) |
+| Companies | 10 | 10 (100%) |
 | Protocols & Standards | 5 | 5 (100%) |
 | Products & Platforms | 5 | 5 (100%) |
-| People | 0 | 0 |
+| People | 7 | 7 (100%) |
 | Technologies | 0 | 0 |
 | Trends | 0 | 0 |
 | Research Papers | 5 | 5 (100%) |
 | Security & Compliance Frameworks | 5 | 5 (100%) |
-| **Total Entities** | **25** | **25 (100%)** |
+| **Total Entities** | **37** | **37 (100%)** |
 
 ## Research Summary
 
