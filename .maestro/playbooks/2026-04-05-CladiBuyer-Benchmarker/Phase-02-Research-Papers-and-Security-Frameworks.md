@@ -9,10 +9,11 @@ This phase completes the academic and standards layer of the research vault by p
   - Read `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/LOOP_00001_ENTITIES.md` lines covering Research Papers and Security/Compliance sections (scan for entity metadata already captured)
   <!-- Completed 2026-04-05: ACP.md establishes the profile format — YAML front matter (type/title/created/tags/related), Quick Facts table, deep protocol sections, BuyerBench relevance blockquotes, wiki-links, and numbered Sources. ENTITIES.md confirmed arXiv IDs, Why Notable context, and discovery sources for all 5 research papers (ACES 2508.02630, LLM Agent Survey 2507.21504, AgentBench 2308.03688, WebArena 2307.13854, WebShop 2207.01206) and all 5 security frameworks (PCI DSS v4.0, EMV 3DS2, NIST AI RMF 1.0, ISO 42001:2023, FATF AML/CFT). All 10 entities have Status: PENDING — ready for profiling in subsequent tasks. -->
 
-- [ ] Research and profile the ACES paper (AI buyer agent bias evaluation):
+- [x] Research and profile the ACES paper (AI buyer agent bias evaluation):
   - Web search: "ACES What Is Your AI Agent Buying arXiv 2508.02630"
   - Web search: "ACES benchmark buyer agent position bias anchoring decoy evaluation"
   - Create `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/research/market-research/vault/Research-Papers/ACES-AI-Agent-Buying.md` with YAML front matter (type: research-paper, tags: [benchmark, buyer-agent, behavioral-bias, evaluation, pillar-2]) and sections: Citation, Abstract Summary, Key Findings (position bias, anchoring, decoy susceptibility metrics), Methodology (controlled variants, scenario design), Datasets Used, Implications for BuyerBench Pillar 2 Design, wiki-links to [[AgentBench]], [[WebShop]], [[Fairmarkit]]
+  <!-- Completed 2026-04-05: Profile created at Research-Papers/ACES-AI-Agent-Buying.md. ACES = Agentic e-CommercE Simulator (arXiv 2508.02630, Columbia University, Aug 2025, v3 Dec 2025). Key findings: 5× position bias, −0.135–−0.371 sponsored tag penalty, +1.06–+1.90 Overall Pick endorsement effect, price elasticity −1.6 to −2.2, seller description manipulation yielding +3.66–80.4pp market share. RCT+conditional logit methodology directly validates BuyerBench Pillar 2 controlled-variant design. Six BuyerBench design implications documented. -->
 
 - [ ] Research and profile the LLM Agent Benchmarking Survey (arXiv 2507.21504):
   - Web search: "Evaluation Benchmarking LLM Agents Survey arXiv 2507.21504 2025"
