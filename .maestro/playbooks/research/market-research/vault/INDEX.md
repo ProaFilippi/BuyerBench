@@ -1,7 +1,7 @@
 # AI Buyer Agents and Autonomous Procurement Research Vault
 
 > Research initiated: 2026-04-04
-> Last updated: 2026-04-05 (Phase 01 — 9 new protocol + product profiles; vault now 15 entities fully profiled)
+> Last updated: 2026-04-05 (Phase 02 — 5 research papers + PCI DSS v4.0 profiled; vault now 21 entities fully profiled)
 > Agent: CladiBuyer Benchmarker
 
 ## Overview
@@ -72,20 +72,18 @@ _No technologies researched yet._
 _No trends researched yet._
 
 ### Research Papers
-_Discovered — research profiles pending._
-- arXiv 2508.02630 — ACES: What Is Your AI Agent Buying? (buyer agent biases, VLM shopping agent evaluation)
-- arXiv 2507.21504 — Evaluation and Benchmarking of LLM Agents: A Survey (methodology for all pillars)
-- arXiv 2308.03688 — AgentBench: Evaluating LLMs as Agents (ICLR 2024; web shopping + web browsing tasks)
-- arXiv 2307.13854 — WebArena: Realistic Web Environment for Autonomous Agents (e-commerce domain)
-- arXiv 2207.01206 — WebShop: AI Shopping Agent Benchmark (NeurIPS 2022; 1.18M Amazon products)
+- [[Research-Papers/ACES-AI-Agent-Buying|ACES (arXiv 2508.02630)]] — RCT benchmark for AI buyer agent behavioral bias; 5× position bias, +1.0–+1.9 endorsement effect, −1.6 to −2.2 price elasticity; **Pillar 2 design foundation**
+- [[Research-Papers/LLM-Agent-Benchmarking-Survey|LLM Agent Benchmarking Survey (arXiv 2507.21504)]] — KDD 2025 survey; two-dimensional taxonomy (objectives × process); maps to BuyerBench 3-pillar structure
+- [[Research-Papers/AgentBench|AgentBench (arXiv 2308.03688)]] — ICLR 2024; 8 task environments; GPT-4 ~4× better than OSS; harness architecture template for **Pillar 1**
+- [[Research-Papers/WebArena|WebArena (arXiv 2307.13854)]] — ICLR 2024; 5-site realistic web env; 812 tasks; 14.4% GPT-4 vs 78% human baseline; functional correctness evaluation; **Pillar 1** gap analysis
+- [[Research-Papers/WebShop|WebShop (arXiv 2207.01206)]] — NeurIPS 2022; 1.18M Amazon products; partial-credit reward; 29% best model vs 59% human; **Pillar 1 reward design template**
 
 ### Security & Compliance Frameworks
-_Discovered — research profiles pending._
-- **PCI DSS v4.0** — Payment Card Industry Data Security Standard; full enforcement from April 2025; primary baseline for any AI buyer agent executing card transactions
-- **EMV 3-D Secure (3DS2)** — Card-not-present authentication protocol; governs online card payment authorization flows for agent-initiated transactions
-- **NIST AI Risk Management Framework (AI RMF 1.0)** — Voluntary AI governance framework (Jan 2023); GOVERN/MAP/MEASURE/MANAGE functions applicable to enterprise AI procurement compliance
-- **ISO/IEC 42001:2023 AI Management System** — First international certifiable AI management standard (Dec 2023); enterprise AI governance certification pathway
-- **FATF Guidance on AML/CFT for Virtual Assets** — Anti-money laundering framework for crypto rails; Travel Rule obligations for x402/Coinbase-based agent payments
+- [[Security-Compliance/PCI-DSS-v4|PCI DSS v4.0 (v4.0.1)]] — Full enforcement Mar 31 2025; 12 req domains; NHI management mandate (Req 8); AI Principles guidance; tokenization scope-reduction; **Pillar 3 payment security baseline**
+- **EMV 3-D Secure (3DS2)** — _(profile pending)_ Card-not-present authentication; frictionless vs. challenge flows; agent-initiated checkout authentication
+- **NIST AI RMF 1.0** — _(profile pending)_ Voluntary AI governance; GOVERN/MAP/MEASURE/MANAGE functions; enterprise AI procurement compliance
+- **ISO/IEC 42001:2023** — _(profile pending)_ First certifiable international AI management standard; Dec 2023; enterprise AI governance certification pathway
+- **FATF AML/CFT** — _(profile pending)_ Travel Rule obligations for crypto rails; x402/Coinbase-based agent payments
 
 ## Research Tools
 
@@ -109,9 +107,9 @@ _Discovered — research profiles pending._
 | People | 0 | 0 |
 | Technologies | 0 | 0 |
 | Trends | 0 | 0 |
-| Research Papers | 5 | 0 |
-| Security & Compliance Frameworks | 5 | 0 |
-| **Total Entities** | **25** | **15 (60%)** |
+| Research Papers | 5 | 5 (100%) |
+| Security & Compliance Frameworks | 5 | 1 (20%) |
+| **Total Entities** | **25** | **21 (84%)** |
 
 ## Research Summary
 
@@ -126,9 +124,9 @@ _Discovered — research profiles pending._
 | Companies | 5 | 5 (100%) | 0 — all 5 companies fully profiled |
 | Protocols & Standards | 5 | 5 (100%) | 0 — ACP, AP2/UCP, x402, Visa, Mastercard all profiled |
 | Products & Platforms | 5 | 5 (100%) | 0 — Amazon, ChatGPT Operator, Perplexity Comet, Agentforce, NegMAS all profiled |
-| Research Papers | 5 | 0 | ACES, LLM Eval Survey, AgentBench, WebArena, WebShop — pending |
-| Security & Compliance Frameworks | 5 | 0 | PCI DSS, 3DS2, NIST AI RMF, ISO 42001, FATF — pending |
-| **Total** | **25** | **15 (60%)** | 10 entities discovered but not yet deeply profiled |
+| Research Papers | 5 | 5 (100%) | All 5 profiled: ACES, LLM Eval Survey, AgentBench, WebArena, WebShop |
+| Security & Compliance Frameworks | 5 | 1 (20%) | PCI DSS profiled; 3DS2, NIST AI RMF, ISO 42001, FATF pending |
+| **Total** | **25** | **21 (84%)** | 4 entities remaining (security frameworks) |
 
 ### Researched Entities (with Research Files)
 
@@ -153,9 +151,10 @@ _Discovered — research profiles pending._
 ### Research Notes
 
 - **Companies, Protocols, and Products categories: COMPLETE.** All 15 entities across these three categories fully profiled as of 2026-04-05.
-- **10 entities remain unresearched.** 5 research papers (ACES, LLM Eval Survey, AgentBench, WebArena, WebShop) and 5 security frameworks (PCI DSS, 3DS2, NIST AI RMF, ISO 42001, FATF) are discovered but pending deep-dive profiles.
-- **Inter-page links:** All profiles use `[[Entity]]` wiki-link syntax. The Obsidian graph now shows a dense cluster connecting all protocols (ACP ↔ AP2/UCP ↔ x402 ↔ Visa ↔ Mastercard), products cross-referencing each other (Amazon ↔ Perplexity ↔ ChatGPT), and all Pillar 3 entities linking to Skyfire.
-- **Recommended next phase:** Research Papers + Security Frameworks (10 remaining entities). The ACES paper (arXiv 2508.02630) and PCI DSS v4.0 are highest-priority for BuyerBench scenario design.
+- **Research Papers: COMPLETE.** All 5 papers (ACES, LLM Eval Survey, AgentBench, WebArena, WebShop) fully profiled as of 2026-04-05 (Phase 02).
+- **Security Frameworks: IN PROGRESS.** PCI DSS v4.0 profiled (Phase 02). Four remain: EMV 3DS2, NIST AI RMF, ISO 42001, FATF AML/CFT.
+- **4 entities remain.** All are security/compliance frameworks.
+- **Inter-page links:** All profiles use `[[Entity]]` wiki-link syntax. The Obsidian graph shows a dense cluster connecting all protocols (ACP ↔ AP2/UCP ↔ x402 ↔ Visa ↔ Mastercard), products cross-referencing each other (Amazon ↔ Perplexity ↔ ChatGPT), and all Pillar 3 entities linking to Skyfire and PCI-DSS-v4.
 - **Pipeline note (Loop 00001):** The research pipeline ran 12 loops due to a recurring stall pattern (5_PROGRESS.md gate was firing before docs 1–4 executed in each cycle). Loops 7–12 used a stall-break pattern where the gate directly executed blocked pipeline steps.
 
 ---
