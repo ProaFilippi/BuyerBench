@@ -16,12 +16,13 @@ This phase documents the Brazilian regulatory and compliance environment that an
   - Create `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/research/market-research/vault/Brazil/Regulatory/LGPD.md` with YAML front matter (type: compliance-framework, tags: [brazil, lgpd, data-privacy, anpd, pillar-3]) and sections: Overview, Key Obligations (consent, data minimization, transparency), Automated Decision-Making Provisions (Art. 20 — agent-specific implications), ANPD Enforcement Status and Fines (in BRL), Comparison to GDPR, Implications for AI Buyer Agents Operating in Brazil, BuyerBench Pillar 3 Scenario Mapping, wiki-links to [[Pix]], [[Open-Finance-Brazil]], [[NIST-AI-RMF]]
   - *Completed 2026-04-06: Full LGPD profile created — 10 legal bases, Art. 20 automated decision analysis (lower threshold than GDPR), ANPD enforcement escalation (blocking orders > fines in 2024-2025), non-discrimination principle unique to LGPD, 7 Pillar 3 scenario mappings, LGPD vs GDPR comparison table.*
 
-- [ ] Research and profile Pix (BACEN instant payment rail):
+- [x] Research and profile Pix (BACEN instant payment rail):
   - Web search: "Pix BACEN API specification 2025 B2B enterprise payments"
   - Web search: "Pix automatic Pix Agendado programmatic payment AI agent 2025"
   - Web search: "Pix Cobrança API QR code payment B2B procurement Brazil"
   - Web search: "Pix fraud prevention BACEN limits rules 2025 agent transactions"
   - Create `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/research/market-research/vault/Brazil/Regulatory/Pix.md` with YAML front matter (type: payment-infrastructure, tags: [brazil, pix, bacen, instant-payment, b2b, pillar-3]) and sections: Overview, Pix Architecture (keys, QR codes, API flows), B2B Capabilities (Pix Cobrança, Pix Automatic, scheduled Pix), Transaction Limits (per-person, B2B, nighttime), Fraud Prevention Rules (BACEN regulations), AI Agent Compatibility (programmatic Pix initiation), BuyerBench Pillar 3 Scenario Design Implications, wiki-links to [[Open-Finance-Brazil]], [[LGPD]], [[Stripe-Agent-Payments]] (global comparison)
+  - *Completed 2026-04-06: Full Pix profile created — DICT key architecture, COB vs COBV B2B invoice distinction, Pix Automático (Jun 2025 launch) for recurring contracts, Pix Agendado for milestone payments, BCB Resolution 506 fraud rules (MED registry, device limits, R$200 new-device cap), mTLS+OAuth2.0 auth requirements, 8 Pillar 3 scenario mappings, comparison table vs Stripe/ACH/SEPA.*
 
 - [ ] Research and profile Open Finance Brazil (Open Banking expanded):
   - Web search: "Open Finance Brazil Phase 4 2024 2025 API agent payments"
