@@ -13,7 +13,7 @@ related:
 # Brazil AI Buyer Agent Market Index
 
 > Research initiated: 2026-04-05
-> Last updated: 2026-04-06 (Phase 04 Tasks 1–7 complete — vault finalized)
+> Last updated: 2026-04-06 (Phase 05 Task 5 complete — Brazil-Procurement-Regulation.md added to Regulatory section)
 > Agent: CladiBuyer Benchmarker
 
 ## Overview
@@ -165,3 +165,4 @@ Brazil's agribusiness sector (responsible for ~25% of GDP) and manufacturing bas
 - [[Pix]] — BACEN instant payment rail; DICT key architecture; COB vs COBV B2B invoices; Pix Automático (Jun 2025); BCB Resolution 506 fraud rules (MED, device limits, R$200 cap); 8 Pillar 3 scenario mappings
 - [[Open-Finance-Brazil]] — Phases 1–4 (Phase 4 complete April 2024); Payment Initiation API V1–V4; FAPI 1.0 + ICP-Brasil mTLS; Contactless Pix / Enrollments API; LGPD consent coupling; 8 Pillar 3 scenario mappings
 - [[BACEN-AI-Governance]] — BACEN "monitor first, regulate later" posture; no AI-specific rules before 2027; PL 2338/2023 strict liability framework; Circular 3.978/2020 AML/KYC; COAF reporting thresholds; 7 Pillar 3 scenario mappings; gap analysis vs FATF/NIST
+- [[Brazil-Procurement-Regulation]] — NF-e / NFS-e mandatory e-invoicing (SEFAZ real-time government clearance); Nova Lei de Licitações (Lei 14.133/2021); NFC-e→NF-e B2B restriction (Nov 2025); IBS/CBS tax reform (2025.002); 8 Pillar 3 scenario mappings; compliance checklist (10 items)
