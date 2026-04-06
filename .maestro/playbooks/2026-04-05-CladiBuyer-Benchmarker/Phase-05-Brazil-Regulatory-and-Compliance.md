@@ -9,11 +9,12 @@ This phase documents the Brazilian regulatory and compliance environment that an
   - Read `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/research/market-research/vault/Brazil/INDEX.md`
   - *Completed 2026-04-06: PCI DSS v4.0 profile ingested (NHI reqs, tokenization architecture, BuyerBench scenario hooks). Brazil INDEX read — vault has 25 entities across companies/products/ERP/fintechs; Regulatory section reserved for Phase 05.*
 
-- [ ] Research and profile LGPD (Lei Geral de Proteção de Dados):
+- [x] Research and profile LGPD (Lei Geral de Proteção de Dados):
   - Web search: "LGPD Lei Geral Proteção Dados requirements AI agents autonomous systems 2025"
   - Web search: "LGPD ANPD enforcement penalties AI automated decision making 2024 2025"
   - Web search: "LGPD vs GDPR key differences Brazil data protection agent systems"
   - Create `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/research/market-research/vault/Brazil/Regulatory/LGPD.md` with YAML front matter (type: compliance-framework, tags: [brazil, lgpd, data-privacy, anpd, pillar-3]) and sections: Overview, Key Obligations (consent, data minimization, transparency), Automated Decision-Making Provisions (Art. 20 — agent-specific implications), ANPD Enforcement Status and Fines (in BRL), Comparison to GDPR, Implications for AI Buyer Agents Operating in Brazil, BuyerBench Pillar 3 Scenario Mapping, wiki-links to [[Pix]], [[Open-Finance-Brazil]], [[NIST-AI-RMF]]
+  - *Completed 2026-04-06: Full LGPD profile created — 10 legal bases, Art. 20 automated decision analysis (lower threshold than GDPR), ANPD enforcement escalation (blocking orders > fines in 2024-2025), non-discrimination principle unique to LGPD, 7 Pillar 3 scenario mappings, LGPD vs GDPR comparison table.*
 
 - [ ] Research and profile Pix (BACEN instant payment rail):
   - Web search: "Pix BACEN API specification 2025 B2B enterprise payments"
