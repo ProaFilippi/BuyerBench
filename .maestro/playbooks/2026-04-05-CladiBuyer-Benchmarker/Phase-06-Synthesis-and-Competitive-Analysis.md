@@ -22,13 +22,14 @@ This phase synthesizes all research from Phases 01–05 into high-value analytic
     - wiki-links to every profiled company and product
   <!-- Completed 2026-04-06: Read all 10 company profiles (Procure AI, Omnea, Zycus, Fairmarkit, Skyfire, Amazon, OpenAI, Google, Stripe, Coinbase) and 5 product profiles (Amazon Rufus/BuyForMe, ChatGPT Operator, Perplexity Comet, Salesforce Agentforce, NegMAS). Created Competitive-Landscape.md with 4-layer market map, 4 competitive clusters, 12 head-to-head comparison tables, 22-event timeline (Apr 2025–Apr 2026), 8 white space gaps, and wiki-links to all 37 vault entities. -->
 
-- [ ] Build the Global Pricing Registry:
+- [x] Build the Global Pricing Registry:
   - Read all profiles that contain pricing information (Companies/ and Products/ folders — look for BRL, USD, per-seat, per-transaction pricing)
   - Create `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/research/market-research/vault/Pricing-Registry.md` with YAML front matter (type: reference, tags: [pricing, registry, global, brazil, comparison]) and sections:
     - Global Pricing Table (columns: Entity | Model | Price | Currency | Notes | Source Date)
     - Brazil Pricing Table (same columns, BRL-denominated where available)
     - Pricing Observations (enterprise SaaS opacity, open-source free tier patterns, per-transaction models in payment protocols)
     - wiki-links to all entities listed
+  <!-- Completed 2026-04-06: Read all 10 global company profiles and 5 global product profiles, plus 9 Brazil company profiles and 5 Brazil product profiles. Created Pricing-Registry.md with: (1) global model API pricing table (Amazon Nova, OpenAI GPT-5 family, Gemini 2.5 family), (2) agent runtime pricing (AgentCore vs Vertex AI Agent Engine — 9× cost gap), (3) consumer subscription tiers ($0–$249.99/month across ChatGPT/Perplexity/Google), (4) Salesforce Agentforce all 3 pricing models ($2/conv, $0.10/action, $125+/user), (5) full Stripe + Coinbase x402 per-transaction fee schedules with break-even analysis, (6) Brazil BRL table (Nubank, Stone, ASAAS, Celcoin, Belvo, TOTVS, Mercado Livre Negócios, Pipefy), (7) 6 pricing observations including Brazil cost competitiveness vs. global and $200/month consumer agent tier convergence. Wiki-links to all 37 vault entities. -->
 
 - [ ] Build the Brazil vs. Global Comparison document:
   - Read `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/research/market-research/vault/Brazil/Market-Context/Brazil-AI-Procurement-Landscape.md`
