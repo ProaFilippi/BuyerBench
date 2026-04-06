@@ -10,10 +10,11 @@ This phase profiles the 9 highest-priority entities that were discovered but nev
   - Read `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/research/market-research/vault/Technologies/ACP.md` (use as profile format reference)
   - Read `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/research/market-research/vault/Companies/Skyfire.md` (use as company profile format reference)
 
-- [ ] Research and profile the AP2/UCP protocol (Google):
+- [x] Research and profile the AP2/UCP protocol (Google):
   - Web search: "AP2 UCP Google agentic payment protocol 2025 2026"
   - Web search: "Google AP2 autonomous purchase protocol partners specification"
   - Create `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/research/market-research/vault/Protocols/AP2-UCP.md` with YAML front matter (type: protocol, tags: [payment-protocol, google, authorization, agentic-commerce]) and sections: Overview, How It Works, Key Partners (60+), Coverage (payment authorization + checkout layer), Comparison to ACP, BuyerBench Pillar Relevance, wiki-links to [[ACP]], [[Visa-Intelligent-Commerce]], [[Skyfire]]
+  <!-- Completed 2026-04-05: Created Protocols/AP2-UCP.md. Key findings: AP2 = payment authorization via cryptographic Intent+Cart mandates (VC-signed); UCP = full commerce orchestration (discovery→fulfillment); co-launched NRF Jan 11, 2026 with 60+ partners including all 5 major card networks. AP2 has native x402 crypto extension. Both protocols REST/MCP/A2A compatible. -->
 
 - [ ] Research and profile the x402 protocol (Coinbase/HTTP-native micropayments):
   - Web search: "x402 Coinbase HTTP 402 micropayment protocol AI agents 2025"
