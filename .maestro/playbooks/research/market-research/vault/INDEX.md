@@ -47,6 +47,11 @@ This vault contains structured research about the **AI Buyer Agents and Autonomo
 - [[Companies/Zycus|Zycus]] — Global source-to-pay suite; Merlin ANA (Autonomous Negotiation Agent) is first enterprise-deployed autonomous supplier negotiation agent; ~2,500 employees; founded 1998; Princeton NJ / Mumbai
 - [[Companies/Fairmarkit|Fairmarkit]] — AI agents for autonomous sourcing (demand-to-award); $78M raised; 150,000+ events with zero human touch per year at enterprise scale; Boston, founded 2017; 5× ProcureTech100
 - [[Companies/Skyfire|Skyfire]] — AI agent payment infrastructure (KYA identity + KYAPay open protocol + multi-rail wallets); $9.5M seed (Neuberger Berman, a16z CSX, Coinbase Ventures); live Visa Intelligent Commerce demo (Dec 2025); Pillar 3 payment rails reference
+- [[Companies/Amazon-Agentic-Commerce|Amazon Agentic Commerce]] — Nova model family ($0.035–$0.80/M tokens); AgentCore Runtime ($0.0895/vCPU-hr); Amazon Business AI tools (bundled); $50B OpenAI partnership (Feb 2026); Perplexity CFAA injunction (Mar 2026); **Pillars 1+2+3 infrastructure layer**
+- [[Companies/OpenAI-Agent-Platform|OpenAI Agent Platform]] — GPT-5 family ($0.05–$1.75/M input tokens); Operator browser agent (Pro $200/mo); Agents SDK (Mar 2025); ACP Instant Checkout launched Sep 2025 → removed Mar 2026; Frontier enterprise platform; **Pillars 1+2+3 (agent under test + platform)**
+- [[Companies/Google-Agentic-Commerce|Google Agentic Commerce]] — Project Mariner browser agent (83.5% WebVoyager); Gemini 2.5 Pro ($1.25/M input tokens); Vertex AI Agent Engine ($0.00994/vCPU-hr); AP2/UCP payment protocol layer; $185B CapEx; **Pillars 1+3 (infrastructure + protocol)**
+- [[Companies/Stripe-Agent-Payments|Stripe Agent Payments]] — ACP co-author + primary payment rail; SPT (Shared Payment Token) agent-payment primitive; standard 2.9%+$0.30; Radar +$0.02/txn; Payments Foundation Model (trained on $1.4T+ volume); **Pillar 3 primary payment rail reference**
+- [[Companies/Coinbase-Agent-Payments|Coinbase Agent Payments]] — x402 protocol creator; USDC on Base at $0 facilitator fee; Agentic Wallets ($0.005/op); x402 Foundation (Coinbase, Stripe, Cloudflare, AWS, Anthropic); GENIUS Act compliant; **Pillar 3 crypto payment rail + irreversibility testing**
 
 ### Products & Services
 - [[Products/Amazon-Rufus-BuyForMe|Amazon Rufus / Buy for Me / Alexa+]] — 3-product AI shopping stack; 300M Rufus users; cross-site Buy for Me (Nova+Claude); $10–12B GMV lift; Alexa+ GA Feb 2026; Amazon won injunction vs. Perplexity Mar 2026; **Pillar 3: user consent ≠ platform authorization**
@@ -119,20 +124,21 @@ _No trends researched yet._
 
 ## Research Summary
 
-**Research Period:** 2026-04-04 — 2026-04-05
-**Total Loops:** 12 (Loop 00001, iterations 1–12) + Phase 01 (2026-04-05) + Phase 02 (2026-04-05)
+**Research Period:** 2026-04-04 — 2026-04-06
+**Total Loops:** 12 (Loop 00001, iterations 1–12) + Phase 01 (2026-04-05) + Phase 02 (2026-04-05) + Phase 03 (2026-04-06)
 **Agent:** CladiBuyer Benchmarker
 
 ### Coverage Statistics
 
 | Category | Discovered | Researched | Gap |
 |----------|------------|------------|-----|
-| Companies | 5 | 5 (100%) | 0 — all 5 companies fully profiled |
+| Companies | 10 | 10 (100%) | 0 — 5 original + 5 Phase 03 platform profiles (Amazon, OpenAI, Google, Stripe, Coinbase) |
 | Protocols & Standards | 5 | 5 (100%) | 0 — ACP, AP2/UCP, x402, Visa, Mastercard all profiled |
 | Products & Platforms | 5 | 5 (100%) | 0 — Amazon, ChatGPT Operator, Perplexity Comet, Agentforce, NegMAS all profiled |
+| People | 7 | 7 (100%) | 0 — Allouah, Besbes, Mohammad, Frechette, Sarhangi, Birwadker, Lambert profiled |
 | Research Papers | 5 | 5 (100%) | All 5 profiled: ACES, LLM Eval Survey, AgentBench, WebArena, WebShop |
 | Security & Compliance Frameworks | 5 | 5 (100%) | All 5 profiled: PCI DSS v4.0, EMV 3DS2, NIST AI RMF, ISO 42001, FATF AML/CFT |
-| **Total** | **25** | **25 (100%)** | **All entities researched — vault coverage complete** |
+| **Total** | **37** | **37 (100%)** | **All entities researched — vault coverage complete** |
 
 ### Researched Entities (with Research Files)
 
@@ -158,13 +164,26 @@ _No trends researched yet._
 | NIST AI RMF 1.0 | Security/Compliance Framework | `vault/Security-Compliance/NIST-AI-RMF.md` | **Pillar 3** (GOVERN/MAP/MEASURE/MANAGE, GenAI Profile 600-1, CAISI agent identity initiative) |
 | ISO/IEC 42001:2023 | Security/Compliance Framework | `vault/Security-Compliance/ISO-42001.md` | **Pillar 3** (42 controls, 9 domains, certification pathway, IBM Granite model-scoped cert) |
 | FATF AML/CFT | Security/Compliance Framework | `vault/Security-Compliance/FATF-AML-CFT.md` | **Pillar 3** (Travel Rule, AI Horizon Scan Dec 2025, autonomous-agent ML/TF vector, x402 compliance) |
+| Amazon Agentic Commerce | Company | `vault/Companies/Amazon-Agentic-Commerce.md` | Pillars 1+2+3 (Nova pricing, AgentCore, agent cost multiplier 5–10×, Perplexity CFAA dual-auth precedent) |
+| OpenAI Agent Platform | Company | `vault/Companies/OpenAI-Agent-Platform.md` | Pillars 1+2+3 (GPT-5 family, Operator, Agents SDK, ACP rollback, Frontier enterprise) |
+| Google Agentic Commerce | Company | `vault/Companies/Google-Agentic-Commerce.md` | Pillars 1+3 (Project Mariner, Gemini 2.5 Pro, Vertex AI Agent Engine 9× cheaper than AgentCore, AP2/UCP) |
+| Stripe Agent Payments | Company | `vault/Companies/Stripe-Agent-Payments.md` | **Pillar 3** (SPT token model, Payments Foundation Model, MPP, ACP co-author, Radar fraud detection) |
+| Coinbase Agent Payments | Company | `vault/Companies/Coinbase-Agent-Payments.md` | **Pillar 3** (x402 protocol, USDC micropayments, Agentic Wallets, irreversibility risk, KYC gap flagged) |
+| Amine Allouah | Person | `vault/People/Amine-Allouah.md` | **Pillar 2** (ACES paper lead author; RCT benchmark; 5× position bias + endorsement effect documented) |
+| Omar Besbes | Person | `vault/People/Omar-Besbes.md` | **Pillar 2** (ACES senior author; Columbia professor; revenue management + market microstructure theory) |
+| Yasser Mohammad | Person | `vault/People/Yasser-Mohammad.md` | Pillars 1+2 (NegMAS + SCML creator; official ANAC engine; BuyerBench `negmas` agent reference) |
+| Kevin Frechette | Person | `vault/People/Kevin-Frechette.md` | **Pillar 1** (Fairmarkit CEO; 150K+ zero-touch sourcing events/year; enterprise practitioner reference) |
+| Amir Sarhangi | Person | `vault/People/Amir-Sarhangi.md` | **Pillar 3** (Skyfire CEO; KYAPay open protocol architect; prior Ripple VP; identity-first payment design) |
+| Rubail Birwadker | Person | `vault/People/Rubail-Birwadker.md` | **Pillar 3** (Visa SVP; VIC + TAP lead; 100+ partners; crypto/stablecoins; at Visa since 2011) |
+| Jorn Lambert | Person | `vault/People/Jorn-Lambert.md` | **Pillar 3** (Mastercard CPO; Agent Pay + Verifiable Intent + Web Bot Auth; audit trail reference) |
 
 ### Research Notes
 
-- **Phase 02 Complete (2026-04-05).** All 10 Phase 02 entities profiled: 5 research papers + 5 security/compliance frameworks. Vault now at 25/25 (100%) coverage.
-- **Companies, Protocols, and Products categories: COMPLETE.** All 15 entities across these three categories fully profiled as of 2026-04-05.
-- **Research Papers: COMPLETE.** All 5 papers (ACES, LLM Eval Survey, AgentBench, WebArena, WebShop) fully profiled as of 2026-04-05 (Phase 02).
-- **Security Frameworks: COMPLETE.** All 5 frameworks (PCI DSS v4.0, EMV 3DS2, NIST AI RMF 1.0, ISO/IEC 42001, FATF AML/CFT) fully profiled as of 2026-04-05 (Phase 02).
+- **Phase 03 Complete (2026-04-06).** 12 Phase 03 entities profiled: 5 major platform company profiles (Amazon, OpenAI, Google, Stripe, Coinbase) + 7 key people profiles. Vault now at 37/37 (100%) coverage.
+- **Phase 02 Complete (2026-04-05).** 10 Phase 02 entities profiled: 5 research papers + 5 security/compliance frameworks.
+- **Companies category: COMPLETE.** All 10 companies fully profiled — 5 original (Procure AI, Omnea, Zycus, Fairmarkit, Skyfire) + 5 Phase 03 platform incumbents (Amazon, OpenAI, Google, Stripe, Coinbase).
+- **People category: COMPLETE.** All 7 key people profiled: ACES authors (Allouah, Besbes), NegMAS creator (Mohammad), Fairmarkit CEO (Frechette), Skyfire CEO (Sarhangi), Visa SVP (Birwadker), Mastercard CPO (Lambert).
+- **Protocols, Products, Research Papers, Security Frameworks: COMPLETE.** All fully profiled as of Phase 01/02 (2026-04-05).
 - **0 entities remain.** Vault coverage is 100%.
 - **Inter-page links:** All profiles use `[[Entity]]` wiki-link syntax. The Obsidian graph shows a dense cluster connecting all protocols (ACP ↔ AP2/UCP ↔ x402 ↔ Visa ↔ Mastercard), products cross-referencing each other (Amazon ↔ Perplexity ↔ ChatGPT), and all Pillar 3 entities linking to Skyfire and PCI-DSS-v4.
 - **Pipeline note (Loop 00001):** The research pipeline ran 12 loops due to a recurring stall pattern (5_PROGRESS.md gate was firing before docs 1–4 executed in each cycle). Loops 7–12 used a stall-break pattern where the gate directly executed blocked pipeline steps.
