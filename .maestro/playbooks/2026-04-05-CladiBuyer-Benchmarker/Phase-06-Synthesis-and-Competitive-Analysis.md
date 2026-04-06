@@ -31,7 +31,7 @@ This phase synthesizes all research from Phases 01–05 into high-value analytic
     - wiki-links to all entities listed
   <!-- Completed 2026-04-06: Read all 10 global company profiles and 5 global product profiles, plus 9 Brazil company profiles and 5 Brazil product profiles. Created Pricing-Registry.md with: (1) global model API pricing table (Amazon Nova, OpenAI GPT-5 family, Gemini 2.5 family), (2) agent runtime pricing (AgentCore vs Vertex AI Agent Engine — 9× cost gap), (3) consumer subscription tiers ($0–$249.99/month across ChatGPT/Perplexity/Google), (4) Salesforce Agentforce all 3 pricing models ($2/conv, $0.10/action, $125+/user), (5) full Stripe + Coinbase x402 per-transaction fee schedules with break-even analysis, (6) Brazil BRL table (Nubank, Stone, ASAAS, Celcoin, Belvo, TOTVS, Mercado Livre Negócios, Pipefy), (7) 6 pricing observations including Brazil cost competitiveness vs. global and $200/month consumer agent tier convergence. Wiki-links to all 37 vault entities. -->
 
-- [ ] Build the Brazil vs. Global Comparison document:
+- [x] Build the Brazil vs. Global Comparison document:
   - Read `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/research/market-research/vault/Brazil/Market-Context/Brazil-AI-Procurement-Landscape.md`
   - Read `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/research/market-research/vault/Brazil/Market-Context/Global-Players-Brazil-Presence.md`
   - Read `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/research/market-research/vault/Brazil/Regulatory/Brazil-Compliance-Overview.md`
@@ -43,6 +43,7 @@ This phase synthesizes all research from Phases 01–05 into high-value analytic
     - Brazil-Native Players Competitive Advantage
     - Priority Market Entry Considerations for AI Buyer Agent Vendors
     - wiki-links to key Brazil profiles and corresponding global profiles
+  <!-- Completed 2026-04-06: Read all three source documents (Brazil-AI-Procurement-Landscape, Global-Players-Brazil-Presence, Brazil-Compliance-Overview). Created Brazil-vs-Global-Analysis.md with: (1) market size comparison table (Brazil $1.4–1.65B TAM vs. global $9.5B procurement software market), (2) infrastructure contrast across three dimensions (Pix vs. card rails, TOTVS vs. SAP/Oracle, Open Finance vs. PSD2), (3) full regulatory contrast — four-plane Brazil architecture vs. two-plane global, LGPD vs. GDPR automated-decision trigger comparison, Pix vs. PCI DSS non-overlap analysis, (4) localization gap table for all 6 global players across 5 dimensions, (5) Brazil-native competitive advantage across 5 structural factors with segment-by-segment positioning matrix, (6) three-tier market entry priority framework (legal prerequisites → compliance operations → differentiation), (7) 11 recommended Brazil-specific BuyerBench scenario archetypes with framework activation mapping, (8) wiki-links to all relevant Brazil and global vault profiles. -->
 
 - [ ] Create BuyerBench Scenario Design Recommendations document:
   - Read `/home/superiora/Documents/CODE/BuyerBench/CLAUDE.md` (project context)
