@@ -10,7 +10,7 @@ This phase launches an entirely new research thread focused on the Brazilian mar
   - Create `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/research/market-research/vault/Brazil/INDEX.md` with YAML front matter (type: index, title: "Brazil AI Buyer Agent Market Index", created: 2026-04-05, tags: [brazil, market-research, index]) and sections: Overview, Entity Categories, Coverage Statistics (to be filled as phase progresses), Key Market Themes
   - **Completed 2026-04-06**: Created all 4 subfolders (Companies, Products, Regulatory, Market-Context) and INDEX.md with full front matter, 6 key market themes (Pix, Open Finance, TOTVS dominance, tax complexity, LGPD, agribusiness verticals), entity category tables, and coverage statistics scaffold.
 
-- [ ] Research Brazilian AI procurement startups and buyer agent companies:
+- [x] Research Brazilian AI procurement startups and buyer agent companies:
   - Web search: "Brazil AI procurement startup agente comprador 2024 2025"
   - Web search: "inteligência artificial compras empresariais B2B Brazil startup 2025"
   - Web search: "Brazil AI agent procurement automation company funded 2024 2025"
@@ -18,6 +18,7 @@ This phase launches an entirely new research thread focused on the Brazilian mar
   - Web search: "Brazil B2B AI sourcing agent platform supplier discovery 2025"
   - For each significant company found (target 3-6), create a profile in `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/research/market-research/vault/Brazil/Companies/[CompanyName].md` with YAML front matter (type: company, tags: [brazil, ai-procurement, startup]) and sections: Overview, Product, Funding, Target Market, Pricing (in BRL if available), BuyerBench Relevance
   - Create `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/research/market-research/vault/Brazil/Market-Context/Brazil-AI-Procurement-Landscape.md` summarizing the discovery with wiki-links to each company found
+  - **Completed 2026-04-06**: Ran all 5 web searches + targeted article fetches. Profiled 4 companies: **Freedom** (Brazilian AI agent platform, R$14.5M seed, 900% growth), **Zinit** (e-sourcing SaaS, US$8M/R$44M seed, Dubai HQ / Brazil expansion), **Linkana** (SRM platform, YC W20, Brazilian native), **Pipefy** (no-code workflow + AI agents, ~$150M raised, Curitiba). Created `Brazil-AI-Procurement-Landscape.md` with competitive matrix, stack diagram, macro market data, and BuyerBench scenario design recommendations (Pix flows, Nota Fiscal validation, CNPJ verification, TOTVS integration layer).
 
 - [ ] Research Brazilian B2B marketplaces and procurement platforms:
   - Web search: "Mercado Livre B2B empresas marketplace procurement Brazil 2025"
