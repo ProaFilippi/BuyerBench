@@ -13,7 +13,7 @@ related:
 # Brazil AI Buyer Agent Market Index
 
 > Research initiated: 2026-04-05
-> Last updated: 2026-04-06 (Phase 04 Tasks 1–4 complete)
+> Last updated: 2026-04-06 (Phase 04 Tasks 1–5 complete)
 > Agent: CladiBuyer Benchmarker
 
 ## Overview
@@ -40,7 +40,7 @@ Brazil's unique combination of advanced payment infrastructure (Pix), Open Finan
 ## Entity Categories
 
 ### Companies (AI Procurement Startups & Fintechs)
-> *Task 2 (AI startups) complete — Task 5 (Fintechs) pending*
+> *Task 2 (AI startups) complete — Task 5 (Fintechs) complete*
 
 | Entity | Type | Focus | File |
 |--------|------|-------|------|
@@ -48,6 +48,11 @@ Brazil's unique combination of advanced payment infrastructure (Pix), Open Finan
 | Zinit | e-Sourcing SaaS | US$8M seed, Dubai HQ / Brazil expansion | [[Zinit]] |
 | Linkana | SRM Platform | YC W20, Brazilian-native supplier management | [[Linkana]] |
 | Pipefy | No-code Workflow + AI | ~$150M raised, Curitiba-based | [[Pipefy]] |
+| Nubank (Nu Empresas) | Neobank / PJ Account | 100M+ customers; Assistente de Pagamentos + Voice Pix | [[Nubank-Nu-Empresas]] |
+| Stone (StoneCo) | Payment Acquirer + Bank | ~14% acquiring market share; Conta PJ; NASDAQ: STNE | [[Stone-StoneCo]] |
+| Celcoin | BaaS + Open Finance Infra | ITP-licensed; R$30B+/month; 80-endpoint API | [[Celcoin]] |
+| ASAAS | SMB Financial Automation | R$820M Series C; free REST API; 100%+ YoY growth | [[ASAAS]] |
+| Belvo | Open Finance Middleware | YC W20; ITP-authorized; multi-bank aggregation + Pix | [[Belvo]] |
 
 ### Products (B2B Marketplaces & Procurement Platforms)
 > *Task 3 complete — 5 platforms profiled*
@@ -89,9 +94,9 @@ See: [[Global-Players-Brazil-Presence]]
 | AI Procurement Startups | 6+ | 4 | ~67% |
 | B2B Marketplaces / Platforms | 7+ | 5 | ~70% |
 | ERP Systems | 5 | 5 (landscape doc) | 100% |
-| Fintech / Payment Companies | TBD | 0 | 0% (Task 5 pending) |
+| Fintech / Payment Companies | 6+ | 5 | ~83% |
 | Global Players (Brazil presence) | TBD | 0 | 0% (Task 6 pending) |
-| **Total** | **18+** | **14** | **~60%** |
+| **Total** | **24+** | **19** | **~79%** |
 
 ---
 
@@ -123,6 +128,7 @@ Brazil's agribusiness sector (responsible for ~25% of GDP) and manufacturing bas
 - [[Brazil-AI-Procurement-Landscape]] — Discovery summary of AI procurement startups
 - [[Brazil-B2B-Marketplace-Landscape]] — B2B marketplace and procurement platform landscape
 - [[Brazil-ERP-Landscape]] — ERP market players (TOTVS, SAP, Senior, Sankhya, Oracle), AI agent integration status, pricing tiers, BuyerBench scenario implications
+- [[Brazil-Fintech-Payment-Landscape]] — Fintech payment stack (Nubank, Stone, Celcoin, ASAAS, Belvo), ITP architecture, Pix capabilities, 10 BuyerBench Pillar 3 scenario recommendations
 - [[Global-Players-Brazil-Presence]] — Global AI agent/procurement platforms in Brazil *(Task 6 pending)*
 
 ### Companies
