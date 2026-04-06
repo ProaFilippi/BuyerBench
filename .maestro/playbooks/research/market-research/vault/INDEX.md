@@ -82,6 +82,20 @@ _No technologies researched yet._
 ### Market Trends
 _No trends researched yet._
 
+### Brazil Market Sub-Vault
+
+> Brazil is the largest B2B e-commerce market in Latin America (~R$234B, 18.42% CAGR), with unique infrastructure (Pix instant payments, Open Finance mandate, NF-e fiscal documents, LGPD). Phase 04 built a parallel Brazil vault profiling 25+ entities.
+
+**Navigate:** [[Brazil/INDEX|Brazil INDEX]] — full entity list, coverage stats, key market themes
+
+| Document | Summary |
+|---|---|
+| [[Brazil/Market-Context/Brazil-AI-Procurement-Landscape\|Brazil AI Procurement Landscape]] | 4 domestic AI startups profiled: Freedom (R$14.5M), Zinit (US$8M), Linkana (YC W20), Pipefy (~$150M) |
+| [[Brazil/Market-Context/Brazil-B2B-Marketplace-Landscape\|Brazil B2B Marketplace Landscape]] | 5 platforms: Mercado Livre Negócios, TOTVS+Fluig, Compras.gov.br/PNCP, B2Brazil, Nomos |
+| [[Brazil/Market-Context/Brazil-ERP-Landscape\|Brazil ERP Landscape]] | TOTVS (50% share + Agente de Compras), SAP Joule, Senior, Sankhya, Oracle — pricing in BRL, AI agent matrix |
+| [[Brazil/Market-Context/Brazil-Fintech-Payment-Landscape\|Brazil Fintech Payment Landscape]] | Nubank, Stone, Celcoin, ASAAS, Belvo — Pix/Open Finance stack for autonomous procurement payments |
+| [[Brazil/Market-Context/Global-Players-Brazil-Presence\|Global Players Brazil Presence]] | Salesforce Agentforce, OpenAI API, Microsoft Copilot Studio, SAP Ariba+Joule, Zycus Merlin, Coupa — localization gap analysis, BRL pricing matrix |
+
 ### Research Papers
 - [[Research-Papers/ACES-AI-Agent-Buying|ACES (arXiv 2508.02630)]] — RCT benchmark for AI buyer agent behavioral bias; 5× position bias, +1.0–+1.9 endorsement effect, −1.6 to −2.2 price elasticity; **Pillar 2 design foundation**
 - [[Research-Papers/LLM-Agent-Benchmarking-Survey|LLM Agent Benchmarking Survey (arXiv 2507.21504)]] — KDD 2025 survey; two-dimensional taxonomy (objectives × process); maps to BuyerBench 3-pillar structure

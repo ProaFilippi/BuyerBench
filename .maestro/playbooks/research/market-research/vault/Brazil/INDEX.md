@@ -13,7 +13,7 @@ related:
 # Brazil AI Buyer Agent Market Index
 
 > Research initiated: 2026-04-05
-> Last updated: 2026-04-06 (Phase 04 Tasks 1–5 complete)
+> Last updated: 2026-04-06 (Phase 04 Tasks 1–6 complete)
 > Agent: CladiBuyer Benchmarker
 
 ## Overview
@@ -79,9 +79,18 @@ See: [[Brazil-ERP-Landscape]] for full profiles on TOTVS, SAP, Senior Sistemas, 
 | Oracle | ~5–8% | Live (Fusion Agentic Apps, Q4 2025) | Quote-to-Requisition Agent |
 
 ### Global Players — Brazil Presence
-> *Populated during Phase 04 — Task 6*
+> *Task 6 complete — 6 global players profiled (Salesforce Agentforce, OpenAI API, Microsoft Copilot Studio, SAP Ariba + Joule, Zycus Merlin, Coupa)*
 
 See: [[Global-Players-Brazil-Presence]]
+
+| Player | Local Entity | PT-BR UI | Pix Native | BRL Pricing |
+|--------|-------------|---------|-----------|------------|
+| Salesforce Agentforce | ✅ São Paulo | ✅ Full | ❌ | ❌ USD only |
+| OpenAI API | ❌ None | ✅ Multilingual | ❌ | ⚠️ Consumer only |
+| Microsoft Copilot Studio | ✅ São Paulo + Azure BR | ✅ Full pt-BR | ❌ | ⚠️ FX-converted |
+| SAP Ariba + Joule | ✅ São Paulo | ✅ PT GA Sept 2025 | ⚠️ Via connector | ⚠️ Enterprise negotiation |
+| Zycus Merlin | ❌ None | ❌ Not confirmed | ❌ | ❌ None |
+| Coupa | ✅ São Paulo (2022) | ✅ Likely | ❌ | ❌ Enterprise only |
 
 ---
 
@@ -95,8 +104,8 @@ See: [[Global-Players-Brazil-Presence]]
 | B2B Marketplaces / Platforms | 7+ | 5 | ~70% |
 | ERP Systems | 5 | 5 (landscape doc) | 100% |
 | Fintech / Payment Companies | 6+ | 5 | ~83% |
-| Global Players (Brazil presence) | TBD | 0 | 0% (Task 6 pending) |
-| **Total** | **24+** | **19** | **~79%** |
+| Global Players (Brazil presence) | 6 | 6 (landscape doc) | 100% |
+| **Total** | **30+** | **25** | **~83%** |
 
 ---
 
@@ -129,7 +138,7 @@ Brazil's agribusiness sector (responsible for ~25% of GDP) and manufacturing bas
 - [[Brazil-B2B-Marketplace-Landscape]] — B2B marketplace and procurement platform landscape
 - [[Brazil-ERP-Landscape]] — ERP market players (TOTVS, SAP, Senior, Sankhya, Oracle), AI agent integration status, pricing tiers, BuyerBench scenario implications
 - [[Brazil-Fintech-Payment-Landscape]] — Fintech payment stack (Nubank, Stone, Celcoin, ASAAS, Belvo), ITP architecture, Pix capabilities, 10 BuyerBench Pillar 3 scenario recommendations
-- [[Global-Players-Brazil-Presence]] — Global AI agent/procurement platforms in Brazil *(Task 6 pending)*
+- [[Global-Players-Brazil-Presence]] — Global AI agent/procurement platforms in Brazil; 6 players profiled: Salesforce Agentforce, OpenAI API, Microsoft Copilot Studio, SAP Ariba + Joule, Zycus Merlin, Coupa; localization gap analysis, BRL pricing matrix, BuyerBench scenario implications
 
 ### Companies
 *(Linked here as populated)*
