@@ -20,13 +20,14 @@ This phase launches an entirely new research thread focused on the Brazilian mar
   - Create `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/research/market-research/vault/Brazil/Market-Context/Brazil-AI-Procurement-Landscape.md` summarizing the discovery with wiki-links to each company found
   - **Completed 2026-04-06**: Ran all 5 web searches + targeted article fetches. Profiled 4 companies: **Freedom** (Brazilian AI agent platform, R$14.5M seed, 900% growth), **Zinit** (e-sourcing SaaS, US$8M/R$44M seed, Dubai HQ / Brazil expansion), **Linkana** (SRM platform, YC W20, Brazilian native), **Pipefy** (no-code workflow + AI agents, ~$150M raised, Curitiba). Created `Brazil-AI-Procurement-Landscape.md` with competitive matrix, stack diagram, macro market data, and BuyerBench scenario design recommendations (Pix flows, Nota Fiscal validation, CNPJ verification, TOTVS integration layer).
 
-- [ ] Research Brazilian B2B marketplaces and procurement platforms:
+- [x] Research Brazilian B2B marketplaces and procurement platforms:
   - Web search: "Mercado Livre B2B empresas marketplace procurement Brazil 2025"
   - Web search: "TOTVS procurement AI automation Brazil ERP 2025"
   - Web search: "Boa Compra governo eletrônico compras empresariais Brazil"
   - Web search: "Brazil B2B e-commerce marketplace supplier discovery platform 2025 pricing"
   - Web search: "Nomos Linkana supplier management Brazil 2024 2025"
   - For each significant platform found (target 4-6), create a profile in `/home/superiora/Documents/CODE/BuyerBench/.maestro/playbooks/research/market-research/vault/Brazil/Products/[PlatformName].md` with YAML front matter (type: product, tags: [brazil, b2b-marketplace, procurement]) and sections: Overview, Key Capabilities, Market Share (if available), Pricing in BRL, AI/Agent Features (if any), BuyerBench Scenario Relevance
+  - **Completed 2026-04-06**: Ran all 5 web searches + 3 follow-up targeted searches. Profiled 5 platforms: **Mercado Livre Negócios** (B2B marketplace, Sep 2025 launch, 1.3M SKUs, up to 50% corporate discounts, CNPJ-gated, NF-e filter), **TOTVS ERP Procurement + Fluig Voyager 2.0** (~50% Brazil ERP market share, generative AI workflow builder, natural language procurement requisitions), **Compras.gov.br / PNCP** (Brazilian federal e-procurement portal, PNCP REST API for public bids, SICAF supplier registry, Law 14.133/2021), **B2Brazil** (largest Americas foreign trade B2B marketplace, 230K+ companies, free for buyers, B2B SafePay + Freight), **Nomos** (regulatory intelligence platform, 230+ regulatory events/day, LGPD/ANVISA monitoring). Created `Brazil-B2B-Marketplace-Landscape.md` with competitive matrix, stack architecture diagram, market sizing (R$ 234B e-commerce, 18.42% B2B CAGR), 6 key market themes (TOTVS dominance, Pix payment flow, NF-e compliance gate, PNCP API, SISCOMEX import complexity, compliance intelligence), and 10 BuyerBench scenario design recommendations spanning all 3 pillars.
 
 - [ ] Research Brazilian ERP systems and their AI agent capabilities:
   - Web search: "TOTVS inteligência artificial agente compras 2025 preço"
