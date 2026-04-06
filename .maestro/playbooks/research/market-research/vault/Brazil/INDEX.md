@@ -13,7 +13,7 @@ related:
 # Brazil AI Buyer Agent Market Index
 
 > Research initiated: 2026-04-05
-> Last updated: 2026-04-05 (Phase 04 In Progress — folder structure initialized)
+> Last updated: 2026-04-06 (Phase 04 Tasks 1–4 complete)
 > Agent: CladiBuyer Benchmarker
 
 ## Overview
@@ -40,23 +40,38 @@ Brazil's unique combination of advanced payment infrastructure (Pix), Open Finan
 ## Entity Categories
 
 ### Companies (AI Procurement Startups & Fintechs)
-> *Populated during Phase 04 — Task 2 (AI startups) and Task 5 (Fintechs)*
+> *Task 2 (AI startups) complete — Task 5 (Fintechs) pending*
 
 | Entity | Type | Focus | File |
 |--------|------|-------|------|
-| *(to be populated)* | | | |
+| Freedom | AI Agent Platform | Brazilian AI agent platform, R$14.5M seed, 900% growth | [[Freedom]] |
+| Zinit | e-Sourcing SaaS | US$8M seed, Dubai HQ / Brazil expansion | [[Zinit]] |
+| Linkana | SRM Platform | YC W20, Brazilian-native supplier management | [[Linkana]] |
+| Pipefy | No-code Workflow + AI | ~$150M raised, Curitiba-based | [[Pipefy]] |
 
 ### Products (B2B Marketplaces & Procurement Platforms)
-> *Populated during Phase 04 — Task 3*
+> *Task 3 complete — 5 platforms profiled*
 
 | Entity | Type | Market Position | File |
 |--------|------|----------------|------|
-| *(to be populated)* | | | |
+| Mercado Livre Negócios | B2B Marketplace | Largest LatAm B2B marketplace; Sep 2025 launch | [[Mercado-Livre-Negocios]] |
+| TOTVS ERP + Fluig Voyager | ERP + Workflow AI | ~50% Brazil ERP market share; generative AI workflow | [[TOTVS-ERP-Procurement]] |
+| Compras.gov.br / PNCP | Gov e-Procurement | Federal procurement portal; PNCP REST API | [[Compras-gov-br-PNCP]] |
+| B2Brazil | Foreign Trade Marketplace | Largest Americas foreign-trade B2B; 230K+ companies | [[B2Brazil]] |
+| Nomos | Regulatory Intelligence | 230+ regulatory events/day; LGPD/ANVISA monitoring | [[Nomos]] |
 
 ### ERP Systems (Brazilian & Global with Brazil Presence)
-> *Populated during Phase 04 — Task 4*
+> *Task 4 complete — 5 ERP players profiled*
 
-See: [[Brazil-ERP-Landscape]]
+See: [[Brazil-ERP-Landscape]] for full profiles on TOTVS, SAP, Senior Sistemas, Sankhya, and Oracle.
+
+| Vendor | Market Share | AI Agent Status | Key Agent |
+|--------|-------------|----------------|-----------|
+| TOTVS | ~50% | Live (Agent Store, 2025) | Agente de Compras / TOTVS Copilot |
+| SAP | ~15–20% | Live (Joule, rolling 2024–25) | Sourcing Agent; multi-agent orchestration |
+| Senior Sistemas | ~5–8% | Live (AI-Centric ERP, 2025) | 50+ specialized agents |
+| Sankhya | ~5–7% | Live (Deploy Agent + Bia, 2025) | Bia AI Assistant; SRM module |
+| Oracle | ~5–8% | Live (Fusion Agentic Apps, Q4 2025) | Quote-to-Requisition Agent |
 
 ### Global Players — Brazil Presence
 > *Populated during Phase 04 — Task 6*
@@ -71,12 +86,12 @@ See: [[Global-Players-Brazil-Presence]]
 
 | Category | Discovered | Profiled | Coverage |
 |----------|-----------|---------|---------|
-| AI Procurement Startups | TBD | 0 | 0% |
-| B2B Marketplaces / Platforms | TBD | 0 | 0% |
-| ERP Systems | TBD | 0 | 0% |
-| Fintech / Payment Companies | TBD | 0 | 0% |
-| Global Players (Brazil presence) | TBD | 0 | 0% |
-| **Total** | **TBD** | **0** | **0%** |
+| AI Procurement Startups | 6+ | 4 | ~67% |
+| B2B Marketplaces / Platforms | 7+ | 5 | ~70% |
+| ERP Systems | 5 | 5 (landscape doc) | 100% |
+| Fintech / Payment Companies | TBD | 0 | 0% (Task 5 pending) |
+| Global Players (Brazil presence) | TBD | 0 | 0% (Task 6 pending) |
+| **Total** | **18+** | **14** | **~60%** |
 
 ---
 
@@ -106,8 +121,9 @@ Brazil's agribusiness sector (responsible for ~25% of GDP) and manufacturing bas
 
 ### Market Context
 - [[Brazil-AI-Procurement-Landscape]] — Discovery summary of AI procurement startups
-- [[Brazil-ERP-Landscape]] — ERP market players, AI integration status, and pricing
-- [[Global-Players-Brazil-Presence]] — Global AI agent/procurement platforms in Brazil
+- [[Brazil-B2B-Marketplace-Landscape]] — B2B marketplace and procurement platform landscape
+- [[Brazil-ERP-Landscape]] — ERP market players (TOTVS, SAP, Senior, Sankhya, Oracle), AI agent integration status, pricing tiers, BuyerBench scenario implications
+- [[Global-Players-Brazil-Presence]] — Global AI agent/procurement platforms in Brazil *(Task 6 pending)*
 
 ### Companies
 *(Linked here as populated)*
