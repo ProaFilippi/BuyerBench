@@ -1,7 +1,7 @@
 # AI Buyer Agents and Autonomous Procurement Research Vault
 
 > Research initiated: 2026-04-04
-> Last updated: 2026-04-05 (Phase 02 — 5 research papers + PCI DSS v4.0 profiled; vault now 21 entities fully profiled)
+> Last updated: 2026-04-05 (Phase 02 Complete — all 10 new profiles created; vault now at 25/25 entities, 100% coverage)
 > Agent: CladiBuyer Benchmarker
 
 ## Overview
@@ -80,10 +80,10 @@ _No trends researched yet._
 
 ### Security & Compliance Frameworks
 - [[Security-Compliance/PCI-DSS-v4|PCI DSS v4.0 (v4.0.1)]] — Full enforcement Mar 31 2025; 12 req domains; NHI management mandate (Req 8); AI Principles guidance; tokenization scope-reduction; **Pillar 3 payment security baseline**
-- **EMV 3-D Secure (3DS2)** — _(profile pending)_ Card-not-present authentication; frictionless vs. challenge flows; agent-initiated checkout authentication
-- **NIST AI RMF 1.0** — _(profile pending)_ Voluntary AI governance; GOVERN/MAP/MEASURE/MANAGE functions; enterprise AI procurement compliance
-- **ISO/IEC 42001:2023** — _(profile pending)_ First certifiable international AI management standard; Dec 2023; enterprise AI governance certification pathway
-- **FATF AML/CFT** — _(profile pending)_ Travel Rule obligations for crypto rails; x402/Coinbase-based agent payments
+- [[Security-Compliance/EMV-3DS2|EMV 3-D Secure (3DS2)]] — Card-not-present authentication; frictionless vs. challenge flows; decoupled auth (MIT exemption) for agent-initiated checkout; ACP/SPT as frictionless-by-design solution; **Pillar 3 authentication reference**
+- [[Security-Compliance/NIST-AI-RMF|NIST AI RMF 1.0]] — Voluntary but quasi-mandatory (EO 14110 + OMB M-24-10); GOVERN/MAP/MEASURE/MANAGE functions; GenAI Profile (NIST AI 600-1); CAISI agent-identity initiative (Feb 2026); **Pillar 3 AI governance baseline**
+- [[Security-Compliance/ISO-42001|ISO/IEC 42001:2023]] — World's first certifiable AI management system standard (Dec 2023); Harmonized Structure; 42 controls across 9 domains; IBM Granite model-scoped certification precedent; **Pillar 3 AI governance certification pathway**
+- [[Security-Compliance/FATF-AML-CFT|FATF AML/CFT (40 Recommendations)]] — Travel Rule (USD 1,000 wire / same for VASPs; EU zero-threshold); Dec 2025 AI Horizon Scan names autonomous agents as ML/TF vector; sunrise + unhosted wallet gaps; **Pillar 3 crypto payment rail compliance**
 
 ## Research Tools
 
@@ -108,13 +108,13 @@ _No trends researched yet._
 | Technologies | 0 | 0 |
 | Trends | 0 | 0 |
 | Research Papers | 5 | 5 (100%) |
-| Security & Compliance Frameworks | 5 | 1 (20%) |
-| **Total Entities** | **25** | **21 (84%)** |
+| Security & Compliance Frameworks | 5 | 5 (100%) |
+| **Total Entities** | **25** | **25 (100%)** |
 
 ## Research Summary
 
 **Research Period:** 2026-04-04 — 2026-04-05
-**Total Loops:** 12 (Loop 00001, iterations 1–12) + Phase 01 (2026-04-05)
+**Total Loops:** 12 (Loop 00001, iterations 1–12) + Phase 01 (2026-04-05) + Phase 02 (2026-04-05)
 **Agent:** CladiBuyer Benchmarker
 
 ### Coverage Statistics
@@ -125,8 +125,8 @@ _No trends researched yet._
 | Protocols & Standards | 5 | 5 (100%) | 0 — ACP, AP2/UCP, x402, Visa, Mastercard all profiled |
 | Products & Platforms | 5 | 5 (100%) | 0 — Amazon, ChatGPT Operator, Perplexity Comet, Agentforce, NegMAS all profiled |
 | Research Papers | 5 | 5 (100%) | All 5 profiled: ACES, LLM Eval Survey, AgentBench, WebArena, WebShop |
-| Security & Compliance Frameworks | 5 | 1 (20%) | PCI DSS profiled; 3DS2, NIST AI RMF, ISO 42001, FATF pending |
-| **Total** | **25** | **21 (84%)** | 4 entities remaining (security frameworks) |
+| Security & Compliance Frameworks | 5 | 5 (100%) | All 5 profiled: PCI DSS v4.0, EMV 3DS2, NIST AI RMF, ISO 42001, FATF AML/CFT |
+| **Total** | **25** | **25 (100%)** | **All entities researched — vault coverage complete** |
 
 ### Researched Entities (with Research Files)
 
@@ -147,13 +147,19 @@ _No trends researched yet._
 | Perplexity Comet | Product | `vault/Products/Perplexity-Comet.md` | **Pillar 3** (agent-identity masking violation, CFAA precedent, cross-platform auth) |
 | Salesforce Agentforce | Product | `vault/Products/Salesforce-Agentforce.md` | Pillar 1 + **Pillar 3** (least-privilege, Agent Script determinism, JSON audit trail) |
 | NegMAS | Product | `vault/Products/NegMAS.md` | Pillar 1 + 2 (SCML supply chain, SAOMechanism bilateral, bias utility functions) |
+| PCI DSS v4.0 | Security/Compliance Framework | `vault/Security-Compliance/PCI-DSS-v4.md` | **Pillar 3** (NHI identity/auth Req 8, tokenization scope-reduction, AI Principles guidance) |
+| EMV 3-D Secure (3DS2) | Security/Compliance Framework | `vault/Security-Compliance/EMV-3DS2.md` | **Pillar 3** (frictionless vs. challenge flows, decoupled auth, MIT exemption, ACP SPT solution) |
+| NIST AI RMF 1.0 | Security/Compliance Framework | `vault/Security-Compliance/NIST-AI-RMF.md` | **Pillar 3** (GOVERN/MAP/MEASURE/MANAGE, GenAI Profile 600-1, CAISI agent identity initiative) |
+| ISO/IEC 42001:2023 | Security/Compliance Framework | `vault/Security-Compliance/ISO-42001.md` | **Pillar 3** (42 controls, 9 domains, certification pathway, IBM Granite model-scoped cert) |
+| FATF AML/CFT | Security/Compliance Framework | `vault/Security-Compliance/FATF-AML-CFT.md` | **Pillar 3** (Travel Rule, AI Horizon Scan Dec 2025, autonomous-agent ML/TF vector, x402 compliance) |
 
 ### Research Notes
 
+- **Phase 02 Complete (2026-04-05).** All 10 Phase 02 entities profiled: 5 research papers + 5 security/compliance frameworks. Vault now at 25/25 (100%) coverage.
 - **Companies, Protocols, and Products categories: COMPLETE.** All 15 entities across these three categories fully profiled as of 2026-04-05.
 - **Research Papers: COMPLETE.** All 5 papers (ACES, LLM Eval Survey, AgentBench, WebArena, WebShop) fully profiled as of 2026-04-05 (Phase 02).
-- **Security Frameworks: IN PROGRESS.** PCI DSS v4.0 profiled (Phase 02). Four remain: EMV 3DS2, NIST AI RMF, ISO 42001, FATF AML/CFT.
-- **4 entities remain.** All are security/compliance frameworks.
+- **Security Frameworks: COMPLETE.** All 5 frameworks (PCI DSS v4.0, EMV 3DS2, NIST AI RMF 1.0, ISO/IEC 42001, FATF AML/CFT) fully profiled as of 2026-04-05 (Phase 02).
+- **0 entities remain.** Vault coverage is 100%.
 - **Inter-page links:** All profiles use `[[Entity]]` wiki-link syntax. The Obsidian graph shows a dense cluster connecting all protocols (ACP ↔ AP2/UCP ↔ x402 ↔ Visa ↔ Mastercard), products cross-referencing each other (Amazon ↔ Perplexity ↔ ChatGPT), and all Pillar 3 entities linking to Skyfire and PCI-DSS-v4.
 - **Pipeline note (Loop 00001):** The research pipeline ran 12 loops due to a recurring stall pattern (5_PROGRESS.md gate was firing before docs 1–4 executed in each cycle). Loops 7–12 used a stall-break pattern where the gate directly executed blocked pipeline steps.
 
