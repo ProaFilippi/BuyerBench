@@ -13,7 +13,7 @@ related:
 # Brazil AI Buyer Agent Market Index
 
 > Research initiated: 2026-04-05
-> Last updated: 2026-04-06 (Phase 04 Tasks 1–6 complete)
+> Last updated: 2026-04-06 (Phase 04 Tasks 1–7 complete — vault finalized)
 > Agent: CladiBuyer Benchmarker
 
 ## Overview
@@ -96,16 +96,16 @@ See: [[Global-Players-Brazil-Presence]]
 
 ## Coverage Statistics
 
-> *Updated at end of Phase 04*
+> *Finalized — Phase 04 complete (Tasks 1–7)*
 
-| Category | Discovered | Profiled | Coverage |
-|----------|-----------|---------|---------|
-| AI Procurement Startups | 6+ | 4 | ~67% |
-| B2B Marketplaces / Platforms | 7+ | 5 | ~70% |
-| ERP Systems | 5 | 5 (landscape doc) | 100% |
-| Fintech / Payment Companies | 6+ | 5 | ~83% |
-| Global Players (Brazil presence) | 6 | 6 (landscape doc) | 100% |
-| **Total** | **30+** | **25** | **~83%** |
+| Category | Discovered | Profiled | Coverage | Files |
+|----------|-----------|---------|---------|-------|
+| AI Procurement Startups | 6+ | 4 | ~67% | `Companies/Freedom.md`, `Zinit.md`, `Linkana.md`, `Pipefy.md` |
+| B2B Marketplaces / Platforms | 7+ | 5 | ~71% | `Products/Mercado-Livre-Negocios.md`, `TOTVS-ERP-Procurement.md`, `Compras-gov-br.md`, `B2Brazil.md`, `Nomos-Legislativo.md` |
+| ERP Systems | 5 | 5 (landscape doc) | 100% | `Market-Context/Brazil-ERP-Landscape.md` |
+| Fintech / Payment Companies | 6+ | 5 | ~83% | `Companies/Nubank-Nu-Empresas.md`, `Stone-StoneCo.md`, `Celcoin.md`, `ASAAS.md`, `Belvo.md` |
+| Global Players (Brazil presence) | 6 | 6 (landscape doc) | 100% | `Market-Context/Global-Players-Brazil-Presence.md` |
+| **Total** | **30+** | **25** | **~83%** | **9 company files + 5 product files + 5 landscape docs** |
 
 ---
 
@@ -140,11 +140,25 @@ Brazil's agribusiness sector (responsible for ~25% of GDP) and manufacturing bas
 - [[Brazil-Fintech-Payment-Landscape]] — Fintech payment stack (Nubank, Stone, Celcoin, ASAAS, Belvo), ITP architecture, Pix capabilities, 10 BuyerBench Pillar 3 scenario recommendations
 - [[Global-Players-Brazil-Presence]] — Global AI agent/procurement platforms in Brazil; 6 players profiled: Salesforce Agentforce, OpenAI API, Microsoft Copilot Studio, SAP Ariba + Joule, Zycus Merlin, Coupa; localization gap analysis, BRL pricing matrix, BuyerBench scenario implications
 
-### Companies
-*(Linked here as populated)*
+### Companies — AI Procurement Startups
+- [[Freedom]] — Brazilian AI agent platform; R$14.5M seed (2024); 900% revenue growth; full source-to-pay AI agents
+- [[Zinit]] — e-Sourcing SaaS; US$8M/R$44M seed; Dubai HQ / Brazil expansion; RFQ + auction automation
+- [[Linkana]] — Supplier Relationship Management (SRM) platform; YC W20; Brazilian-native; vendor onboarding + qualification
+- [[Pipefy]] — No-code workflow automation + AI agents; ~$150M raised; Curitiba-based; procurement request flows
 
-### Products
-*(Linked here as populated)*
+### Companies — Fintech & Payments
+- [[Nubank-Nu-Empresas]] — 100M+ customers; Assistente de Pagamentos; Voice Pix (Jun 2025); free PJ account; Pillar 3 Pix consent model reference
+- [[Stone-StoneCo]] — ~14% acquiring market share (NASDAQ: STNE); Conta PJ; Linx ERP integration; R$7B+ gross profit guidance 2025
+- [[Celcoin]] — ITP-licensed BaaS infrastructure; R$30B+/month; 80-endpoint Open Finance API; Direct Pix Participant; white-label banking
+- [[ASAAS]] — R$820M Series C; SMB financial automation; free REST API; PCI-DSS; SCD license; 100%+ YoY growth
+- [[Belvo]] — YC W20; ITP-authorized Open Finance middleware; multi-bank data aggregation; Pix Biometria pioneer
+
+### Products — B2B Marketplaces & Procurement Platforms
+- [[Mercado-Livre-Negocios]] — Largest LatAm B2B marketplace; Sep 2025 launch; 1.3M+ SKUs; CNPJ-gated; NF-e filter; up to 50% corporate discounts
+- [[TOTVS-ERP-Procurement]] — ~50% Brazil ERP market share; Fluig Voyager 2.0 generative AI workflow builder; natural language procurement requisitions
+- [[Compras-gov-br]] — Brazilian federal e-procurement portal (Compras.gov.br / PNCP); PNCP REST API for public bids; SICAF supplier registry; Law 14.133/2021
+- [[B2Brazil]] — Largest Americas foreign-trade B2B marketplace; 230K+ companies; free for buyers; B2B SafePay + freight matching
+- [[Nomos-Legislativo]] — Regulatory intelligence platform; 230+ regulatory events/day; LGPD/ANVISA/ANATEL monitoring; proactive compliance alerts
 
 ### Regulatory
-*(Linked here as populated — see also Phase 05 for regulatory deep-dive)*
+*(See Phase 05 for deep-dive on LGPD, NF-e/SPED, BACEN Open Finance resolutions, ANVISA, and Receita Federal frameworks)*
