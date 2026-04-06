@@ -161,4 +161,7 @@ Brazil's agribusiness sector (responsible for ~25% of GDP) and manufacturing bas
 - [[Nomos-Legislativo]] — Regulatory intelligence platform; 230+ regulatory events/day; LGPD/ANVISA/ANATEL monitoring; proactive compliance alerts
 
 ### Regulatory
-*(See Phase 05 for deep-dive on LGPD, NF-e/SPED, BACEN Open Finance resolutions, ANVISA, and Receita Federal frameworks)*
+- [[LGPD]] — Lei Geral de Proteção de Dados; 10 legal bases; Art. 20 automated decision provisions; ANPD enforcement (blocking > fines in 2024–25); 7 Pillar 3 scenario mappings; comparison table vs GDPR
+- [[Pix]] — BACEN instant payment rail; DICT key architecture; COB vs COBV B2B invoices; Pix Automático (Jun 2025); BCB Resolution 506 fraud rules (MED, device limits, R$200 cap); 8 Pillar 3 scenario mappings
+- [[Open-Finance-Brazil]] — Phases 1–4 (Phase 4 complete April 2024); Payment Initiation API V1–V4; FAPI 1.0 + ICP-Brasil mTLS; Contactless Pix / Enrollments API; LGPD consent coupling; 8 Pillar 3 scenario mappings
+- [[BACEN-AI-Governance]] — BACEN "monitor first, regulate later" posture; no AI-specific rules before 2027; PL 2338/2023 strict liability framework; Circular 3.978/2020 AML/KYC; COAF reporting thresholds; 7 Pillar 3 scenario mappings; gap analysis vs FATF/NIST
