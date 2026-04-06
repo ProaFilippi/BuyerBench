@@ -1,8 +1,23 @@
 # AI Buyer Agents and Autonomous Procurement Research Vault
 
 > Research initiated: 2026-04-04
-> Last updated: 2026-04-06 (Phase 03 In Progress — 5 major platform company profiles + 7 people profiles added; vault now at 37/37 entities, 100% coverage)
+> Last updated: 2026-04-06 (Phase 06 Complete — 4 synthesis documents added; vault now fully interconnected with competitive landscape, pricing registry, Brazil analysis, and scenario recommendations)
 > Agent: CladiBuyer Benchmarker
+
+## Start Here — Navigation Guide
+
+> **New to this vault?** Start with one of these four entry points depending on your goal:
+
+| Goal | Best Entry Point |
+|------|-----------------|
+| Understand who competes with whom | [[Competitive-Landscape]] — 4-layer market map, competitive clusters, head-to-head tables, 22-event timeline (2025–2026) |
+| Know what things cost | [[Pricing-Registry]] — Global + Brazil pricing tables; model API costs, agent runtime, consumer subscriptions, per-transaction fees |
+| Understand the Brazil opportunity | [[Brazil/Brazil-vs-Global-Analysis]] — Market size, infrastructure contrast, regulatory divergence, localization gaps, market-entry priorities |
+| Design new BuyerBench scenarios | [[BuyerBench-Scenario-Recommendations]] — 20 new scenario proposals across Pillars 1–3 + 5 Brazil-specific scenarios with ACES-calibrated benchmarks |
+
+For full entity navigation, continue reading the sections below. For the Brazil sub-vault, see [[Brazil/INDEX]].
+
+---
 
 ## Overview
 
@@ -82,14 +97,24 @@ _No technologies researched yet._
 ### Market Trends
 _No trends researched yet._
 
+### Synthesis Documents
+
+> Phase 06 synthesis documents — these cross-reference the entire vault and answer high-level strategic questions.
+
+- [[Competitive-Landscape|Global Competitive Landscape]] — 4-layer market map (procurement platforms → agent runtimes → payment infrastructure → standards/protocols); 4 competitive clusters; 12 head-to-head comparison tables; 22-event timeline Apr 2025–Apr 2026; 8 identified white-space gaps; wiki-links to all 37 vault entities
+- [[Pricing-Registry|Global + Brazil Pricing Registry]] — Model API pricing (Amazon Nova, OpenAI GPT-5, Gemini 2.5); agent runtime costs (AgentCore vs. Vertex AI: 9× gap); consumer subscription tiers ($0–$249.99/mo); Salesforce Agentforce 3 pricing models; Stripe + Coinbase per-transaction schedules; Brazil BRL table (Nubank, Stone, ASAAS, Celcoin, Belvo, TOTVS, Mercado Livre, Pipefy)
+- [[Brazil/Brazil-vs-Global-Analysis|Brazil vs. Global Analysis]] — Brazil TAM ($1.4–1.65B) vs. global ($9.5B procurement software); Pix vs. card rails; TOTVS vs. SAP/Oracle; LGPD vs. GDPR; three-tier market-entry framework; 11 Brazil-specific BuyerBench scenario archetypes
+- [[BuyerBench-Scenario-Recommendations|BuyerBench Scenario Design Recommendations]] — 4 Pillar 1 new scenarios (P1-19 through P1-22); 6 Pillar 2 ACES-calibrated bias scenarios (P2-10 through P2-15); 5 Pillar 3 security scenarios (P3-07 through P3-11); 5 Brazil-specific scenarios (BR-01 through BR-05); 20-scenario priority roadmap
+
 ### Brazil Market Sub-Vault
 
 > Brazil is the largest B2B e-commerce market in Latin America (~R$234B, 18.42% CAGR), with unique infrastructure (Pix instant payments, Open Finance mandate, NF-e fiscal documents, LGPD). Phase 04 built a parallel Brazil vault profiling 25+ entities.
 
-**Navigate:** [[Brazil/INDEX|Brazil INDEX]] — full entity list, coverage stats, key market themes
+**Navigate:** [[Brazil/INDEX|Brazil INDEX]] — full entity list, coverage stats, key market themes (25 entities, ~83% coverage)
 
 | Document | Summary |
 |---|---|
+| [[Brazil/Brazil-vs-Global-Analysis\|Brazil vs. Global Analysis]] *(synthesis)* | Market size comparison, Pix vs. card rails, LGPD vs. GDPR, market-entry priority framework — Phase 06 synthesis document |
 | [[Brazil/Market-Context/Brazil-AI-Procurement-Landscape\|Brazil AI Procurement Landscape]] | 4 domestic AI startups profiled: Freedom (R$14.5M), Zinit (US$8M), Linkana (YC W20), Pipefy (~$150M) |
 | [[Brazil/Market-Context/Brazil-B2B-Marketplace-Landscape\|Brazil B2B Marketplace Landscape]] | 5 platforms: Mercado Livre Negócios, TOTVS+Fluig, Compras.gov.br/PNCP, B2Brazil, Nomos |
 | [[Brazil/Market-Context/Brazil-ERP-Landscape\|Brazil ERP Landscape]] | TOTVS (50% share + Agente de Compras), SAP Joule, Senior, Sankhya, Oracle — pricing in BRL, AI agent matrix |
@@ -124,6 +149,8 @@ _No trends researched yet._
 
 ## Statistics
 
+### Global Vault
+
 | Category | Discovered | Researched |
 |----------|------------|------------|
 | Companies | 10 | 10 (100%) |
@@ -135,6 +162,26 @@ _No trends researched yet._
 | Research Papers | 5 | 5 (100%) |
 | Security & Compliance Frameworks | 5 | 5 (100%) |
 | **Total Entities** | **37** | **37 (100%)** |
+
+### Brazil Sub-Vault
+
+| Category | Discovered | Researched |
+|----------|------------|------------|
+| Companies (Brazil) | 9 | 9 (100%) |
+| Products (Brazil) | 5 | 5 (100%) |
+| Regulatory/Compliance (Brazil) | 5 | 5 (100%) |
+| Market Context Documents | 5 | 5 (100%) |
+| People (Brazil) | 1 | 1 (100%) |
+| **Total Brazil Entities** | **25** | **~25 (~83% coverage)** |
+
+### Synthesis Documents (Phase 06)
+
+| Document | Type | Status |
+|----------|------|--------|
+| [[Competitive-Landscape]] | Analysis | Complete — 2026-04-06 |
+| [[Pricing-Registry]] | Reference | Complete — 2026-04-06 |
+| [[Brazil/Brazil-vs-Global-Analysis]] | Analysis | Complete — 2026-04-06 |
+| [[BuyerBench-Scenario-Recommendations]] | Report | Complete — 2026-04-06 |
 
 ## Research Summary
 
@@ -193,6 +240,7 @@ _No trends researched yet._
 
 ### Research Notes
 
+- **Research Complete — Phase 06 (2026-04-06).** All synthesis documents created: Global Competitive Landscape (4-layer market map, 22-event timeline, 8 white-space gaps), Pricing Registry (global + Brazil, 6 pricing observations), Brazil vs. Global Analysis (three-tier market-entry framework, 11 scenario archetypes), BuyerBench Scenario Recommendations (20 new scenarios across Pillars 1–3 + 5 Brazil-specific). Vault is now a fully interconnected, queryable knowledge base.
 - **Phase 03 Complete (2026-04-06).** 12 Phase 03 entities profiled: 5 major platform company profiles (Amazon, OpenAI, Google, Stripe, Coinbase) + 7 key people profiles. Vault now at 37/37 (100%) coverage.
 - **Phase 02 Complete (2026-04-05).** 10 Phase 02 entities profiled: 5 research papers + 5 security/compliance frameworks.
 - **Companies category: COMPLETE.** All 10 companies fully profiled — 5 original (Procure AI, Omnea, Zycus, Fairmarkit, Skyfire) + 5 Phase 03 platform incumbents (Amazon, OpenAI, Google, Stripe, Coinbase).
