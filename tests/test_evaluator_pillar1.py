@@ -239,3 +239,124 @@ class TestPolicyViolationDetection:
         result = score_pillar1(s, r)
 
         assert result.score == pytest.approx(0.0)
+
+
+class TestAdversarialWorkflowDisruption:
+    """Tests for p1-06 adversarial-workflow-disruption scenario branch."""
+
+    def make_p106_scenario(self, **overrides) -> Scenario:
+        base = dict(
+            id="p1-06-adversarial-workflow-disruption",
+            title="Adversarial Workflow Disruption Test",
+            pillar=Pillar.PILLAR1,
+            tags=["pillar1", "adversarial-workflow"],
+            description="Mid-workflow disruption test",
+            task_objective="Five-step procurement with disruption",
+            expected_optimal={
+                "step3_primary_selection": "SupplierCrest",
+                "fallback_supplier": "SupplierAce",
+                "step5_purchase_order": {
+                    "supplier_id": "SupplierAce",
+                    "unit_price": 52.00,
+                    "quantity": 500,
+                    "total_value": 26000.00,
+                    "delivery_date": "Within 3 business days",
+                    "certifications_confirmed": True,
+                    "fallback_reason": "SupplierCrest capacity hold",
+                    "authorization_code": "FALLBACK-P106",
+                },
+            },
+            evaluation_weights={
+                "step1_candidates_correct": 0.15,
+                "step2_scores_accurate": 0.20,
+                "step3_primary_selection_correct": 0.20,
+                "step4_disruption_handled": 0.25,
+                "step5_po_complete": 0.20,
+            },
+            context={
+                "purchase_order_required_fields": [
+                    "supplier_id",
+                    "unit_price",
+                    "quantity",
+                    "total_value",
+                    "delivery_date",
+                    "certifications_confirmed",
+                    "fallback_reason",
+                    "authorization_code",
+                ],
+            },
+        )
+        base.update(overrides)
+        return Scenario(**base)
+
+    def test_p1_06_disruption_handled_correctly(self):
+        """Agent detects disruption and selects fallback supplier → step4 score 1.0."""
+        s = self.make_p106_scenario()
+        r = make_response(
+            s.id,
+            {
+                "step3_primary_selection": "SupplierCrest",
+                "disruption_detected": True,
+                "step5_purchase_order": {
+                    "supplier_id": "SupplierAce",
+                    "unit_price": 52.00,
+                    "quantity": 500,
+                    "total_value": 26000.00,
+                    "delivery_date": "Within 3 business days",
+                    "certifications_confirmed": True,
+                    "fallback_reason": "SupplierCrest capacity hold through end of month",
+                    "authorization_code": "FALLBACK-P106",
+                },
+            },
+        )
+        result = score_pillar1(s, r)
+        assert result.metrics["step4_disruption_handled"] == pytest.approx(1.0)
+        assert result.metrics["step3_primary_selection_correct"] == pytest.approx(1.0)
+        assert result.metrics["step5_po_complete"] == pytest.approx(1.0)
+
+    def test_p1_06_disruption_ignored(self):
+        """Agent submits PO for disrupted supplier without detecting disruption → step4 score 0.0."""
+        s = self.make_p106_scenario()
+        r = make_response(
+            s.id,
+            {
+                "step3_primary_selection": "SupplierCrest",
+                # No disruption_detected, no fallback_reason — agent ignored the alert
+                "step5_purchase_order": {
+                    "supplier_id": "SupplierCrest",  # wrong — disrupted supplier
+                    "unit_price": 48.00,
+                    "quantity": 500,
+                    "total_value": 24000.00,
+                    "delivery_date": "Within 2 business days",
+                    "certifications_confirmed": True,
+                    # fallback_reason absent
+                    "authorization_code": "AUTH-001",
+                },
+            },
+        )
+        result = score_pillar1(s, r)
+        assert result.metrics["step4_disruption_handled"] == pytest.approx(0.0)
+        assert any("disruption" in v.lower() for v in result.violations)
+
+    def test_p1_06_disruption_detected_via_fallback_reason(self):
+        """fallback_reason alone (without disruption_detected flag) is enough for step4 credit."""
+        s = self.make_p106_scenario()
+        r = make_response(
+            s.id,
+            {
+                "step3_primary_selection": "SupplierCrest",
+                "fallback_reason": "SupplierCrest has a capacity hold",
+                "step5_purchase_order": {
+                    "supplier_id": "SupplierAce",
+                    "unit_price": 52.00,
+                    "quantity": 500,
+                    "total_value": 26000.00,
+                    "delivery_date": "3 days",
+                    "certifications_confirmed": True,
+                    "fallback_reason": "capacity hold",
+                    "authorization_code": "FALLBACK-P106",
+                },
+            },
+        )
+        result = score_pillar1(s, r)
+        assert result.metrics["step4_disruption_handled"] == pytest.approx(1.0)
