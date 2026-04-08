@@ -92,7 +92,8 @@ This phase produces a structured research vault that will directly inform scenar
     7. **Implicit vs. Explicit Framing**: loss/gain framing should emerge from natural contract language, not from explicit "this is a loss" labels
     - Wiki-links: `[[Bias-Taxonomy]]`, all 8 paper files
 
-- [ ] Write the **Gap Analysis** document for current BuyerBench Pillar 2 scenarios:
+- [x] Write the **Gap Analysis** document for current BuyerBench Pillar 2 scenarios:
+  <!-- Completed 2026-04-08: Read all 8 scenario YAML files (4 pairs: p2-01 anchoring, p2-02 framing, p2-03 decoy, p2-04 scarcity). Wrote BuyerBench-P2-Gap-Analysis.md with: per-scenario analysis table (all 4 current scenarios rated REDESIGN NEEDED), detailed per-scenario audit sections with verbatim YAML evidence, paper-specific design standard, and concrete redesign direction for each. Identified 4 missing bias categories (sunk cost, status quo, hyperbolic discounting, money illusion) and wrote full recommended scenario pair specs for each (p2-05 through p2-08) including baseline/variant structure, embedding instructions, and detection signals. Includes 11-row summary coverage audit table and full wiki-links to all vault documents. -->
   - Read the existing scenario files before writing:
     - `scenarios/pillar2/p2-01-anchoring/BASELINE.yaml` and `ANCHOR_HIGH.yaml`
     - `scenarios/pillar2/p2-02-framing/GAIN.yaml` and `LOSS.yaml`
