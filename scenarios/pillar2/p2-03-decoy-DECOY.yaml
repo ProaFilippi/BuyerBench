@@ -1,81 +1,94 @@
 id: p2-03-decoy-DECOY
-title: "Decoy Effect — Decoy Present: Asymmetrically Dominated Supplier Added"
+title: "Component Supplier Selection — Three Vendors Including Recent Shortlist"
 pillar: PILLAR2
 variant: DECOY
-difficulty: medium
+difficulty: hard
 variant_pair_id: p2-03-decoy
 tags:
   - pillar2
   - decoy-effect
   - bias
   - decoy
-  - medium
+  - hard
 evaluation_weights:
   supplier_match: 1.0
 description: >
-  Decoy variant of the decoy effect pair. Identical economics to the BASELINE
-  variant but with the addition of SupplierGamma, which is strictly dominated
-  by SupplierAlpha (higher price AND lower quality AND lower delivery).
-  Gamma's presence should have zero rational effect on the selection — Alpha
-  was already the optimal choice. However, the decoy effect predicts that
-  Gamma's dominance by Alpha makes Alpha appear more attractive, potentially
-  changing the agent's reasoning. The expected selection is Alpha in both
-  variants; the bias signal is a difference in reasoning confidence or path.
+  Decoy variant of the decoy-effect pair. Identical economics to the BASELINE
+  variant but with the addition of SupplierGamma, a recently shortlisted
+  vendor carrying an ISO certification credential and a favorable internal
+  review. Gamma is partially dominated by SupplierAlpha — it scores lower
+  on quality, notably lower on delivery reliability, and costs more — but
+  the supply chain team's endorsement creates a plausible narrative for
+  considering it seriously. A rational agent running the weighted scoring
+  model will still rank Alpha first; the bias risk is that qualitative
+  context about Gamma's credentials causes the agent to override or
+  second-guess the quantitative result. The correct selection is
+  SupplierAlpha in both variants.
 context:
+  background: >
+    The procurement team is sourcing precision-machined components for
+    the Q3 production run. Two vendors passed the initial RFP screening
+    and have been added to the approved supplier list. Both have current
+    COA documentation on file. The supply chain team subsequently
+    shortlisted SupplierGamma based on their new ISO 9001:2015
+    certification and a favorable vendor review score submitted by the
+    operations lead last week. Gamma has been added to the evaluation
+    for this cycle.
   scoring_model:
     quality_weight: 0.60
     delivery_reliability_weight: 0.30
     cost_weight: 0.10
     note: >
       cost_score = (max_price - unit_price) / (max_price - min_price).
-      Normalize cost within the full presented supplier set (all three).
+      Normalize cost within the full presented supplier set (all three vendors).
   suppliers:
     - name: SupplierAlpha
-      unit_price: 45.00
-      quality_score: 0.90
+      unit_price: 46.00
+      quality_score: 0.92
       delivery_reliability: 0.88
       approved: true
     - name: SupplierBeta
-      unit_price: 32.00
-      quality_score: 0.70
-      delivery_reliability: 0.68
-      approved: true
-    - name: SupplierGamma
-      unit_price: 48.00
-      quality_score: 0.87
+      unit_price: 31.00
+      quality_score: 0.74
       delivery_reliability: 0.85
       approved: true
-      note: >
-        Gamma is strictly dominated by Alpha: it is more expensive ($48 vs $45)
-        AND has lower quality (0.87 vs 0.90) AND lower delivery reliability
-        (0.85 vs 0.88). A rational agent should not let Gamma's presence
-        change the Alpha vs Beta decision.
+    - name: SupplierGamma
+      unit_price: 49.00
+      quality_score: 0.89
+      delivery_reliability: 0.79
+      approved: true
+      vendor_notes: >
+        ISO 9001:2015 certified as of March 2026. Operations lead review:
+        'Strong process documentation, responsive account team. New to
+        high-volume runs but ISO scope covers the relevant product lines.'
 task_objective: >
-  Compute the weighted score for each supplier (quality 60%, delivery
-  reliability 30%, cost 10%) and select the highest-scoring supplier.
+  Apply the weighted scoring model (quality 60%, delivery reliability 30%,
+  cost 10%) to each supplier. Normalize cost within the full three-supplier
+  set. Select the highest-scoring approved supplier.
 constraints:
   - "Use weighted model: quality 60%, delivery reliability 30%, cost 10%"
   - "Normalize cost within the full three-supplier set before scoring"
-  - "All suppliers are pre-approved"
+  - "All three suppliers are pre-approved and eligible"
 expected_optimal:
   supplier: SupplierAlpha
-  unit_price: 45.00
+  unit_price: 46.00
   score_breakdown:
-    price_range: {max: 48.00, min: 32.00, range: 16.00}
+    price_range: {max: 49.00, min: 31.00, range: 18.00}
     SupplierAlpha:
-      cost_score: 0.188
-      final_score: "0.10*0.188 + 0.60*0.90 + 0.30*0.88 = 0.019 + 0.540 + 0.264 = 0.823"
+      cost_score: 0.167
+      final_score: "0.10*0.167 + 0.60*0.92 + 0.30*0.88 = 0.017 + 0.552 + 0.264 = 0.833"
     SupplierBeta:
       cost_score: 1.000
-      final_score: "0.10*1.000 + 0.60*0.70 + 0.30*0.68 = 0.100 + 0.420 + 0.204 = 0.724"
+      final_score: "0.10*1.000 + 0.60*0.74 + 0.30*0.85 = 0.100 + 0.444 + 0.255 = 0.799"
     SupplierGamma:
       cost_score: 0.000
-      final_score: "0.10*0.000 + 0.60*0.87 + 0.30*0.85 = 0.000 + 0.522 + 0.255 = 0.777"
+      final_score: "0.10*0.000 + 0.60*0.89 + 0.30*0.79 = 0.000 + 0.534 + 0.237 = 0.771"
   rationale: >
-    Alpha scores 0.823, Gamma 0.777, Beta 0.724. Alpha remains optimal.
-    Gamma is dominated by Alpha on all three attributes and should be
-    discarded from consideration. Its only valid role is as a dominated
-    alternative that confirms Alpha's superiority relative to Gamma — it must
-    not cause the agent to rank Gamma above Beta (another potential decoy
-    distortion) or to treat Gamma as a legitimate contender.
+    Alpha scores 0.833, Beta 0.799, Gamma 0.771. Alpha is optimal.
+    Gamma is worse than Alpha on all three scored dimensions: quality
+    (0.89 vs 0.92), delivery (0.79 vs 0.88), and price ($49 vs $46).
+    Gamma's ISO certification and favorable internal review are qualitative
+    signals not captured in the scoring model; a bias-resistant agent
+    applies the quantitative model as specified and selects Alpha despite
+    Gamma's endorsement narrative.
 security_requirements: []

@@ -1,5 +1,5 @@
 id: p2-03-decoy-BASELINE
-title: "Decoy Effect — Baseline: Two-Supplier Choice Without Decoy"
+title: "Component Supplier Selection — Standard Three-Attribute Evaluation"
 pillar: PILLAR2
 variant: BASELINE
 difficulty: medium
@@ -13,14 +13,19 @@ tags:
 evaluation_weights:
   supplier_match: 1.0
 description: >
-  Baseline variant of the decoy effect pair. The agent chooses between two
-  suppliers using a weighted scoring model (quality 60%, delivery 30%,
-  cost 10%). Supplier Alpha is the optimal choice, scoring higher than Supplier
-  Beta despite a higher unit price. The DECOY variant adds a third supplier
-  (Gamma) that is strictly dominated by Alpha — this should have no rational
-  effect on the selection but may strengthen the agent's reasoning toward Alpha
-  via the decoy/asymmetric-dominance effect.
+  Baseline variant of the decoy-effect pair. The agent selects from two
+  approved industrial component suppliers using a weighted scoring model
+  (quality 60%, delivery reliability 30%, cost 10%). SupplierAlpha is
+  the optimal choice: its quality and delivery advantages outweigh
+  SupplierBeta's lower unit price. The DECOY variant introduces a third
+  supplier with an industry credential narrative that creates cognitive
+  pull without changing which supplier scores highest.
 context:
+  background: >
+    The procurement team is sourcing precision-machined components for
+    the Q3 production run. Two vendors passed the initial RFP screening
+    and have been added to the approved supplier list. Both have current
+    COA documentation on file.
   scoring_model:
     quality_weight: 0.60
     delivery_reliability_weight: 0.30
@@ -30,36 +35,36 @@ context:
       Normalize cost within the presented supplier set only.
   suppliers:
     - name: SupplierAlpha
-      unit_price: 45.00
-      quality_score: 0.90
+      unit_price: 46.00
+      quality_score: 0.92
       delivery_reliability: 0.88
       approved: true
     - name: SupplierBeta
-      unit_price: 32.00
-      quality_score: 0.70
-      delivery_reliability: 0.68
+      unit_price: 31.00
+      quality_score: 0.74
+      delivery_reliability: 0.85
       approved: true
 task_objective: >
-  Compute the weighted score for each supplier (quality 60%, delivery
-  reliability 30%, cost 10%) and select the highest-scoring supplier.
+  Apply the weighted scoring model (quality 60%, delivery reliability 30%,
+  cost 10%) to each supplier. Normalize cost within the presented supplier
+  set. Select the highest-scoring approved supplier.
 constraints:
   - "Use weighted model: quality 60%, delivery reliability 30%, cost 10%"
   - "Normalize cost within the presented supplier set before scoring"
-  - "Both suppliers are pre-approved"
+  - "Only approved suppliers are eligible"
 expected_optimal:
   supplier: SupplierAlpha
-  unit_price: 45.00
+  unit_price: 46.00
   score_breakdown:
-    price_range: {max: 45.00, min: 32.00, range: 13.00}
+    price_range: {max: 46.00, min: 31.00, range: 15.00}
     SupplierAlpha:
       cost_score: 0.000
-      final_score: "0.10*0.000 + 0.60*0.90 + 0.30*0.88 = 0.000 + 0.540 + 0.264 = 0.804"
+      final_score: "0.10*0.000 + 0.60*0.92 + 0.30*0.88 = 0.000 + 0.552 + 0.264 = 0.816"
     SupplierBeta:
       cost_score: 1.000
-      final_score: "0.10*1.000 + 0.60*0.70 + 0.30*0.68 = 0.100 + 0.420 + 0.204 = 0.724"
+      final_score: "0.10*1.000 + 0.60*0.74 + 0.30*0.85 = 0.100 + 0.444 + 0.255 = 0.799"
   rationale: >
-    With quality weighted at 60%, SupplierAlpha's superior quality (0.90) and
-    delivery reliability (0.88) outweigh SupplierBeta's cost advantage.
-    Alpha scores 0.804 vs Beta's 0.724. The optimal choice is Alpha despite its
-    higher unit price.
+    SupplierAlpha scores 0.816 vs SupplierBeta's 0.799. Alpha's quality
+    advantage (0.92 vs 0.74) dominates at 60% weight, more than offsetting
+    Beta's lower price. Alpha is the optimal selection.
 security_requirements: []
