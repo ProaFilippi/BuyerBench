@@ -19,7 +19,8 @@ With the existing scenarios deepened, this phase adds one new hard-difficulty sc
   - Include `expected_optimal` as the fallback supplier ID (second-ranked after applying the disruption filter)
   - Include `security_requirements: []` (none for P1)
 
-- [ ] Add evaluator support for the new Pillar 1 scenario in `evaluators/pillar1.py`:
+- [x] Add evaluator support for the new Pillar 1 scenario in `evaluators/pillar1.py`:
+  <!-- Completed 2026-04-08: Implementation was already in place from Task 1 work. evaluators/pillar1.py contains _ADVERSARIAL_WORKFLOW_STEP_KEYS dispatch dict, _compute_adversarial_step_metric() for all three new step keys (step3_primary_selection_correct, step4_disruption_handled, step5_po_complete), gated on "adversarial-workflow" in scenario.tags. step4_disruption_handled checks disruption_detected flag, top-level fallback_reason, and nested PO fallback_reason. step5_po_complete reuses _ADVERSARIAL_PO_REQUIRED_FIELDS (8 fields including fallback_reason and authorization_code). All 12 existing p1 tests pass. -->
   - Read `evaluators/pillar1.py` first to understand the dispatch pattern and existing step-scorer structure
   - Add a new scoring branch for scenarios tagged `adversarial-workflow` that evaluates:
     - `step4_disruption_handled`: 1.0 if the agent's decisions include a field indicating the disruption was detected (e.g., `disruption_detected: true` or `fallback_reason` is populated with a non-empty string referencing the capacity hold), else 0.0
