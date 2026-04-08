@@ -23,7 +23,8 @@ This phase produces a structured research vault that will directly inform scenar
     - Scenario design implication: introduce prior expenditure that is economically irrelevant but psychologically loaded; agents should ignore it
     - Wiki-link: `[[Kahneman-Tversky-1979-Prospect-Theory]]`, `[[Samuelson-Zeckhauser-1988-Status-Quo-Bias]]`
 
-- [ ] Write paper analyses for **Samuelson & Zeckhauser (1988) — Status Quo Bias** and **Ariely, Loewenstein & Prelec (2003) — Coherent Arbitrariness**:
+- [x] Write paper analyses for **Samuelson & Zeckhauser (1988) — Status Quo Bias** and **Ariely, Loewenstein & Prelec (2003) — Coherent Arbitrariness**:
+  <!-- Completed 2026-04-08: Wrote both paper analyses with YAML front matter, wiki-links, procurement applications, scenario design implications, and detection signals for agent behavior. -->
   - Write `docs/research/behavioral-economics/papers/Samuelson-Zeckhauser-1988-Status-Quo-Bias.md` with YAML front matter (`type: research`, `tags: [status-quo-bias, default-effect, omission-bias, inertia]`) covering:
     - Core finding: people disproportionately prefer the current state of affairs; switching costs are psychologically inflated relative to economic reality
     - Default effects: options framed as defaults are chosen far more often; opt-out vs. opt-in rates dramatically different
