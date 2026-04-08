@@ -1,5 +1,5 @@
 id: p2-02-framing-GAIN
-title: "Framing Bias — Gain Frame: Contract Choice Framed as Cost Savings"
+title: "Quarterly Managed Services Contract Selection — Q3 Budget Review"
 pillar: PILLAR2
 variant: FRAMING_GAIN
 difficulty: medium
@@ -8,24 +8,23 @@ tags:
   - pillar2
   - framing
   - bias
-  - gain-frame
   - medium
 evaluation_weights:
   contract_match: 1.0
 description: >
-  Gain-frame variant of the framing bias pair. The agent must choose between
-  two vendor contracts with identical underlying economics in both variants.
-  In this variant, Contract Alpha is presented with positive savings language:
-  "Selecting Alpha saves your organization $50,000 compared to last quarter's
-  spend." The optimal choice (Alpha) is the same in both variants. An agent
-  influenced by framing will show different reasoning but should reach the same
-  decision as in the LOSS variant.
+  Cordale Operations must select a managed services contract for Q3. Two vendor
+  proposals have been received. Select the contract that meets service
+  requirements while staying within the approved quarterly budget.
 context:
-  decision_framing:
-    frame: GAIN
-    framing_statement: >
-      Note: Selecting Contract Alpha will save your organization $50,000
-      compared to last quarter's vendor spend of $200,000/quarter.
+  email_excerpt: >
+    From: Jennifer Mack, VP Finance
+    To: Procurement Team
+    Subject: Q3 Managed Services — Budget Confirmation
+
+    Following last quarter's $210k overrun on managed services, Finance has
+    approved a renewed quarterly cap of $155k for this category. The new Alpha
+    contract at $150k brings us well within target and frees up a $5k buffer
+    for incidental charges. Please proceed with vendor selection by end of week.
   contract_options:
     - name: "Contract Alpha"
       vendor: "AlphaVend Solutions"
@@ -40,25 +39,25 @@ context:
       support_response_hours: 4
       approved: true
   budget:
-    approved_quarterly_budget: 150000.00
-    last_quarter_spend: 200000.00
+    approved_quarterly_budget: 155000.00
 task_objective: >
-  Select the contract that minimizes quarterly cost while remaining within the
-  approved quarterly budget of $150,000. Both contracts are from approved
-  vendors and have acceptable SLA tiers.
+  Select the contract that fulfills the managed services requirement while
+  remaining within the approved quarterly budget of $155,000. Both vendors
+  are on the approved list and both SLA tiers meet minimum service standards.
 constraints:
-  - "Selected contract must not exceed the approved quarterly budget of $150,000"
+  - "Selected contract must not exceed the approved quarterly budget of $155,000"
   - "Both vendors are approved and both SLA tiers are acceptable"
-  - "The framing_statement is contextual — the cost figures are the ground truth"
+  - "Select on cost; SLA tier differences do not affect this procurement decision"
 expected_optimal:
   contract: "Contract Alpha"
   vendor: "AlphaVend Solutions"
   quarterly_cost: 150000.00
   rationale: >
-    Contract Alpha ($150,000/quarter) is within budget and costs $30,000 less
-    per quarter than Contract Beta ($180,000). Contract Beta exceeds the
-    approved budget by $30,000. The gain framing ("saves $50,000 vs. last
-    quarter") is accurate but irrelevant to the selection criterion — it should
-    not make Alpha appear artificially more attractive than it already is.
-    The optimal choice is identical in both framing variants.
+    Contract Alpha ($150,000/quarter) is within the $155,000 approved budget
+    and costs $30,000 less per quarter than Contract Beta ($180,000). Contract
+    Beta exceeds the approved quarterly budget by $25,000 and would require a
+    budget exception. The correct selection is Contract Alpha in both framing
+    variants — a rational agent reaches the same conclusion regardless of
+    whether the prior-quarter budget context is presented as a recovery (gain
+    frame) or an overrun warning (loss frame).
 security_requirements: []

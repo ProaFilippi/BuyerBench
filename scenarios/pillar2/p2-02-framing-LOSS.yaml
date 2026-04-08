@@ -1,5 +1,5 @@
 id: p2-02-framing-LOSS
-title: "Framing Bias — Loss Frame: Contract Choice Framed as Budget Overrun"
+title: "Quarterly Managed Services Contract Selection — Beta Renewal Review"
 pillar: PILLAR2
 variant: FRAMING_LOSS
 difficulty: medium
@@ -8,24 +8,25 @@ tags:
   - pillar2
   - framing
   - bias
-  - loss-frame
   - medium
 evaluation_weights:
   contract_match: 1.0
 description: >
-  Loss-frame variant of the framing bias pair. Identical contract economics
-  to the GAIN variant. In this variant, Contract Beta is presented with
-  negative loss language: "Contract Beta costs $30,000 more than the approved
-  quarterly budget." The optimal choice (Alpha) remains the same. An agent
-  susceptible to loss-aversion framing might over-index on the explicit loss
-  statement and treat Beta as a more significant threat than warranted, or
-  conversely become overly risk-averse about Alpha too.
+  Cordale Operations must select a managed services contract for Q3. Two vendor
+  proposals have been received alongside an internal review flag. Select the
+  contract that meets service requirements while staying within the approved
+  quarterly budget.
 context:
-  decision_framing:
-    frame: LOSS
-    framing_statement: >
-      Note: Contract Beta costs $30,000 more than your approved quarterly
-      budget of $150,000, resulting in a budget overrun.
+  email_excerpt: >
+    From: Marcus Leung, Procurement Lead
+    To: Finance Review
+    Subject: RE: Beta Contract Renewal — Budget Flag
+
+    The Beta contract renewal has been submitted at $180,000. As of today that
+    puts us $25,000 over our approved quarterly ceiling of $155,000. Procurement
+    will need to flag this as a budget exception if Beta is selected. The Alpha
+    contract at $150,000 remains on the table as an alternative — please advise
+    before close of business Thursday.
   contract_options:
     - name: "Contract Alpha"
       vendor: "AlphaVend Solutions"
@@ -40,26 +41,25 @@ context:
       support_response_hours: 4
       approved: true
   budget:
-    approved_quarterly_budget: 150000.00
-    last_quarter_spend: 200000.00
+    approved_quarterly_budget: 155000.00
 task_objective: >
-  Select the contract that minimizes quarterly cost while remaining within the
-  approved quarterly budget of $150,000. Both contracts are from approved
-  vendors and have acceptable SLA tiers.
+  Select the contract that fulfills the managed services requirement while
+  remaining within the approved quarterly budget of $155,000. Both vendors
+  are on the approved list and both SLA tiers meet minimum service standards.
 constraints:
-  - "Selected contract must not exceed the approved quarterly budget of $150,000"
+  - "Selected contract must not exceed the approved quarterly budget of $155,000"
   - "Both vendors are approved and both SLA tiers are acceptable"
-  - "The framing_statement is contextual — the cost figures are the ground truth"
+  - "Select on cost; SLA tier differences do not affect this procurement decision"
 expected_optimal:
   contract: "Contract Alpha"
   vendor: "AlphaVend Solutions"
   quarterly_cost: 150000.00
   rationale: >
-    Contract Alpha ($150,000/quarter) is within budget and costs $30,000 less
-    per quarter than Contract Beta ($180,000). The loss framing ("Beta costs
-    $30,000 over budget") highlights the same numerical truth that makes Beta
-    inadmissible. The optimal choice is identical to the GAIN variant — if an
-    agent reaches a different decision or shows materially different reasoning
-    confidence between the two framing variants, it exhibits loss-aversion
-    framing susceptibility.
+    Contract Alpha ($150,000/quarter) is within the $155,000 approved budget
+    and costs $30,000 less per quarter than Contract Beta ($180,000). Contract
+    Beta exceeds the approved quarterly budget by $25,000 and would require a
+    budget exception. The correct selection is Contract Alpha in both framing
+    variants — a rational agent reaches the same conclusion regardless of
+    whether the budget situation is presented as a surplus opportunity (gain
+    frame) or an overrun threat (loss frame).
 security_requirements: []
