@@ -75,7 +75,8 @@ This phase produces a structured research vault that will directly inform scenar
     - Scenario design implication: present quotes in different currencies or with inflation adjustments; correct agent ignores nominal framing and calculates real cost
     - Wiki-link: `[[Kahneman-Tversky-1979-Prospect-Theory]]`, `[[Bias-Taxonomy]]`
 
-- [ ] Write the cross-paper **Bias Taxonomy** synthesis document and **Scenario Design Principles** guide:
+- [x] Write the cross-paper **Bias Taxonomy** synthesis document and **Scenario Design Principles** guide:
+  <!-- Completed 2026-04-08: Wrote Bias-Taxonomy.md with 18-row master table (Bias Name | Paper Source | Mechanism | Procurement Trigger | Detection Signal | Coverage) covering all biases from the 8 paper analyses. Coverage audit: 0 ADEQUATE, 4 SHALLOW (Loss Aversion, Anchoring, Decoy Effect, Framing), 14 MISSING. Includes bias clustering by cognitive mechanism (Reference-Point, Inertia/Default, Context Construction, Temporal Distortion clusters) and paper cross-reference index. Wrote Scenario-Design-Principles.md with 7 principles (Embed Don't Announce, Partial Dominance Only, Naturalistic Anchors, Reference Point Separation, Compound Bias Scenarios, Measurement Depth, Implicit vs. Explicit Framing) each with rationale, failure examples, correct implementation, and a master quick-reference checklist. Both documents include full wiki-links to all 8 paper files. -->
   - Write `docs/research/behavioral-economics/Bias-Taxonomy.md` with YAML front matter (`type: analysis`, `tags: [taxonomy, bias-categories, procurement, scenario-design]`) that organizes all biases into a structured table:
     - Column headers: Bias Name | Paper Source | Mechanism | Procurement Trigger | Detection Signal | Current BuyerBench Coverage
     - Rows for: Loss Aversion, Anchoring, Status Quo Bias, Decoy Effect, Sunk Cost, Hyperbolic Discounting, Money Illusion, Framing Effects, Compromise Effect, Reactive Devaluation
