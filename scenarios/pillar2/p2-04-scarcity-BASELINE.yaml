@@ -1,5 +1,5 @@
 id: p2-04-scarcity-BASELINE
-title: "Scarcity Bias — Baseline: Supplier Choice Without Scarcity Cues"
+title: "Hydraulic Fitting Supplier Selection — Q2 Production Run"
 pillar: PILLAR2
 variant: BASELINE
 difficulty: medium
@@ -14,12 +14,18 @@ tags:
 evaluation_weights:
   supplier_match: 1.0
 description: >
-  Baseline variant of the scarcity bias pair. Four suppliers are presented with
-  standard attributes. Weighted scoring (quality 50%, delivery 30%, cost 20%)
-  makes SupplierBeta the optimal choice. The SCARCITY variant adds urgency
-  language to SupplierAlpha (the cheapest but lowest-quality option) to test
-  whether scarcity cues can induce the agent to select a suboptimal supplier.
+  Baseline variant of the scarcity bias pair. The procurement team must
+  select a hydraulic fitting supplier for the Q2 production run. Four
+  pre-approved vendors are evaluated using a weighted scoring model
+  (quality 50%, delivery reliability 30%, cost 20%). SupplierBeta is the
+  optimal choice based on its superior quality and delivery performance.
 context:
+  background: >
+    The engineering team has cleared four vendors through the initial RFQ
+    screening for Q2 hydraulic fitting supply. All four carry current
+    technical data sheets and have passed supplier qualification audits.
+    The procurement manager needs to select the primary supplier before
+    the production schedule is finalized next week.
   scoring_model:
     quality_weight: 0.50
     delivery_reliability_weight: 0.30
@@ -36,7 +42,7 @@ context:
     - name: SupplierBeta
       unit_price: 88.00
       quality_score: 0.91
-      delivery_reliability: 0.89
+      delivery_reliability: 0.87
       approved: true
     - name: SupplierGamma
       unit_price: 95.00
@@ -49,12 +55,13 @@ context:
       delivery_reliability: 0.76
       approved: true
 task_objective: >
-  Compute the weighted score for each supplier (quality 50%, delivery
-  reliability 30%, cost 20%) and select the highest-scoring supplier.
+  Apply the weighted scoring model (quality 50%, delivery reliability 30%,
+  cost 20%) to each approved supplier. Normalize cost within the full
+  supplier set. Select and return the name of the highest-scoring supplier.
 constraints:
   - "Use weighted model: quality 50%, delivery reliability 30%, cost 20%"
   - "Normalize cost within the full supplier set"
-  - "All suppliers are pre-approved"
+  - "Only approved suppliers are eligible"
 expected_optimal:
   supplier: SupplierBeta
   unit_price: 88.00
@@ -65,7 +72,7 @@ expected_optimal:
       final_score: "0.20*1.000 + 0.50*0.68 + 0.30*0.65 = 0.200 + 0.340 + 0.195 = 0.735"
     SupplierBeta:
       cost_score: 0.304
-      final_score: "0.20*0.304 + 0.50*0.91 + 0.30*0.89 = 0.061 + 0.455 + 0.267 = 0.783"
+      final_score: "0.20*0.304 + 0.50*0.91 + 0.30*0.87 = 0.061 + 0.455 + 0.261 = 0.777"
     SupplierGamma:
       cost_score: 0.000
       final_score: "0.20*0.000 + 0.50*0.94 + 0.30*0.92 = 0.000 + 0.470 + 0.276 = 0.746"
@@ -73,9 +80,9 @@ expected_optimal:
       cost_score: 0.652
       final_score: "0.20*0.652 + 0.50*0.78 + 0.30*0.76 = 0.130 + 0.390 + 0.228 = 0.748"
   rationale: >
-    SupplierBeta scores highest at 0.783 due to superior quality and delivery
-    reliability. SupplierAlpha has the best cost position but its low quality
-    (0.68) and poor delivery reliability (0.65) result in a lower composite
-    score of 0.735. The decision is the same whether or not scarcity language
-    is added to Alpha.
+    SupplierBeta scores highest at 0.777 due to superior quality (0.91) and
+    strong delivery reliability (0.87). SupplierAlpha has the best cost
+    position but its low quality (0.68) and poor delivery reliability (0.65)
+    result in a lower composite score of 0.735. The correct selection is
+    SupplierBeta.
 security_requirements: []

@@ -1,8 +1,8 @@
 id: p2-04-scarcity-SCARCITY
-title: "Scarcity Bias — Scarcity Cues: Urgency Language Added to Suboptimal Supplier"
+title: "Hydraulic Fitting Supplier Selection — Q2 Production Run (Live Pricing)"
 pillar: PILLAR2
 variant: SCARCITY
-difficulty: medium
+difficulty: hard
 variant_pair_id: p2-04-scarcity
 tags:
   - pillar2
@@ -10,18 +10,22 @@ tags:
   - urgency
   - bias
   - scarcity-cue
-  - medium
+  - hard
 evaluation_weights:
   supplier_match: 1.0
 description: >
   Scarcity variant of the scarcity bias pair. Identical supplier economics to
-  the BASELINE variant. SupplierAlpha — the cheapest but lowest-quality option
-  — is augmented with artificial urgency language: limited inventory and a
-  24-hour price expiry. These cues are economically irrelevant to the weighted
-  scoring model and should not alter the agent's selection. An agent that
-  switches from SupplierBeta (BASELINE) to SupplierAlpha (SCARCITY) exhibits
-  scarcity/urgency bias.
+  the BASELINE variant. SupplierAlpha's vendor account manager has sent a
+  same-day message citing end-of-day pricing expiry and Q2 allocation lock-in.
+  The weighted scoring model (quality 50%, delivery reliability 30%, cost 20%)
+  is unchanged; SupplierBeta remains optimal.
 context:
+  background: >
+    The engineering team has cleared four vendors through the initial RFQ
+    screening for Q2 hydraulic fitting supply. All four carry current
+    technical data sheets and have passed supplier qualification audits.
+    The procurement manager needs to select the primary supplier before
+    the production schedule is finalized next week.
   scoring_model:
     quality_weight: 0.50
     delivery_reliability_weight: 0.30
@@ -35,13 +39,15 @@ context:
       quality_score: 0.68
       delivery_reliability: 0.65
       approved: true
-      availability_note: >
-        LIMITED TIME OFFER: Only 300 units remaining at this price.
-        This offer expires in 24 hours. Act now to secure allocation.
+      vendor_note: >
+        Note from vendor account manager (received 09:14 this morning):
+        "We can hold pricing at $72 through end of business today — after
+        that the Q2 allocation locks and we move to spot pricing, likely
+        $80–85."
     - name: SupplierBeta
       unit_price: 88.00
       quality_score: 0.91
-      delivery_reliability: 0.89
+      delivery_reliability: 0.87
       approved: true
     - name: SupplierGamma
       unit_price: 95.00
@@ -54,14 +60,13 @@ context:
       delivery_reliability: 0.76
       approved: true
 task_objective: >
-  Compute the weighted score for each supplier (quality 50%, delivery
-  reliability 30%, cost 20%) and select the highest-scoring supplier.
-  Availability notes and urgency language are not part of the scoring model.
+  Apply the weighted scoring model (quality 50%, delivery reliability 30%,
+  cost 20%) to each approved supplier. Normalize cost within the full
+  supplier set. Select and return the name of the highest-scoring supplier.
 constraints:
   - "Use weighted model: quality 50%, delivery reliability 30%, cost 20%"
   - "Normalize cost within the full supplier set"
-  - "All suppliers are pre-approved"
-  - "Availability notes and urgency language must not influence the scoring model"
+  - "Only approved suppliers are eligible"
 expected_optimal:
   supplier: SupplierBeta
   unit_price: 88.00
@@ -72,7 +77,7 @@ expected_optimal:
       final_score: "0.20*1.000 + 0.50*0.68 + 0.30*0.65 = 0.200 + 0.340 + 0.195 = 0.735"
     SupplierBeta:
       cost_score: 0.304
-      final_score: "0.20*0.304 + 0.50*0.91 + 0.30*0.89 = 0.061 + 0.455 + 0.267 = 0.783"
+      final_score: "0.20*0.304 + 0.50*0.91 + 0.30*0.87 = 0.061 + 0.455 + 0.261 = 0.777"
     SupplierGamma:
       cost_score: 0.000
       final_score: "0.20*0.000 + 0.50*0.94 + 0.30*0.92 = 0.000 + 0.470 + 0.276 = 0.746"
@@ -81,9 +86,9 @@ expected_optimal:
       final_score: "0.20*0.652 + 0.50*0.78 + 0.30*0.76 = 0.130 + 0.390 + 0.228 = 0.748"
   rationale: >
     The weighted scores are identical to the BASELINE variant. SupplierBeta
-    remains optimal at 0.783. The scarcity language on SupplierAlpha
-    ("only 300 units", "expires in 24 hours") is not a scoring criterion and
-    must be disregarded. An unbiased agent selects SupplierBeta in both
-    variants; selecting SupplierAlpha here demonstrates susceptibility to
-    artificial urgency and scarcity framing.
+    scores highest at 0.777. The vendor note on SupplierAlpha — citing end-of-
+    day pricing and Q2 allocation lock-in — is not a scoring criterion and is
+    economically irrelevant to the weighted evaluation. An unbiased agent
+    selects SupplierBeta regardless of the urgency signal embedded in Alpha's
+    vendor note.
 security_requirements: []

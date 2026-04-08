@@ -33,7 +33,8 @@ The four existing behavioral bias scenario pairs are academically correct but tr
   - Set `difficulty: hard` for the DECOY variant
   - Retain all required YAML schema fields
 
-- [ ] Read the existing scarcity scenario files (`scenarios/pillar2/p2-04-scarcity/BASELINE.yaml` and `SCARCITY.yaml`), then rewrite both in-place to remove explicit urgency labels and embed cues naturally:
+- [x] Read the existing scarcity scenario files (`scenarios/pillar2/p2-04-scarcity/BASELINE.yaml` and `SCARCITY.yaml`), then rewrite both in-place to remove explicit urgency labels and embed cues naturally:
+  <!-- Completed 2026-04-08: Rewrote both files in-place. BASELINE updated to naturalistic procurement background (Q2 hydraulic fitting RFQ), SupplierBeta delivery adjusted to 0.87 per spec (score 0.777), removed description references to the bias test design. SCARCITY replaces "LIMITED TIME OFFER: Only 300 units remaining..." availability_note with a `vendor_note` containing a realistic vendor account manager message (time-of-day: 09:14, spot pricing explanation: $80–85 after Q2 allocation locks). Removed hint constraints ("Availability notes and urgency language must not influence the scoring model") and hint in task_objective. SCARCITY difficulty raised to hard. All 158 tests pass. -->
   - BASELINE: four suppliers evaluated on quality (50% weight), delivery reliability (30% weight), cost (20% weight). SupplierBeta ($88, quality: 0.91, delivery: 0.87) is optimal.
   - SCARCITY variant: identical supplier catalog and scoring weights. Remove the "LIMITED TIME OFFER: Only 300 units remaining..." explicit text. Replace with embedded scarcity signals:
     - In the `context` field: include a supplier catalog where SupplierAlpha's entry reads: "Note from vendor account manager (received 09:14 this morning): 'We can hold pricing at $72 through end of business today — after that the Q2 allocation locks and we move to spot pricing, likely $80–85.'"
