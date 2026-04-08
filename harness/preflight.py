@@ -90,6 +90,50 @@ def _probe_mcp_server() -> dict[str, Any]:
         return {"started": False, "error": str(exc)}
 
 
+_OPENROUTER_AGENT_IDS = [
+    "openrouter-openai-gpt-4o",
+    "openrouter-anthropic-claude-3.5-sonnet",
+    "openrouter-google-gemini-pro-1.5",
+    "openrouter-meta-llama-llama-3.1-405b-instruct",
+    "openrouter-mistralai-mistral-large",
+    "openrouter-deepseek-deepseek-chat",
+    "openrouter-qwen-qwen-2.5-72b-instruct",
+    "openrouter-cohere-command-r-plus",
+    "openrouter-mistralai-mixtral-8x22b-instruct",
+    "openrouter-01-ai-yi-large",
+]
+
+
+def _probe_openrouter() -> dict[str, Any]:
+    """Check OPENROUTER_API_KEY and probe the /models endpoint."""
+    try:
+        import requests
+    except ImportError:
+        return {
+            "available": False,
+            "reason": "requests not installed — run: pip install requests",
+        }
+
+    api_key = os.environ.get("OPENROUTER_API_KEY")
+    if not api_key:
+        return {"available": False, "reason": "OPENROUTER_API_KEY not set"}
+
+    try:
+        resp = requests.get(
+            "https://openrouter.ai/api/v1/models",
+            headers={"Authorization": f"Bearer {api_key}"},
+            timeout=5,
+        )
+        if resp.status_code == 200:
+            return {"available": True, "reason": None}
+        return {
+            "available": False,
+            "reason": f"HTTP {resp.status_code} from OpenRouter /models",
+        }
+    except Exception as exc:  # noqa: BLE001
+        return {"available": False, "reason": str(exc)}
+
+
 def check_environment(print_report: bool = True) -> dict[str, Any]:
     """Run all pre-flight checks and optionally print a rich report.
 
@@ -118,7 +162,7 @@ def check_environment(print_report: bool = True) -> dict[str, Any]:
                 "available_agents": list[str],  # agent_ids whose CLI + key are present
             }
     """
-    results: dict[str, Any] = {"clis": {}, "api_keys": {}, "mcp_server": {}}
+    results: dict[str, Any] = {"clis": {}, "api_keys": {}, "mcp_server": {}, "openrouter": {}}
 
     # --- CLI probes ---
     for family, (cli_name, version_flag) in _CLI_TOOLS.items():
@@ -130,6 +174,9 @@ def check_environment(print_report: bool = True) -> dict[str, Any]:
 
     # --- Mock MCP server probe ---
     results["mcp_server"] = _probe_mcp_server()
+
+    # --- OpenRouter probe ---
+    results["openrouter"] = _probe_openrouter()
 
     # --- Derive available agent families ---
     _family_ok = {
@@ -158,6 +205,10 @@ def check_environment(print_report: bool = True) -> dict[str, Any]:
                     "claude-code-mcp",
                 ]
             )
+
+    if results["openrouter"]["available"]:
+        available_agents.extend(_OPENROUTER_AGENT_IDS)
+
     results["available_agents"] = available_agents
 
     all_keys_set = all(v["set"] for v in results["api_keys"].values())
@@ -237,6 +288,27 @@ def _print_report(results: dict[str, Any]) -> None:
     mcp_table.add_column("Detail")
     mcp_table.add_row("Mock MCP Server", mcp_status, mcp_detail)
     console.print(mcp_table)
+    console.print()
+
+    # --- OpenRouter table ---
+    or_info = results.get("openrouter", {})
+    or_table = Table(title="OpenRouter", box=box.ROUNDED, show_lines=True)
+    or_table.add_column("Check", style="bold cyan", no_wrap=True)
+    or_table.add_column("Status", justify="center")
+    or_table.add_column("Detail")
+    if or_info.get("available"):
+        or_table.add_row(
+            "OPENROUTER_API_KEY + /models",
+            "[green]OK[/green]",
+            f"10 models registered ({', '.join(_OPENROUTER_AGENT_IDS[:3])}…)",
+        )
+    else:
+        or_table.add_row(
+            "OPENROUTER_API_KEY + /models",
+            "[yellow]UNAVAILABLE[/yellow]",
+            or_info.get("reason") or "—",
+        )
+    console.print(or_table)
     console.print()
 
     # --- Summary ---

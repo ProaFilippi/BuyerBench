@@ -12,6 +12,7 @@ Environment variable overrides (take precedence over file values)
   OPENAI_API_KEY       → codex.api_key
   GOOGLE_API_KEY       → gemini.api_key
   GEMINI_API_KEY       → gemini.api_key  (alias)
+  OPENROUTER_API_KEY   → openrouter.api_key
   BUYERBENCH_TIMEOUT   → timeout (global subprocess timeout in seconds)
   BUYERBENCH_DRY_RUN   → dry_run (set to "1" or "true" to enable)
 """
@@ -56,6 +57,7 @@ def load_config(path: str | Path | None = None) -> dict[str, Any]:
     config.setdefault("claude_code", {})
     config.setdefault("codex", {})
     config.setdefault("gemini", {})
+    config.setdefault("openrouter", {"api_key": None, "timeout": 60})
     config.setdefault("timeout", 120)
     config.setdefault("dry_run", False)
 
@@ -66,9 +68,13 @@ def load_config(path: str | Path | None = None) -> dict[str, Any]:
         config["codex"]["api_key"] = key
     if key := os.environ.get("GOOGLE_API_KEY") or os.environ.get("GEMINI_API_KEY"):
         config["gemini"]["api_key"] = key
+    if key := os.environ.get("OPENROUTER_API_KEY"):
+        config["openrouter"]["api_key"] = key
     if timeout_str := os.environ.get("BUYERBENCH_TIMEOUT"):
         try:
-            config["timeout"] = int(timeout_str)
+            t = int(timeout_str)
+            config["timeout"] = t
+            config["openrouter"]["timeout"] = t
         except ValueError:
             pass
     if dry_run_str := os.environ.get("BUYERBENCH_DRY_RUN"):

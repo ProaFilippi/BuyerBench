@@ -62,6 +62,18 @@ pytest tests/test_evaluator_pillar3.py -v
 #   gemini-mcp               Google Gemini CLI + MCP
 #   negmas                   NegMAS negotiation agent (Python-native, no credentials)
 #   stripe-toolkit           Stripe Agent Toolkit (simulation mode by default)
+#
+#   OpenRouter HTTP agents (direct API, no CLI install — requires OPENROUTER_API_KEY):
+#   openrouter-openai-gpt-4o                      OpenAI GPT-4o via OpenRouter
+#   openrouter-anthropic-claude-3.5-sonnet        Anthropic Claude 3.5 Sonnet via OpenRouter
+#   openrouter-google-gemini-pro-1.5              Google Gemini Pro 1.5 via OpenRouter
+#   openrouter-meta-llama-llama-3.1-405b-instruct Meta LLaMA 3.1 405B Instruct via OpenRouter
+#   openrouter-mistralai-mistral-large            Mistral Large via OpenRouter
+#   openrouter-deepseek-deepseek-chat             DeepSeek Chat via OpenRouter
+#   openrouter-qwen-qwen-2.5-72b-instruct         Qwen 2.5 72B Instruct via OpenRouter
+#   openrouter-cohere-command-r-plus              Cohere Command R+ via OpenRouter
+#   openrouter-mistralai-mixtral-8x22b-instruct   Mixtral 8x22B Instruct via OpenRouter
+#   openrouter-01-ai-yi-large                     01.AI Yi Large via OpenRouter
 ```
 
 ## Architecture

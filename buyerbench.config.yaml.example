@@ -36,6 +36,26 @@ gemini:
   model: ""                  # Pin a specific Gemini model (e.g. gemini-2.0-flash)
   mcp_config_path: ""        # Path to custom MCP config JSON (mcp mode only)
 
+# OpenRouter HTTP agent configuration
+# Calls OpenRouter's OpenAI-compatible API directly — no CLI install required.
+# Requires: OPENROUTER_API_KEY env var or api_key below
+# Get a key at: https://openrouter.ai/keys
+#
+# Registered model IDs (use with --agent flag):
+#   openrouter-openai-gpt-4o
+#   openrouter-anthropic-claude-3.5-sonnet
+#   openrouter-google-gemini-pro-1.5
+#   openrouter-meta-llama-llama-3.1-405b-instruct
+#   openrouter-mistralai-mistral-large
+#   openrouter-deepseek-deepseek-chat
+#   openrouter-qwen-qwen-2.5-72b-instruct
+#   openrouter-cohere-command-r-plus
+#   openrouter-mistralai-mixtral-8x22b-instruct
+#   openrouter-01-ai-yi-large
+openrouter:
+  api_key: ""              # Or set OPENROUTER_API_KEY env var
+  timeout: 60              # HTTP request timeout in seconds
+
 # Scenarios root directory (relative to repo root)
 scenarios_root: scenarios
 

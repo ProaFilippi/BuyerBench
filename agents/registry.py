@@ -17,6 +17,7 @@ Canonical agent IDs
   mock-agent-v1          Perfect mock agent (test / pipeline verification)
   stripe-toolkit         Stripe Agent Toolkit adapter (Pillar 3 focus)
   negmas                 NegMAS negotiation agent adapter (Pillar 1 focus)
+  openrouter-*           Direct HTTP agents via OpenRouter (10 models)
 """
 from __future__ import annotations
 
@@ -26,7 +27,25 @@ from agents.codex_agent import CodexAgent
 from agents.gemini_agent import GeminiAgent
 from agents.mock import MockAgent
 from agents.negmas_agent import NegMASAgent
+from agents.openrouter_agent import OpenRouterAgent
 from agents.stripe_toolkit_agent import StripeToolkitAgent
+
+# ------------------------------------------------------------------
+# OpenRouter model map: agent_id slug -> OpenRouter model_id
+# ------------------------------------------------------------------
+
+OPENROUTER_MODEL_MAP: dict[str, str] = {
+    "openrouter-openai-gpt-4o": "openai/gpt-4o",
+    "openrouter-anthropic-claude-3.5-sonnet": "anthropic/claude-3.5-sonnet",
+    "openrouter-google-gemini-pro-1.5": "google/gemini-pro-1.5",
+    "openrouter-meta-llama-llama-3.1-405b-instruct": "meta-llama/llama-3.1-405b-instruct",
+    "openrouter-mistralai-mistral-large": "mistralai/mistral-large",
+    "openrouter-deepseek-deepseek-chat": "deepseek/deepseek-chat",
+    "openrouter-qwen-qwen-2.5-72b-instruct": "qwen/qwen-2.5-72b-instruct",
+    "openrouter-cohere-command-r-plus": "cohere/command-r-plus",
+    "openrouter-mistralai-mixtral-8x22b-instruct": "mistralai/mixtral-8x22b-instruct",
+    "openrouter-01-ai-yi-large": "01-ai/yi-large",
+}
 
 # ------------------------------------------------------------------
 # Registry: agent_id -> adapter class
@@ -50,6 +69,8 @@ AGENT_REGISTRY: dict[str, type[BaseAgent]] = {
     # Open-source agent adapters
     "stripe-toolkit": StripeToolkitAgent,
     "negmas": NegMASAgent,
+    # OpenRouter HTTP agents (10 models)
+    **{agent_id: OpenRouterAgent for agent_id in OPENROUTER_MODEL_MAP},
 }
 
 
@@ -88,6 +109,16 @@ def get_agent(agent_id: str, config: dict | None = None) -> BaseAgent:
         return StripeToolkitAgent()
     if cls is NegMASAgent:
         return NegMASAgent()
+
+    # OpenRouter agents: instantiate directly with model_id + config overrides
+    if agent_id.startswith("openrouter-"):
+        model_id = OPENROUTER_MODEL_MAP[agent_id]
+        or_cfg = config.get("openrouter", {})
+        return OpenRouterAgent(
+            model_id=model_id,
+            timeout=config.get("timeout", or_cfg.get("timeout", 120)),
+            dry_run=config.get("dry_run", False),
+        )
 
     # Extract mode from the agent_id suffix
     _, mode = agent_id.rsplit("-", 1)
