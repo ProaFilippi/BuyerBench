@@ -44,7 +44,8 @@ The four existing behavioral bias scenario pairs are academically correct but tr
   - Set `difficulty: medium` for BASELINE, `difficulty: hard` for SCARCITY variant
   - Retain all required YAML schema fields
 
-- [ ] Verify all eight rewritten scenario files are valid YAML and compatible with the existing evaluator:
+- [x] Verify all eight rewritten scenario files are valid YAML and compatible with the existing evaluator:
+  <!-- Completed 2026-04-08: All 8 scenario YAML files parse cleanly (yaml.safe_load). `python3 -m buyerbench check` confirms CLI tools and mock MCP server OK; API key warnings are expected in this environment. All 158 tests pass (pytest tests/test_scenarios.py tests/test_evaluator_pillar2.py). No test fixture updates were needed — the previous phase rewrites already preserved required schema fields and test-referenced values. -->
   - Run `python -c "import yaml; [yaml.safe_load(open(f)) for f in ['scenarios/pillar2/p2-01-anchoring/BASELINE.yaml', 'scenarios/pillar2/p2-01-anchoring/ANCHOR_HIGH.yaml', 'scenarios/pillar2/p2-02-framing/GAIN.yaml', 'scenarios/pillar2/p2-02-framing/LOSS.yaml', 'scenarios/pillar2/p2-03-decoy/BASELINE.yaml', 'scenarios/pillar2/p2-03-decoy/DECOY.yaml', 'scenarios/pillar2/p2-04-scarcity/BASELINE.yaml', 'scenarios/pillar2/p2-04-scarcity/SCARCITY.yaml']]; print('All YAML valid')"` from the project root
   - Run `python -m buyerbench check` to verify scenario loading passes preflight
   - Run `pytest tests/test_scenarios.py tests/test_evaluator_pillar2.py -v` and fix any test failures caused by schema changes in the rewritten scenarios
