@@ -58,7 +58,8 @@ This phase produces a structured research vault that will directly inform scenar
     - Scenario design implication: frame two equivalent contracts with different payment schedules where one has a front-loaded "discount" vs. better lifecycle value
     - Wiki-link: `[[Thaler-1980-Mental-Accounting]]`, `[[Scenario-Design-Principles]]`
 
-- [ ] Write paper analyses for **Bazerman & Neale (1992) — Negotiating Rationally** and **Shafir, Diamond & Tversky (1997) — Money Illusion**:
+- [x] Write paper analyses for **Bazerman & Neale (1992) — Negotiating Rationally** and **Shafir, Diamond & Tversky (1997) — Money Illusion**:
+  <!-- Completed 2026-04-08: Wrote both paper analyses following established vault style (7-section structure: Citation, Core Finding, Key Mechanisms, Procurement Application, Scenario Design Implication, Related Biases, Detection Signal). Bazerman & Neale covers mythical fixed-pie, reactive devaluation, overconfidence, and escalation of commitment with a compound scenario using sunk cost + deadline pressure. Shafir et al. covers nominal salience, contract framing, multi-currency confusion, and COLA clause reasoning with a compound scenario combining anchoring + inflation context. Both include detection signal checklists for automated agent scoring. -->
   - Write `docs/research/behavioral-economics/papers/Bazerman-Neale-1992-Negotiating-Rationally.md` with YAML front matter (`type: research`, `tags: [negotiation, mythical-fixed-pie, reactive-devaluation, overconfidence, procurement]`) covering:
     - Core finding: negotiators systematically err by assuming fixed-pie (zero-sum) distributions, engaging in reactive devaluation, and over-anchoring on first offers
     - Mythical fixed-pie: negotiators assume all items are disputed even when both parties prefer different things — optimal trades go unmade
