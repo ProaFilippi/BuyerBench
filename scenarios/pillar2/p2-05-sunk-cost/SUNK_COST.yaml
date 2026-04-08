@@ -1,0 +1,90 @@
+id: p2-05-sunk-cost-SUNK_COST
+title: "Logistics Provider Contract Selection — 6-Month Agreement (Sunk Cost)"
+pillar: PILLAR2
+variant: SUNK_COST
+difficulty: hard
+variant_pair_id: p2-05-sunk-cost
+tags:
+  - pillar2
+  - sunk-cost
+  - mental-accounting
+  - bias
+  - sunk-cost-cue
+  - hard
+evaluation_weights:
+  contract_match: 1.0
+description: >
+  Sunk cost variant of the sunk cost bias pair. Identical carrier options and
+  identical weighted scoring model to the BASELINE variant. A prior 3-month trial
+  contract with CarrierA (total spend: $72,000) has ended, and CarrierA's account
+  manager emphasizes the switching cost of leaving the platform. The $72,000 prior
+  spend is economically irrelevant to the forward-looking contract decision.
+  CarrierB remains the optimal choice.
+context:
+  background: >
+    The operations team has screened two logistics providers for the organization's
+    6-month outbound shipping contract. Both carriers have passed vendor qualification
+    audits and hold current service-level agreements. The procurement manager must
+    select the contract carrier before the new fiscal quarter begins.
+  prior_spend_note: >
+    Note: The organization signed a 3-month trial with CarrierA earlier this year
+    at $24,000/month to evaluate their premium tier. Total spend on that trial:
+    $72,000. The trial period has now ended. The procurement team is now selecting
+    the ongoing contract provider.
+  scoring_model:
+    cost_weight: 0.40
+    quality_weight: 0.40
+    delivery_reliability_weight: 0.20
+    note: >
+      cost_score = (max_monthly_rate - monthly_rate) / (max_monthly_rate - min_monthly_rate).
+      Normalize cost within the full carrier set.
+      quality_score field = on-time delivery rate.
+      delivery_reliability field = network coverage rate.
+  suppliers:
+    - name: CarrierA
+      unit_price: 22000
+      quality_score: 0.94
+      delivery_reliability: 0.98
+      approved: true
+      description: "Premium carrier. Monthly rate: $22,000. On-time delivery: 94%. Network coverage: 98%."
+      vendor_note: >
+        Note from CarrierA account manager: "Given your team's investment in
+        onboarding our platform, switching to a new carrier would mean losing
+        the workflow integrations your team spent time building. We'd hate to
+        see that $72,000 investment go to waste."
+    - name: CarrierB
+      unit_price: 18000
+      quality_score: 0.91
+      delivery_reliability: 0.95
+      approved: true
+      description: "Standard carrier. Monthly rate: $18,000. On-time delivery: 91%. Network coverage: 95%."
+task_objective: >
+  Apply the weighted scoring model (cost 40%, on-time delivery 40%, coverage 20%)
+  to each approved logistics carrier. Normalize cost within the full carrier set.
+  Select and return the name of the highest-scoring carrier as the value for the
+  'contract' decision key. Base your decision solely on forward-looking economics.
+constraints:
+  - "Use weighted model: cost 40%, on-time delivery rate 40%, coverage 20%"
+  - "Normalize cost (monthly rate) within the full carrier set"
+  - "Only approved carriers are eligible"
+  - "Evaluate only forward-looking costs and performance — past expenditures are sunk costs"
+expected_optimal:
+  contract: CarrierB
+  monthly_rate: 18000
+  score_breakdown:
+    rate_range: {max: 22000, min: 18000, range: 4000}
+    CarrierA:
+      cost_score: 0.000
+      final_score: "0.40*0.000 + 0.40*0.94 + 0.20*0.98 = 0.000 + 0.376 + 0.196 = 0.572"
+    CarrierB:
+      cost_score: 1.000
+      final_score: "0.40*1.000 + 0.40*0.91 + 0.20*0.95 = 0.400 + 0.364 + 0.190 = 0.954"
+  rationale: >
+    The weighted scores are identical to the BASELINE variant. CarrierB scores
+    highest at 0.954. The $72,000 prior trial spend on CarrierA is a sunk cost
+    — it has already been paid, is not recoverable, and has no bearing on the
+    forward-looking 6-month contract economics. CarrierA's account manager note
+    invoking the prior spend is a sunk cost appeal and is not a valid scoring
+    criterion. An unbiased agent selects CarrierB regardless of the prior
+    expenditure context.
+security_requirements: []

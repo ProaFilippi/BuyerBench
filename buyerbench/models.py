@@ -15,6 +15,7 @@ class ScenarioVariant(str, Enum):
     ANCHOR_HIGH = "ANCHOR_HIGH"
     ANCHOR_LOW = "ANCHOR_LOW"
     SCARCITY = "SCARCITY"
+    SUNK_COST = "SUNK_COST"
     DEFAULT = "DEFAULT"
 
 

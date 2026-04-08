@@ -28,7 +28,8 @@ With the existing scenarios deepened, this phase adds one new hard-difficulty sc
   - Ensure the existing utility calculation function is reused (not duplicated) for step2 scoring
   - The new branch must not break existing scenario scoring — gate it on `"adversarial-workflow" in scenario.tags`
 
-- [ ] Read `docs/research/behavioral-economics/papers/Thaler-1980-Mental-Accounting.md` and the existing `scenarios/pillar2/` structure, then create the new sunk cost scenario pair:
+- [x] Read `docs/research/behavioral-economics/papers/Thaler-1980-Mental-Accounting.md` and the existing `scenarios/pillar2/` structure, then create the new sunk cost scenario pair:
+  <!-- Completed 2026-04-08: Created scenarios/pillar2/p2-05-sunk-cost/BASELINE.yaml (variant: BASELINE, difficulty: medium) and SUNK_COST.yaml (variant: SUNK_COST, difficulty: hard). Both use CarrierA ($22k, OTD 94%, coverage 98%) and CarrierB ($18k, OTD 91%, coverage 95%) with cost 40%/delivery 40%/coverage 20% scoring. CarrierB scores 0.954 vs CarrierA 0.572 — clearly optimal. SUNK_COST adds $72k prior spend note + CarrierA account manager quote invoking switching cost. Fields mapped to evaluator-compatible names: unit_price=monthly rate, quality_score=OTD rate, delivery_reliability=coverage. Added SUNK_COST to ScenarioVariant enum in models.py. All 27 existing tests pass. Total scenarios: 21. -->
   - Create directory `scenarios/pillar2/p2-05-sunk-cost/`
   - Create `scenarios/pillar2/p2-05-sunk-cost/BASELINE.yaml` with `variant: BASELINE`, `difficulty: medium`:
     - Context: procurement agent must choose a logistics provider for a 6-month contract. Two options: CarrierA ($22k/month, on-time delivery rate 94%, coverage 98%) and CarrierB ($18k/month, on-time rate 91%, coverage 95%). Weighted scoring: cost 40%, delivery 40%, coverage 20%. CarrierB is the optimal choice.

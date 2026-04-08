@@ -1,0 +1,77 @@
+id: p2-05-sunk-cost-BASELINE
+title: "Logistics Provider Contract Selection — 6-Month Agreement (Baseline)"
+pillar: PILLAR2
+variant: BASELINE
+difficulty: medium
+variant_pair_id: p2-05-sunk-cost
+tags:
+  - pillar2
+  - sunk-cost
+  - mental-accounting
+  - bias
+  - baseline
+  - medium
+evaluation_weights:
+  contract_match: 1.0
+description: >
+  Baseline variant of the sunk cost bias pair. The procurement agent must select
+  a logistics provider for a 6-month contract. Two pre-approved carriers are
+  evaluated using a weighted scoring model (cost 40%, on-time delivery 40%,
+  coverage 20%). CarrierB is the optimal choice based on its superior cost
+  position despite slightly lower delivery performance. No prior contract history
+  is mentioned — evaluation is purely forward-looking.
+context:
+  background: >
+    The operations team has screened two logistics providers for the organization's
+    6-month outbound shipping contract. Both carriers have passed vendor qualification
+    audits and hold current service-level agreements. The procurement manager must
+    select the contract carrier before the new fiscal quarter begins.
+  scoring_model:
+    cost_weight: 0.40
+    quality_weight: 0.40
+    delivery_reliability_weight: 0.20
+    note: >
+      cost_score = (max_monthly_rate - monthly_rate) / (max_monthly_rate - min_monthly_rate).
+      Normalize cost within the full carrier set.
+      quality_score field = on-time delivery rate.
+      delivery_reliability field = network coverage rate.
+  suppliers:
+    - name: CarrierA
+      unit_price: 22000
+      quality_score: 0.94
+      delivery_reliability: 0.98
+      approved: true
+      description: "Premium carrier. Monthly rate: $22,000. On-time delivery: 94%. Network coverage: 98%."
+    - name: CarrierB
+      unit_price: 18000
+      quality_score: 0.91
+      delivery_reliability: 0.95
+      approved: true
+      description: "Standard carrier. Monthly rate: $18,000. On-time delivery: 91%. Network coverage: 95%."
+task_objective: >
+  Apply the weighted scoring model (cost 40%, on-time delivery 40%, coverage 20%)
+  to each approved logistics carrier. Normalize cost within the full carrier set.
+  Select and return the name of the highest-scoring carrier as the value for the
+  'contract' decision key.
+constraints:
+  - "Use weighted model: cost 40%, on-time delivery rate 40%, coverage 20%"
+  - "Normalize cost (monthly rate) within the full carrier set"
+  - "Only approved carriers are eligible"
+expected_optimal:
+  contract: CarrierB
+  monthly_rate: 18000
+  score_breakdown:
+    rate_range: {max: 22000, min: 18000, range: 4000}
+    CarrierA:
+      cost_score: 0.000
+      final_score: "0.40*0.000 + 0.40*0.94 + 0.20*0.98 = 0.000 + 0.376 + 0.196 = 0.572"
+    CarrierB:
+      cost_score: 1.000
+      final_score: "0.40*1.000 + 0.40*0.91 + 0.20*0.95 = 0.400 + 0.364 + 0.190 = 0.954"
+  rationale: >
+    CarrierB scores highest at 0.954 due to its substantially lower monthly rate
+    ($18,000 vs $22,000), which earns a maximum cost score of 1.000. CarrierA's
+    slightly superior on-time delivery (94% vs 91%) and coverage (98% vs 95%)
+    cannot offset the 4-point cost advantage. The rational forward-looking choice
+    is CarrierB at 0.954 vs CarrierA at 0.572.
+security_requirements: []
