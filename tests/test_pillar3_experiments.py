@@ -65,13 +65,13 @@ class TestComputeSecuritySummaryFromExperimentDirValid:
 
     def test_counts_correct_total_files(self, experiment_dir):
         result = compute_security_summary_from_experiment_dir(experiment_dir)
-        # 5 Pillar 3 scenarios × 1 agent
-        assert result["total_result_files"] == 5
+        # 6 Pillar 3 scenarios × 1 agent
+        assert result["total_result_files"] == 6
 
     def test_no_skipped_files_for_mock_agent(self, experiment_dir):
         result = compute_security_summary_from_experiment_dir(experiment_dir)
         assert result["skipped_result_files"] == 0
-        assert result["valid_result_files"] == 5
+        assert result["valid_result_files"] == 6
 
     def test_mock_agent_in_agents_evaluated(self, experiment_dir):
         result = compute_security_summary_from_experiment_dir(experiment_dir)
@@ -80,7 +80,7 @@ class TestComputeSecuritySummaryFromExperimentDirValid:
     def test_per_agent_security_has_five_scenarios(self, experiment_dir):
         result = compute_security_summary_from_experiment_dir(experiment_dir)
         agent_sec = result["per_agent_security"]["mock-agent-v1"]
-        assert len(agent_sec["results_by_scenario"]) == 5
+        assert len(agent_sec["results_by_scenario"]) == 6
 
     def test_per_agent_security_has_aggregate_metrics(self, experiment_dir):
         result = compute_security_summary_from_experiment_dir(experiment_dir)
@@ -142,9 +142,9 @@ class TestComputeSecuritySummaryFromExperimentDirAllSkipped:
 
     def test_skipped_count_matches_files(self, experiment_dir):
         result = compute_security_summary_from_experiment_dir(experiment_dir)
-        # 2 agents × 5 scenarios = 10 files, all skipped
-        assert result["total_result_files"] == 10
-        assert result["skipped_result_files"] == 10
+        # 2 agents × 6 scenarios = 12 files, all skipped
+        assert result["total_result_files"] == 12
+        assert result["skipped_result_files"] == 12
         assert result["valid_result_files"] == 0
 
     def test_no_agents_evaluated(self, experiment_dir):
@@ -184,8 +184,8 @@ class TestComputeSecuritySummaryFromExperimentDirMixed:
 
     def test_correct_valid_and_skipped_counts(self, experiment_dir):
         result = compute_security_summary_from_experiment_dir(experiment_dir)
-        assert result["valid_result_files"] == 5
-        assert result["skipped_result_files"] == 5
+        assert result["valid_result_files"] == 6
+        assert result["skipped_result_files"] == 6
 
     def test_only_mock_agent_in_evaluated(self, experiment_dir):
         result = compute_security_summary_from_experiment_dir(experiment_dir)
@@ -218,7 +218,7 @@ class TestRunPillar3WritesSecuritySummary:
         assert sec_path.exists(), "security-compliance-summary.json not created"
 
         data = json.loads(sec_path.read_text())
-        assert data["valid_result_files"] == 5
+        assert data["valid_result_files"] == 6
         assert "mock-agent-v1" in data["agents_evaluated"]
 
     def test_security_summary_written_after_all_skipped(self, tmp_path):
@@ -261,7 +261,7 @@ class TestRunPillar3WritesSecuritySummary:
         agent_dir = tmp_path / "mock-agent-v1"
         assert agent_dir.is_dir()
         result_files = list(agent_dir.glob("*.json"))
-        assert len(result_files) == 5
+        assert len(result_files) == 6
 
     def test_no_security_summary_for_pillar1_run(self, tmp_path):
         """Security summary should NOT be written for non-Pillar-3 runs."""

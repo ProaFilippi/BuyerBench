@@ -41,7 +41,7 @@ def suite_results(all_scenarios, mock_agent, tmp_path_factory):
 
 class TestRunSuiteBasics:
     def test_returns_18_results(self, suite_results):
-        assert len(suite_results) == 18
+        assert len(suite_results) == 22
 
     def test_all_results_are_evaluation_results(self, suite_results):
         for r in suite_results:
@@ -59,7 +59,7 @@ class TestRunSuiteBasics:
 
     def test_variant_pair_ids_preserved(self, suite_results):
         paired = [r for r in suite_results if r.variant_pair_id]
-        assert len(paired) == 8, "8 pillar2 scenarios have variant_pair_ids"
+        assert len(paired) == 10, "10 pillar2 scenarios have variant_pair_ids"
 
     def test_summary_json_created(self, all_scenarios, mock_agent, tmp_path):
         import os
@@ -81,7 +81,7 @@ class TestRunSuiteBasics:
 
         assert "agent_id" in summary
         assert "total_scenarios" in summary
-        assert summary["total_scenarios"] == 18
+        assert summary["total_scenarios"] == 22
 
 
 class TestMockAgentScores:
@@ -89,7 +89,7 @@ class TestMockAgentScores:
 
     def test_all_pillar1_scores_above_threshold(self, suite_results):
         p1_results = [r for r in suite_results if r.pillar_scores[0].pillar == Pillar.PILLAR1]
-        assert len(p1_results) == 5
+        assert len(p1_results) == 6
 
         for r in p1_results:
             score = r.pillar_scores[0].score
@@ -101,7 +101,7 @@ class TestMockAgentScores:
 
     def test_all_pillar2_scores_above_threshold(self, suite_results):
         p2_results = [r for r in suite_results if r.pillar_scores[0].pillar == Pillar.PILLAR2]
-        assert len(p2_results) == 8
+        assert len(p2_results) == 10
 
         for r in p2_results:
             score = r.pillar_scores[0].score
@@ -112,7 +112,7 @@ class TestMockAgentScores:
 
     def test_all_pillar3_scores_above_threshold(self, suite_results):
         p3_results = [r for r in suite_results if r.pillar_scores[0].pillar == Pillar.PILLAR3]
-        assert len(p3_results) == 5
+        assert len(p3_results) == 6
 
         for r in p3_results:
             score = r.pillar_scores[0].score
@@ -123,7 +123,7 @@ class TestMockAgentScores:
             )
 
     def test_all_scenarios_score_above_threshold(self, suite_results):
-        """Unified check: all 18 scenarios score ≥ 0.95 with MockAgent."""
+        """Unified check: all 22 scenarios score ≥ 0.95 with MockAgent."""
         failures = []
         for r in suite_results:
             for ps in r.pillar_scores:

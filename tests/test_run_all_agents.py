@@ -139,10 +139,10 @@ class TestRunAllAgents:
         for aid in real_agents:
             agent_dir = tmp_path / aid
             assert agent_dir.is_dir(), f"No output dir for skipped agent {aid}"
-            # Should have one skipped file per pillar-1 scenario (5 scenarios)
+            # Should have one skipped file per pillar-1 scenario (6 scenarios)
             skipped_files = list(agent_dir.glob("*.json"))
-            assert len(skipped_files) == 5, (
-                f"Expected 5 skipped files for {aid}, got {len(skipped_files)}"
+            assert len(skipped_files) == 6, (
+                f"Expected 6 skipped files for {aid}, got {len(skipped_files)}"
             )
             for f in skipped_files:
                 data = json.loads(f.read_text())
@@ -183,7 +183,7 @@ class TestRunAllAgents:
         agent_dir = tmp_path / "mock-agent-v1"
         assert agent_dir.is_dir()
         result_files = list(agent_dir.glob("*.json"))
-        assert len(result_files) == 5  # 5 pillar-1 scenarios
+        assert len(result_files) == 6  # 6 pillar-1 scenarios
         for f in result_files:
             data = json.loads(f.read_text())
             assert "scenario_id" in data
