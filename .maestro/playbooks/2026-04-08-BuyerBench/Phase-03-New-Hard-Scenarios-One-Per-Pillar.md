@@ -44,7 +44,8 @@ With the existing scenarios deepened, this phase adds one new hard-difficulty sc
     - `variant_pair_id: p2-05-sunk-cost` for both files
   - Both files must include all required Scenario schema fields
 
-- [ ] Update `buyerbench/models.py` to add the `SUNK_COST` variant type and verify schema compatibility:
+- [x] Update `buyerbench/models.py` to add the `SUNK_COST` variant type and verify schema compatibility:
+  <!-- Completed 2026-04-08: SUNK_COST = "SUNK_COST" already present in models.py (line 18) from Task 3 work. evaluators/aggregate.py uses dynamic variant comparison (s0.variant.value == "BASELINE") — no hardcoded variant lists. No changes needed; schema compatibility confirmed. -->
   - Read `buyerbench/models.py` first
   - Add `SUNK_COST = "SUNK_COST"` to the `ScenarioVariant` enum alongside existing variants
   - Verify `ScenarioVariant` is used in the harness for variant-aware reporting — confirm the new value doesn't break existing variant-grouped aggregations in `evaluators/aggregate.py`
