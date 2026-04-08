@@ -171,7 +171,7 @@ def run(
 ) -> None:
     """Run the benchmark suite against a named CLI agent (or all agents)."""
     import json
-    from datetime import datetime
+    from datetime import datetime, timezone
     from pathlib import Path
 
     from agents.registry import AGENT_REGISTRY, get_agent
@@ -256,6 +256,9 @@ def run(
     config = load_config()
     config["dry_run"] = dry_run
 
+    started_at = datetime.now(timezone.utc)
+    all_results: list = []
+
     # ── Run each agent ────────────────────────────────────────────────────────
     for agent_id, is_available in agents_to_run:
         if not is_available:
@@ -288,6 +291,7 @@ def run(
 
         for s in all_scenarios:
             result = run_scenario(s, agent_instance, output_dir=output_dir)
+            all_results.append(result)
             score = result.pillar_scores[0].score if result.pillar_scores else 0.0
             status = "[green]PASS[/green]" if result.overall_pass else "[red]FAIL[/red]"
             table.add_row(s.title[:50], s.pillar.value, f"{score:.2f}", status)
@@ -346,6 +350,60 @@ def run(
                 "[dim]No prompt injection results to display "
                 "(all agents skipped or no p3-05 results)[/dim]"
             )
+
+    # ── Post-run: Academic tables + session export ────────────────────────────
+    if all_results and not dry_run:
+        from results.academic_tables import (
+            render_model_comparison_table,
+            render_pillar_breakdown_table,
+            render_session_summary_panel,
+        )
+        from results.session_export import (
+            SessionMetadata,
+            export_session_csv,
+            export_session_markdown,
+            generate_session_id,
+        )
+
+        completed_at = datetime.now(timezone.utc)
+        session_id = generate_session_id()
+        pillar_ints = [int(pillar)] if pillar else [1, 2, 3]
+        agent_ids = [aid for aid, _ in agents_to_run]
+
+        md_path = str(Path(output_dir) / f"{session_id}.md")
+        csv_path = str(Path(output_dir) / f"{session_id}.csv")
+
+        meta = SessionMetadata(
+            session_id=session_id,
+            agents=agent_ids,
+            scenarios_run=len(all_scenarios) * len(agents_to_run),
+            pillars=pillar_ints,
+            started_at=started_at,
+            completed_at=completed_at,
+            output_dir=output_dir,
+            md_path=md_path,
+            csv_path=csv_path,
+        )
+
+        try:
+            render_model_comparison_table(all_results, console)
+            if not pillar or pillar_ints != [pillar_ints[0]]:
+                for p in pillar_ints:
+                    render_pillar_breakdown_table(all_results, p, console)
+        except Exception as _e:
+            console.print(f"[dim yellow]Academic table rendering failed: {_e}[/dim yellow]")
+
+        try:
+            Path(output_dir).mkdir(parents=True, exist_ok=True)
+            export_session_markdown(all_results, meta, md_path)
+            export_session_csv(all_results, meta, csv_path)
+        except Exception as _e:
+            console.print(f"[dim yellow]Session export failed: {_e}[/dim yellow]")
+
+        try:
+            render_session_summary_panel(meta, all_results, console)
+        except Exception as _e:
+            console.print(f"[dim yellow]Summary panel failed: {_e}[/dim yellow]")
 
     console.print()
     console.print(
@@ -612,6 +670,104 @@ def review(results_dir: str, output: str | None) -> None:
     console.print(f"[bold green]Review saved →[/bold green] [bold]{out_path}[/bold]")
     console.print()
     console.print(review_text)
+
+
+@cli.command("session-report")
+@click.option(
+    "--results-dir",
+    required=True,
+    help="Directory containing per-scenario result JSON files",
+)
+@click.option(
+    "--output-dir",
+    default=None,
+    help="Directory to write .md and .csv exports (default: same as --results-dir)",
+)
+def session_report(results_dir: str, output_dir: str | None) -> None:
+    """Regenerate academic reports and session exports from an existing results directory."""
+    import json
+    from datetime import datetime, timezone
+    from pathlib import Path
+
+    from buyerbench.models import EvaluationResult
+    from results.academic_tables import (
+        render_bias_table,
+        render_model_comparison_table,
+        render_pillar_breakdown_table,
+        render_session_summary_panel,
+    )
+    from results.session_export import (
+        SessionMetadata,
+        export_session_csv,
+        export_session_markdown,
+        generate_session_id,
+    )
+
+    results_path = Path(results_dir)
+    if not results_path.exists():
+        console.print(f"[red]Results directory not found: {results_path}[/red]")
+        raise SystemExit(1)
+
+    out_dir = Path(output_dir) if output_dir else results_path
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    # Load all *.json result files
+    results: list[EvaluationResult] = []
+    for json_file in sorted(results_path.rglob("*.json")):
+        try:
+            raw = json.loads(json_file.read_text())
+            if raw.get("status") == "skipped":
+                continue
+            results.append(EvaluationResult.model_validate(raw))
+        except Exception:
+            continue
+
+    if not results:
+        console.print("[yellow]No valid result JSON files found.[/yellow]")
+        raise SystemExit(1)
+
+    console.print(
+        f"[bold cyan]Loaded {len(results)} result(s) from[/bold cyan] "
+        f"[bold]{results_path}[/bold]"
+    )
+
+    session_id = generate_session_id()
+    agent_ids = sorted({r.agent_id for r in results})
+    pillar_set = sorted({
+        int(ps.pillar.value.replace("PILLAR", ""))
+        for r in results
+        for ps in r.pillar_scores
+        if hasattr(ps.pillar, "value")
+    })
+    now = datetime.now(timezone.utc)
+    md_path = str(out_dir / f"{session_id}.md")
+    csv_path = str(out_dir / f"{session_id}.csv")
+
+    meta = SessionMetadata(
+        session_id=session_id,
+        agents=agent_ids,
+        scenarios_run=len(results),
+        pillars=pillar_set or [1],
+        started_at=now,
+        completed_at=now,
+        output_dir=str(out_dir),
+        md_path=md_path,
+        csv_path=csv_path,
+    )
+
+    render_model_comparison_table(results, console)
+    for p in (meta.pillars or [1, 2, 3]):
+        render_pillar_breakdown_table(results, p, console)
+    render_bias_table(results, console)
+
+    export_session_markdown(results, meta, md_path)
+    export_session_csv(results, meta, csv_path)
+
+    render_session_summary_panel(meta, results, console)
+
+    console.print(f"[bold green]Session report saved → {md_path}[/bold green]")
+    console.print(f"[bold green]CSV export saved    → {csv_path}[/bold green]")
+    console.print()
 
 
 if __name__ == "__main__":
