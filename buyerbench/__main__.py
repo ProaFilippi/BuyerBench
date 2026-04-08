@@ -89,11 +89,59 @@ def _format_decisions(decisions: dict, pillar: str) -> str:
 
 
 @cli.command()
+@click.option("--output", default="session-selection.yaml", show_default=True, help="Path to save the selection YAML")
+@click.option("--filter-tag", default=None, help="Pre-filter catalog by capability tag")
+@click.option("--filter-provider", default=None, help="Pre-filter catalog by provider name")
+def select(output: str, filter_tag: str | None, filter_provider: str | None) -> None:
+    """Interactively choose which OpenRouter models to benchmark and save the selection."""
+    import sys
+    from rich.panel import Panel
+
+    from buyerbench.model_catalog import filter_catalog, MODEL_CATALOG
+    from buyerbench.selector import interactive_select, save_selection
+
+    if not sys.stdin.isatty():
+        console.print("[red]Error: 'select' requires an interactive terminal (TTY).[/red]")
+        raise SystemExit(1)
+
+    catalog = MODEL_CATALOG[:]
+    if filter_tag or filter_provider:
+        catalog = filter_catalog(
+            tags=[filter_tag] if filter_tag else None,
+            providers=[filter_provider] if filter_provider else None,
+        )
+        if not catalog:
+            console.print("[yellow]No models matched the supplied filters.[/yellow]")
+            raise SystemExit(1)
+
+    selected = interactive_select(catalog)
+    save_selection(selected, output)
+
+    names = []
+    from buyerbench.model_catalog import MODEL_CATALOG as _MC
+    id_to_name = {e.agent_id: e.display_name for e in _MC}
+    for aid in selected:
+        names.append(f"  • {id_to_name.get(aid, aid)}")
+
+    console.print()
+    console.print(
+        Panel(
+            "\n".join(names) + f"\n\n[dim]Saved to: [bold]{output}[/bold][/dim]",
+            title=f"[bold green]Selection saved — {len(selected)} model(s)[/bold green]",
+            border_style="green",
+        )
+    )
+    console.print()
+
+
+@cli.command()
 @click.option(
     "--agent",
-    required=True,
+    default=None,
     help='Agent ID to evaluate (e.g. claude-code-baseline) or "all" for all real agents.',
 )
+@click.option("--from-selection", "from_selection", default=None, metavar="PATH",
+              help="Path to a session-selection.yaml produced by 'buyerbench select'")
 @click.option("--scenario", default=None, help="Specific scenario ID to run")
 @click.option(
     "--pillar",
@@ -114,7 +162,8 @@ def _format_decisions(decisions: dict, pillar: str) -> str:
     help="Directory to write evaluation results",
 )
 def run(
-    agent: str,
+    agent: str | None,
+    from_selection: str | None,
     scenario: str | None,
     pillar: str | None,
     dry_run: bool,
@@ -130,10 +179,51 @@ def run(
     from harness.loader import load_all_scenarios
     from harness.runner import run_scenario
 
+    # ── Validate mutually exclusive options ───────────────────────────────────
+    if from_selection and agent:
+        console.print(
+            "[red]--from-selection and --agent are mutually exclusive.[/red]\n"
+            "Use one or the other."
+        )
+        raise SystemExit(1)
+
+    if not from_selection and not agent:
+        console.print(
+            "[red]Provide either --agent <id> or --from-selection <path>.[/red]"
+        )
+        raise SystemExit(1)
+
     # ── Resolve agent list ────────────────────────────────────────────────────
     _REAL_AGENTS = [aid for aid in AGENT_REGISTRY if aid != "mock-agent-v1"]
 
-    if agent == "all":
+    if from_selection:
+        from buyerbench.selector import load_selection
+        from buyerbench.model_catalog import MODEL_CATALOG as _MC
+
+        selected_ids = load_selection(from_selection)
+        if not selected_ids:
+            console.print(f"[red]No agents found in selection file: {from_selection}[/red]")
+            raise SystemExit(1)
+
+        unknown = [aid for aid in selected_ids if aid not in AGENT_REGISTRY]
+        if unknown:
+            console.print(f"[red]Unknown agent IDs in selection file: {', '.join(unknown)}[/red]")
+            raise SystemExit(1)
+
+        id_to_name = {e.agent_id: e.display_name for e in _MC}
+        names_list = "\n".join(f"  • {id_to_name.get(a, a)}" for a in selected_ids)
+        from rich.panel import Panel as _Panel
+        console.print(
+            _Panel(
+                names_list + f"\n\n[dim]Selection file: [bold]{from_selection}[/bold][/dim]",
+                title=f"[bold cyan]Running {len(selected_ids)} model(s) from saved selection[/bold cyan]",
+                border_style="cyan",
+            )
+        )
+        console.print()
+        agents_to_run = [(aid, True) for aid in selected_ids]
+
+    elif agent == "all":
         from harness.preflight import check_environment
 
         env = check_environment(print_report=True)
