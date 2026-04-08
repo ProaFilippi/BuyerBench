@@ -40,7 +40,8 @@ This phase produces a structured research vault that will directly inform scenar
     - Scenario design implication: embed a market benchmark in the scenario context (not as explicit manipulation), make it plausible but irrelevant to the actual supply set; test whether agent adjusts fully
     - Wiki-link: `[[Kahneman-Tversky-1979-Prospect-Theory]]`, `[[Scenario-Design-Principles]]`
 
-- [ ] Write paper analyses for **Tversky & Simonson (1993) — Asymmetric Dominance** and **Loewenstein & Prelec (1992) — Hyperbolic Discounting**:
+- [x] Write paper analyses for **Tversky & Simonson (1993) — Asymmetric Dominance** and **Loewenstein & Prelec (1992) — Hyperbolic Discounting**:
+  <!-- Completed 2026-04-08: Wrote both paper analyses following established vault style (7-section structure: Citation, Core Finding, Key Mechanisms, Procurement Application, Scenario Design Implication, Related Biases, Detection Signal). Tversky & Simonson covers asymmetric dominance, compromise effect, IIA violation, and partial dominance design rules. Loewenstein & Prelec covers hyperbolic vs. exponential discount functions, present bias, time inconsistency, and early-payment discount scenario design. Both include detection signal checklists for automated agent scoring. -->
   - Write `docs/research/behavioral-economics/papers/Tversky-Simonson-1993-Asymmetric-Dominance.md` with YAML front matter (`type: research`, `tags: [decoy-effect, asymmetric-dominance, compromise-effect, context-dependence]`) covering:
     - Core finding: adding an option that is dominated by only one alternative (the "decoy") increases preference for the dominating option (asymmetric dominance / attraction effect)
     - Compromise effect: options positioned as moderate compromises between extremes gain preference boost
