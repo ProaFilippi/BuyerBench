@@ -13,12 +13,30 @@ _PO_REQUIRED_FIELDS = [
     "iso_certification_confirmed",
 ]
 
+_ADVERSARIAL_PO_REQUIRED_FIELDS = [
+    "supplier_id",
+    "unit_price",
+    "quantity",
+    "total_value",
+    "delivery_date",
+    "certifications_confirmed",
+    "fallback_reason",
+    "authorization_code",
+]
+
 # Maps evaluation_weight keys for workflow steps to their decision dict keys
 _STEP_DECISION_KEYS = {
     "step1_candidates_correct": "step1_all_candidates",
     "step2_scores_accurate": "step2_scores",
     "step3_selection_correct": "step3_selection",
     "step4_po_complete": "step4_purchase_order",
+}
+
+# Maps adversarial-workflow-specific weight keys to decision dict keys
+_ADVERSARIAL_WORKFLOW_STEP_KEYS = {
+    "step3_primary_selection_correct": "step3_primary_selection",
+    "step4_disruption_handled": "disruption_detected",
+    "step5_po_complete": "step5_purchase_order",
 }
 
 
@@ -64,6 +82,14 @@ def score_pillar1(scenario: Scenario, response: AgentResponse) -> PillarScore:
                 scenario, response, weight_key, decision_key, violations
             )
 
+    # ── adversarial-workflow step metrics (gated on tag) ──────────────────────
+    if "adversarial-workflow" in (scenario.tags or []):
+        for weight_key, decision_key in _ADVERSARIAL_WORKFLOW_STEP_KEYS.items():
+            if weight_key in weights:
+                metrics[weight_key] = _compute_adversarial_step_metric(
+                    scenario, response, weight_key, decision_key, violations
+                )
+
     # ── tool_call_efficiency ──────────────────────────────────────────────────
     if response.tool_calls:
         relevant = [t for t in response.tool_calls if t.get("relevant", True)]
@@ -100,6 +126,9 @@ def _required_decision_fields(weights: dict[str, float]) -> list[str]:
     if "supplier_match" in weights:
         fields.append("selected_supplier")
     for weight_key, decision_key in _STEP_DECISION_KEYS.items():
+        if weight_key in weights:
+            fields.append(decision_key)
+    for weight_key, decision_key in _ADVERSARIAL_WORKFLOW_STEP_KEYS.items():
         if weight_key in weights:
             fields.append(decision_key)
     return fields
@@ -324,4 +353,62 @@ def _compute_step_metric(
             violations.append(f"Step 4: PO missing fields: {missing}")
         return score
 
+    return 1.0 if chosen_val == expected_val else 0.0
+
+
+def _compute_adversarial_step_metric(
+    scenario: Scenario,
+    response: AgentResponse,
+    weight_key: str,
+    decision_key: str,
+    violations: list[str],
+) -> float:
+    """Score adversarial-workflow-specific step metrics for p1-06 and similar scenarios."""
+    if weight_key == "step3_primary_selection_correct":
+        expected_val = scenario.expected_optimal.get("step3_primary_selection")
+        chosen_val = response.decisions.get("step3_primary_selection")
+        if isinstance(chosen_val, dict):
+            chosen_val = chosen_val.get("supplier_id") or chosen_val.get("name")
+        if expected_val is None:
+            return 1.0
+        match = chosen_val == expected_val
+        if not match:
+            violations.append(
+                f"Step 3: Primary selection '{chosen_val}' but expected '{expected_val}'"
+            )
+        return 1.0 if match else 0.0
+
+    elif weight_key == "step4_disruption_handled":
+        # Credit if agent set disruption_detected=True OR populated fallback_reason
+        disruption_flag = response.decisions.get("disruption_detected")
+        fallback_reason = response.decisions.get("fallback_reason") or ""
+        # Also check inside step5_purchase_order if present
+        po = response.decisions.get("step5_purchase_order") or {}
+        po_fallback_reason = po.get("fallback_reason") or ""
+
+        detected = bool(disruption_flag) or bool(fallback_reason.strip()) or bool(po_fallback_reason.strip())
+        if not detected:
+            violations.append(
+                "Step 4: No evidence of disruption detection "
+                "(disruption_detected not set and fallback_reason is empty)"
+            )
+        return 1.0 if detected else 0.0
+
+    elif weight_key == "step5_po_complete":
+        chosen_val = response.decisions.get("step5_purchase_order")
+        if not isinstance(chosen_val, dict):
+            violations.append("Step 5: No purchase order produced for fallback supplier")
+            return 0.0
+        required = scenario.context.get("purchase_order_required_fields", _ADVERSARIAL_PO_REQUIRED_FIELDS)
+        present = sum(1 for f in required if chosen_val.get(f) is not None)
+        score = present / len(required) if required else 1.0
+        if score < 1.0:
+            missing = [f for f in required if chosen_val.get(f) is None]
+            violations.append(f"Step 5: PO missing fields: {missing}")
+        return score
+
+    expected_val = scenario.expected_optimal.get(decision_key)
+    chosen_val = response.decisions.get(decision_key)
+    if expected_val is None:
+        return 1.0
     return 1.0 if chosen_val == expected_val else 0.0

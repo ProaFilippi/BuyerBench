@@ -1,0 +1,187 @@
+id: p1-06-adversarial-workflow-disruption
+title: "Adversarial Workflow Disruption: Supplier Capacity Revocation Mid-Task"
+pillar: PILLAR1
+variant: BASELINE
+difficulty: hard
+tags:
+  - pillar1
+  - workflow
+  - multi-step
+  - adversarial-workflow
+  - hard
+evaluation_weights:
+  step1_candidates_correct: 0.15
+  step2_scores_accurate: 0.20
+  step3_primary_selection_correct: 0.20
+  step4_disruption_handled: 0.25
+  step5_po_complete: 0.20
+description: >
+  A five-step procurement workflow with a mid-task adversarial disruption.
+  The agent must procure 500 units of industrial fasteners under tight lead-time,
+  certification, and budget constraints. After selecting the top-ranked supplier
+  and issuing an intent-to-order in Step 3, a capacity hold alert arrives in Step 4
+  that invalidates that selection. The agent must re-evaluate, select the next-best
+  qualified supplier, and generate a complete purchase order with fallback
+  justification. Agents that pre-commit without re-reading context will fail Step 4.
+context:
+  product_need:
+    description: "Industrial Fasteners Grade-A"
+    quantity: 500
+    required_lead_time_days: 4
+    required_certification: "ISO 9001"
+    budget_ceiling_per_unit: 58.00
+  supplier_catalog:
+    - supplier_id: SupplierAce
+      name: SupplierAce
+      unit_price: 52.00
+      lead_time_days: 3
+      quality_score: 0.88
+      delivery_reliability: 0.85
+      iso_9001: true
+      approved: true
+    - supplier_id: SupplierBolt
+      name: SupplierBolt
+      unit_price: 55.00
+      lead_time_days: 4
+      quality_score: 0.95
+      delivery_reliability: 0.93
+      iso_9001: true
+      approved: true
+    - supplier_id: SupplierCrest
+      name: SupplierCrest
+      unit_price: 48.00
+      lead_time_days: 2
+      quality_score: 0.86
+      delivery_reliability: 0.82
+      iso_9001: true
+      approved: true
+    - supplier_id: SupplierDusk
+      name: SupplierDusk
+      unit_price: 50.00
+      lead_time_days: 3
+      quality_score: 0.89
+      delivery_reliability: 0.87
+      iso_9001: true
+      approved: false
+    - supplier_id: SupplierEdge
+      name: SupplierEdge
+      unit_price: 45.00
+      lead_time_days: 5
+      quality_score: 0.84
+      delivery_reliability: 0.81
+      iso_9001: true
+      approved: true
+    - supplier_id: SupplierFrost
+      name: SupplierFrost
+      unit_price: 46.00
+      lead_time_days: 3
+      quality_score: 0.83
+      delivery_reliability: 0.80
+      iso_9001: false
+      approved: true
+    - supplier_id: SupplierGale
+      name: SupplierGale
+      unit_price: 62.00
+      lead_time_days: 4
+      quality_score: 0.97
+      delivery_reliability: 0.96
+      iso_9001: true
+      approved: true
+  scoring_model:
+    cost_weight: 0.40
+    quality_weight: 0.35
+    delivery_reliability_weight: 0.25
+    note: >
+      Normalize cost only across the Step 1 qualified candidate set (not full catalog).
+      cost_score = (max_price - unit_price) / (max_price - min_price).
+  mid_workflow_disruption:
+    step: 4
+    message: >
+      ALERT: SupplierCrest has reported a capacity hold on new orders through end of
+      month due to a scheduled factory inspection. Any orders submitted to SupplierCrest
+      today will not be fulfilled within the required lead time. You must re-evaluate the
+      remaining qualified candidates and select the next-best available supplier.
+  purchase_order_required_fields:
+    - supplier_id
+    - unit_price
+    - quantity
+    - total_value
+    - delivery_date
+    - certifications_confirmed
+    - fallback_reason
+    - authorization_code
+task_objective: >
+  Execute the five-step procurement workflow in sequence:
+  Step 1 — Filter the supplier catalog to qualified candidates meeting ALL criteria:
+    approved == true, lead_time_days <= 4, iso_9001 == true, unit_price <= 58.00.
+  Step 2 — Score each qualified candidate using the weighted model (cost 40%, quality 35%,
+    delivery reliability 25%), normalizing cost within the qualified candidate set.
+    Rank all qualified candidates.
+  Step 3 — Select the highest-scoring candidate as the primary supplier and issue
+    an intent-to-order confirmation.
+  Step 4 — A mid-workflow disruption message is embedded in context.mid_workflow_disruption.
+    Read the context, process the alert, and re-evaluate: the previously selected primary
+    supplier is no longer available. Select the next-best qualified candidate as the
+    fallback supplier.
+  Step 5 — Generate a purchase order for the fallback supplier with all 8 required
+    fields populated: supplier_id, unit_price, quantity, total_value, delivery_date,
+    certifications_confirmed, fallback_reason, authorization_code.
+constraints:
+  - "Steps must be completed in order: filter → score/rank → select primary → handle disruption → generate PO"
+  - "Step 1 eligibility: approved=true, lead_time_days<=4, iso_9001=true, unit_price<=58.00"
+  - "Step 2: normalize cost only within the qualified candidate set from Step 1"
+  - "Step 4: context.mid_workflow_disruption must be read and acted on before issuing the PO"
+  - "Step 5 PO must be issued for the fallback supplier (not the disrupted primary)"
+  - "Step 5 PO must include all 8 required fields with correct computed values"
+expected_optimal:
+  step1_eligible_candidates:
+    - SupplierAce
+    - SupplierBolt
+    - SupplierCrest
+  step1_eliminated:
+    - {name: SupplierDusk, reason: "approved is false"}
+    - {name: SupplierEdge, reason: "lead_time_days 5 exceeds maximum of 4"}
+    - {name: SupplierFrost, reason: "iso_9001 is false"}
+    - {name: SupplierGale, reason: "unit_price $62.00 exceeds budget ceiling $58.00"}
+  step2_scores:
+    price_range: {max: 55.00, min: 48.00, range: 7.00}
+    SupplierCrest:
+      cost_score: 1.000
+      weighted: "0.40*1.000 + 0.35*0.86 + 0.25*0.82 = 0.400 + 0.301 + 0.205 = 0.906"
+      final_score: 0.906
+      rank: 1
+    SupplierAce:
+      cost_score: 0.429
+      weighted: "0.40*0.429 + 0.35*0.88 + 0.25*0.85 = 0.171 + 0.308 + 0.213 = 0.692"
+      final_score: 0.692
+      rank: 2
+    SupplierBolt:
+      cost_score: 0.000
+      weighted: "0.40*0.000 + 0.35*0.95 + 0.25*0.93 = 0.000 + 0.333 + 0.233 = 0.566"
+      final_score: 0.566
+      rank: 3
+  step3_primary_selection: SupplierCrest
+  step4_disruption_action: >
+    SupplierCrest is unavailable due to a capacity hold through end of month.
+    Select next-best qualified candidate: SupplierAce (rank 2, score 0.692).
+  step5_purchase_order:
+    supplier_id: "SupplierAce"
+    unit_price: 52.00
+    quantity: 500
+    total_value: 26000.00
+    delivery_date: "Within 3 business days of order confirmation"
+    certifications_confirmed: true
+    fallback_reason: "Primary supplier SupplierCrest has a capacity hold through end of month due to factory inspection"
+    authorization_code: "FALLBACK-P106-SUPPLIERCREST-HOLD"
+  fallback_supplier: SupplierAce
+  rationale: >
+    Three suppliers pass Step 1 eligibility (Ace, Bolt, Crest). After Step 2 scoring
+    normalized over the $48–$55 price range, SupplierCrest scores highest (0.906) driven
+    by the lowest cost ($48) combined with solid quality (0.86) and delivery (0.82).
+    SupplierAce ranks second (0.692) with competitive cost position. SupplierBolt ranks
+    third (0.566) as its high price eliminates its cost advantage despite superior quality.
+    Step 3 selects SupplierCrest as primary. The Step 4 disruption alert invalidates
+    SupplierCrest; the correct fallback is SupplierAce (second-ranked), which becomes the
+    PO target in Step 5. Agents that ignore context.mid_workflow_disruption and issue
+    the PO to SupplierCrest will score 0.0 on step4_disruption_handled and step5_po_complete.
+security_requirements: []
