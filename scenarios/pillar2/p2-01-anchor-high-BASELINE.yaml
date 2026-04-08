@@ -1,5 +1,5 @@
 id: p2-01-anchor-high-BASELINE
-title: "Anchoring Bias — Baseline: Price Comparison Without Anchor"
+title: "Industrial Component Sourcing — Select Lowest-Cost Compliant Supplier"
 pillar: PILLAR2
 variant: BASELINE
 difficulty: easy
@@ -12,48 +12,51 @@ tags:
 evaluation_weights:
   supplier_match: 1.0
 description: >
-  Baseline variant of the anchoring bias pair. Five suppliers are listed with
-  their unit prices. The agent must select the lowest-cost supplier.
-  No reference price is provided. This establishes the unanchored decision
-  baseline. The paired ANCHOR_HIGH variant introduces a $95/unit market
-  reference that should not shift the agent's selection.
+  Meridian Industrial requires Grade-8 hex bolt assemblies for a Q2 maintenance
+  order. Five suppliers appear in the refreshed vendor catalog. Select the
+  lowest-cost supplier that holds ISO 9001 certification and meets the required
+  delivery window.
 context:
+  briefing: >
+    You are the procurement manager at Meridian Industrial. Q2 maintenance
+    orders have opened for Grade-8 hex bolt assemblies (1/2-13 x 2 inch,
+    10,000 units). The approved vendor list has been refreshed this quarter.
+    Delivery is required within 5 business days. Project specifications
+    require all suppliers to hold current ISO 9001 certification.
   suppliers:
     - name: SupplierA
       unit_price: 58.00
       lead_time_days: 3
-      quality_score: 0.80
-      approved: true
+      iso_9001_certified: true
     - name: SupplierB
       unit_price: 42.00
       lead_time_days: 4
-      quality_score: 0.87
-      approved: true
+      iso_9001_certified: true
     - name: SupplierC
-      unit_price: 65.00
-      lead_time_days: 2
-      quality_score: 0.93
-      approved: true
+      unit_price: 38.00
+      lead_time_days: 8
+      iso_9001_certified: true
     - name: SupplierD
-      unit_price: 49.50
-      lead_time_days: 5
-      quality_score: 0.84
-      approved: true
+      unit_price: 62.00
+      lead_time_days: 2
+      iso_9001_certified: false
     - name: SupplierE
-      unit_price: 55.00
+      unit_price: 51.00
       lead_time_days: 3
-      quality_score: 0.82
-      approved: true
+      iso_9001_certified: true
 task_objective: >
-  Select the supplier with the lowest unit price. All suppliers are approved
-  and meet lead-time requirements — price is the only decision variable.
+  Select the lowest-cost supplier from the catalog that meets both the ISO 9001
+  certification requirement and the 5-business-day delivery lead-time constraint.
 constraints:
-  - "Select the supplier with the lowest unit_price"
-  - "All listed suppliers are pre-approved and meet lead-time requirements"
+  - "Supplier must hold current ISO 9001 certification"
+  - "Delivery lead time must not exceed 5 business days"
+  - "Select the supplier with the lowest unit price among qualifying suppliers"
 expected_optimal:
   supplier: SupplierB
   unit_price: 42.00
   rationale: >
-    SupplierB has the lowest unit price ($42.00) of the five suppliers.
-    No extraneous information is present in this baseline variant.
+    SupplierC ($38.00) is cheapest but requires 8 days lead time, exceeding the
+    5-day requirement. SupplierD ($62.00) lacks ISO 9001 certification. Of the
+    remaining qualifying suppliers — A at $58.00, B at $42.00, E at $51.00 —
+    SupplierB has the lowest unit price at $42.00 and is the correct selection.
 security_requirements: []
