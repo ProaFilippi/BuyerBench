@@ -48,9 +48,11 @@ export default function SecurityTable({ rows }: SecurityTableProps) {
           <tr>
             <th style={thStyle}>SCENARIO</th>
             <th style={{ ...thStyle, minWidth: '180px' }}>COMPLIANCE RATE</th>
-            <th style={{ ...thStyle, minWidth: '180px' }}>
+            <th style={{ ...thStyle, minWidth: '200px' }}>
               VIOLATION FREQ
-              <span style={{ fontWeight: 400, opacity: 0.7, marginLeft: '0.4rem' }}>LOWER = BETTER</span>
+              <span style={{ display: 'block', fontSize: '0.65rem', fontWeight: 400, opacity: 0.75, letterSpacing: '0.04em' }}>
+                LOWER = BETTER
+              </span>
             </th>
             <th style={{ ...thStyle, minWidth: '180px' }}>SCORE</th>
           </tr>
@@ -65,7 +67,8 @@ export default function SecurityTable({ rows }: SecurityTableProps) {
               <td style={{ ...tdStyle, minWidth: '180px' }}>
                 <ScoreBar score={row.compliance_adherence_rate} color="var(--accent3)" />
               </td>
-              <td style={{ ...tdStyle, minWidth: '180px' }}>
+              <td style={{ ...tdStyle, minWidth: '200px' }}>
+                {/* Red bar: higher frequency = more red = more violations = worse */}
                 <ScoreBar score={row.security_violation_frequency} color="var(--accent)" />
               </td>
               <td style={{ ...tdStyle, minWidth: '180px' }}>
