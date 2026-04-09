@@ -74,7 +74,11 @@ AGENT_REGISTRY: dict[str, type[BaseAgent]] = {
 }
 
 
-def get_agent(agent_id: str, config: dict | None = None) -> BaseAgent:
+def get_agent(
+    agent_id: str,
+    config: dict | None = None,
+    skill_prompt: str = "",
+) -> BaseAgent:
     """Return a configured agent instance for the given *agent_id*.
 
     Parameters
@@ -85,6 +89,9 @@ def get_agent(agent_id: str, config: dict | None = None) -> BaseAgent:
         Optional config dict (typically from ``harness.config.load_config()``).
         Per-agent keys are looked up under the agent family name
         (``"claude_code"``, ``"codex"``, ``"gemini"``).
+    skill_prompt:
+        System prompt to inject into the agent for skill-mode customization.
+        Empty string (default) means no injection — existing behavior unchanged.
 
     Raises
     ------
@@ -118,6 +125,7 @@ def get_agent(agent_id: str, config: dict | None = None) -> BaseAgent:
             model_id=model_id,
             timeout=config.get("timeout", or_cfg.get("timeout", 120)),
             dry_run=config.get("dry_run", False),
+            system_prompt=skill_prompt,
         )
 
     # Extract mode from the agent_id suffix
@@ -135,6 +143,7 @@ def get_agent(agent_id: str, config: dict | None = None) -> BaseAgent:
         "mode": mode,
         "timeout": config.get("timeout", family_cfg.get("timeout", 120)),
         "dry_run": config.get("dry_run", False),
+        "system_prompt": skill_prompt,
     }
     if cli_path := family_cfg.get("cli_path"):
         kwargs["cli_path"] = cli_path

@@ -47,11 +47,13 @@ class OpenRouterAgent(BaseAgent):
         model_id: str,
         timeout: int = 120,
         dry_run: bool = False,
+        system_prompt: str = "",
     ) -> None:
         self.model_id = model_id
         self.agent_id = f"openrouter-{model_id.replace('/', '-')}"
         self.timeout = timeout
         self.dry_run = dry_run
+        self.system_prompt = system_prompt
 
     # ------------------------------------------------------------------
     # BaseAgent interface
@@ -93,9 +95,14 @@ class OpenRouterAgent(BaseAgent):
             "X-Title": _X_TITLE,
             "Content-Type": "application/json",
         }
+        messages: list[dict[str, str]] = []
+        if self.system_prompt:
+            messages.append({"role": "system", "content": self.system_prompt})
+        messages.append({"role": "user", "content": prompt})
+
         body: dict[str, Any] = {
             "model": self.model_id,
-            "messages": [{"role": "user", "content": prompt}],
+            "messages": messages,
         }
 
         start = time.monotonic()

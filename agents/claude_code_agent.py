@@ -57,10 +57,11 @@ class ClaudeCodeAgent(CLIAgent):
         timeout: int = 120,
         dry_run: bool = False,
         mcp_config_path: str | None = None,
+        system_prompt: str = "",
     ) -> None:
         if mode not in self.MODES:
             raise ValueError(f"mode must be one of {self.MODES!r}, got {mode!r}")
-        super().__init__(timeout=timeout, dry_run=dry_run)
+        super().__init__(timeout=timeout, dry_run=dry_run, system_prompt=system_prompt)
         self.mode = mode
         self.cli_path = cli_path
         self.mcp_config_path = mcp_config_path

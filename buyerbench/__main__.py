@@ -147,6 +147,8 @@ def select(output: str, filter_tag: str | None, filter_provider: str | None) -> 
 )
 @click.option("--from-selection", "from_selection", default=None, metavar="PATH",
               help="Path to a session-selection.yaml produced by 'buyerbench select'")
+@click.option("--from-session", "from_session", default=None, metavar="PATH",
+              help="Path to a session-config.yaml produced by 'buyerbench session'")
 @click.option("--scenario", default=None, help="Specific scenario ID to run")
 @click.option(
     "--pillar",
@@ -169,6 +171,7 @@ def select(output: str, filter_tag: str | None, filter_provider: str | None) -> 
 def run(
     agent: str | None,
     from_selection: str | None,
+    from_session: str | None,
     scenario: str | None,
     pillar: str | None,
     dry_run: bool,
@@ -185,23 +188,65 @@ def run(
     from harness.runner import run_scenario
 
     # ── Validate mutually exclusive options ───────────────────────────────────
-    if from_selection and agent:
+    exclusive_count = sum(bool(x) for x in [agent, from_selection, from_session])
+    if exclusive_count > 1:
         console.print(
-            "[red]--from-selection and --agent are mutually exclusive.[/red]\n"
-            "Use one or the other."
+            "[red]--agent, --from-selection, and --from-session are mutually exclusive.[/red]\n"
+            "Use exactly one."
         )
         raise SystemExit(1)
 
-    if not from_selection and not agent:
+    if exclusive_count == 0:
         console.print(
-            "[red]Provide either --agent <id> or --from-selection <path>.[/red]"
+            "[red]Provide one of --agent <id>, --from-selection <path>, or --from-session <path>.[/red]"
         )
         raise SystemExit(1)
 
     # ── Resolve agent list ────────────────────────────────────────────────────
     _REAL_AGENTS = [aid for aid in AGENT_REGISTRY if aid != "mock-agent-v1"]
 
-    if from_selection:
+    # Maps agent_id -> skill system prompt (empty = no injection)
+    skill_prompts_by_agent: dict[str, str] = {}
+    # Scenario IDs from session config (empty = no extra filter)
+    session_scenario_ids: list[str] = []
+
+    if from_session:
+        import shutil
+        from buyerbench.selector import load_session_config
+        from buyerbench.skills import get_skill_prompt
+
+        sess_cfg = load_session_config(from_session)
+        if not sess_cfg.agents:
+            console.print(f"[red]No agents found in session config: {from_session}[/red]")
+            raise SystemExit(1)
+
+        selected_ids = [slot.agent_id for slot in sess_cfg.agents]
+        unknown = [aid for aid in selected_ids if aid not in AGENT_REGISTRY]
+        if unknown:
+            console.print(f"[red]Unknown agent IDs in session config: {', '.join(unknown)}[/red]")
+            raise SystemExit(1)
+
+        for slot in sess_cfg.agents:
+            skill_prompts_by_agent[slot.agent_id] = get_skill_prompt(slot.skill_mode)
+
+        session_scenario_ids = sess_cfg.scenario_ids
+
+        lines = "\n".join(
+            f"  • [bold]{slot.agent_id}[/bold] ([cyan]{slot.skill_mode}[/cyan])"
+            for slot in sess_cfg.agents
+        )
+        from rich.panel import Panel as _Panel
+        console.print(
+            _Panel(
+                lines + f"\n\n[dim]Session file: [bold]{from_session}[/bold][/dim]",
+                title=f"[bold cyan]Running {len(selected_ids)} agent(s) from session config[/bold cyan]",
+                border_style="cyan",
+            )
+        )
+        console.print()
+        agents_to_run = [(aid, True) for aid in selected_ids]
+
+    elif from_selection:
         from buyerbench.selector import load_selection
         from buyerbench.model_catalog import MODEL_CATALOG as _MC
 
@@ -248,6 +293,11 @@ def run(
     scenarios_root = Path(__file__).parent.parent / "scenarios"
     all_scenarios = load_all_scenarios(str(scenarios_root))
 
+    # Apply session scenario filter first (if --from-session specified a list)
+    if session_scenario_ids:
+        session_set = set(session_scenario_ids)
+        all_scenarios = [s for s in all_scenarios if s.id in session_set]
+
     if pillar:
         pillar_enum = f"PILLAR{pillar}"
         all_scenarios = [s for s in all_scenarios if s.pillar.value == pillar_enum]
@@ -261,6 +311,12 @@ def run(
     config = load_config()
     config["dry_run"] = dry_run
 
+    # Copy session config into output dir for provenance
+    if from_session:
+        Path(output_dir).mkdir(parents=True, exist_ok=True)
+        import shutil as _shutil
+        _shutil.copy2(from_session, Path(output_dir) / Path(from_session).name)
+
     started_at = datetime.now(timezone.utc)
     all_results: list = []
 
@@ -273,7 +329,9 @@ def run(
             )
             continue
 
-        agent_instance = get_agent(agent_id, config)
+        agent_instance = get_agent(
+            agent_id, config, skill_prompt=skill_prompts_by_agent.get(agent_id, "")
+        )
 
         if dry_run:
             console.print(
