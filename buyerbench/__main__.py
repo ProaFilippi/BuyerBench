@@ -168,6 +168,18 @@ def select(output: str, filter_tag: str | None, filter_provider: str | None) -> 
     show_default=True,
     help="Directory to write evaluation results",
 )
+@click.option(
+    "--academic-report/--no-academic-report",
+    default=False,
+    show_default=True,
+    help="Generate an academic paper after the run via Claude CLI",
+)
+@click.option(
+    "--test-context",
+    "test_context",
+    default=None,
+    help="Experiment description injected into the academic report §4 (used with --academic-report)",
+)
 def run(
     agent: str | None,
     from_selection: str | None,
@@ -176,6 +188,8 @@ def run(
     pillar: str | None,
     dry_run: bool,
     output_dir: str,
+    academic_report: bool,
+    test_context: str | None,
 ) -> None:
     """Run the benchmark suite against a named CLI agent (or all agents)."""
     import json
@@ -468,6 +482,30 @@ def run(
         except Exception as _e:
             console.print(f"[dim yellow]Summary panel failed: {_e}[/dim yellow]")
 
+        # ── Post-run: Academic report generation ──────────────────────────────
+        if academic_report and not dry_run:
+            from buyerbench.academic_report import generate_academic_report
+
+            resolved_context = test_context or (
+                "Evaluation conducted on BuyerBench v1.0. "
+                "See session-config.yaml for agent and scenario configuration."
+            )
+            ar_output = str(Path(output_dir) / "ACADEMIC-REPORT.md")
+            console.print(
+                "[bold cyan]Generating academic report via Claude CLI...[/bold cyan]"
+            )
+            ar_text = generate_academic_report(
+                results_dir=output_dir,
+                test_context=resolved_context,
+                output_path=ar_output,
+            )
+            if ar_text.startswith("ERROR:"):
+                console.print(f"[dim yellow]Academic report failed: {ar_text}[/dim yellow]")
+            else:
+                console.print(
+                    f"[bold green]Academic report saved →[/bold green] [bold]{ar_output}[/bold]"
+                )
+
     console.print()
     console.print(
         f"[bold green]Run complete — {len(all_scenarios)} scenario(s) × "
@@ -722,6 +760,97 @@ def session(output: str) -> None:
             border_style="green",
         )
     )
+    console.print()
+
+
+@cli.command("academic-report")
+@click.option(
+    "--results-dir",
+    required=True,
+    help="Directory containing per-scenario result JSON files",
+)
+@click.option(
+    "--test-context",
+    "test_context",
+    default=None,
+    help="Short description of the experiment (injected verbatim into §4)",
+)
+@click.option(
+    "--test-context-file",
+    "test_context_file",
+    default=None,
+    type=click.Path(exists=True, readable=True),
+    help="Path to a file whose contents are used as the test context",
+)
+@click.option(
+    "--output",
+    default="ACADEMIC-REPORT.md",
+    show_default=True,
+    help="Output path for the generated academic report",
+)
+@click.option(
+    "--bib-path",
+    default="docs/paper/references.bib",
+    show_default=True,
+    help="Path to the BibTeX references file",
+)
+@click.option(
+    "--cli-path",
+    default="claude",
+    show_default=True,
+    help="Path to the Claude CLI binary",
+)
+def academic_report(
+    results_dir: str,
+    test_context: str | None,
+    test_context_file: str | None,
+    output: str,
+    bib_path: str,
+    cli_path: str,
+) -> None:
+    """Generate a full academic paper from benchmark results via Claude CLI."""
+    from buyerbench.academic_report import generate_academic_report
+
+    if test_context and test_context_file:
+        console.print("[red]--test-context and --test-context-file are mutually exclusive.[/red]")
+        raise SystemExit(1)
+
+    if test_context_file:
+        resolved_context = Path(test_context_file).read_text(encoding="utf-8").strip()
+    elif test_context:
+        resolved_context = test_context
+    else:
+        resolved_context = (
+            "Evaluation conducted on BuyerBench v1.0. "
+            "See session-config.yaml for agent and scenario configuration."
+        )
+
+    console.print("[bold cyan]Generating academic report via Claude CLI...[/bold cyan]")
+    console.print("[dim]This may take several minutes — writing a full paper.[/dim]")
+    console.print()
+
+    result_text = generate_academic_report(
+        results_dir=results_dir,
+        test_context=resolved_context,
+        output_path=output,
+        cli_path=cli_path,
+        bib_path=bib_path,
+    )
+
+    if result_text.startswith("ERROR:"):
+        console.print(f"[red]{result_text}[/red]")
+        raise SystemExit(1)
+
+    console.print(f"[bold green]Academic report saved →[/bold green] [bold]{output}[/bold]")
+    console.print()
+
+    # Print the first 3 lines of the abstract (skip front matter)
+    lines = [ln for ln in result_text.splitlines() if ln.strip() and not ln.startswith("---") and not ln.startswith("type:") and not ln.startswith("title:") and not ln.startswith("created:") and not ln.startswith("tags:")]
+    abstract_lines = lines[:3]
+    if abstract_lines:
+        console.print("[bold]Abstract preview:[/bold]")
+        for ln in abstract_lines:
+            console.print(f"  {ln}")
     console.print()
 
 
