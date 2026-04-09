@@ -4,7 +4,8 @@ This phase adds per-agent detail pages at `/agent/[id]`, surfacing the three ana
 
 ## Tasks
 
-- [ ] Add three new helper exports to `web/src/lib/loadReport.ts`:
+- [x] Add three new helper exports to `web/src/lib/loadReport.ts`:
+  <!-- Done: all four functions were already implemented (getBiasRowsForAgent, getSecurityRowsForAgent, getDeltaRowsForAgent, getAllAgentIds). TypeScript checks pass with no errors. -->
   - `getBiasRowsForAgent(report: FullReport, agentId: string): BiasSusceptibilityRow[]` — filter `bias_susceptibility_table` by `agent_id`, sort by `bsi` descending.
   - `getSecurityRowsForAgent(report: FullReport, agentId: string): SecurityViolationRow[]` — filter `security_violation_table` by `agent_id`.
   - `getDeltaRowsForAgent(report: FullReport, agentId: string): SkillsDeltaRow[]` — filter `skills_mcp_delta_table` by `agent_id`.
