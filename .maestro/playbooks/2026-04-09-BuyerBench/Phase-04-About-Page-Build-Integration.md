@@ -4,7 +4,7 @@ This phase completes the site: adds an About page explaining the evaluation meth
 
 ## Tasks
 
-- [ ] Create `web/src/pages/about.tsx`. Static page (no `getStaticProps` needed). Brutalist layout with sections:
+- [x] Create `web/src/pages/about.tsx`. Static page (no `getStaticProps` needed). Brutalist layout with sections:
   1. `WHAT IS BUYERBENCH` — one paragraph on the three-pillar evaluation framework
   2. `PILLAR 1 — CAPABILITY` — bullet list of key metrics (task completion, supplier match, tool efficiency)
   3. `PILLAR 2 — BEHAVIORAL ECONOMICS` — explanation of bias variant testing (BASELINE vs ANCHOR_HIGH/FRAMING_GAIN/DECOY/SCARCITY/SUNK_COST), what BSI measures

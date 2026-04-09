@@ -1,5 +1,23 @@
-.hero {
-  padding: 3rem 0;
+.page {
+  padding: 2rem 0;
+  max-width: 860px;
+}
+
+.backLink {
+  margin-bottom: 2rem;
+}
+
+.back {
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.back:hover {
+  text-decoration: underline;
 }
 
 .headline {
@@ -7,11 +25,74 @@
   font-size: clamp(2rem, 5vw, 3.5rem);
   font-weight: 900;
   letter-spacing: -0.02em;
-  margin-bottom: 1.5rem;
+  margin-bottom: 2.5rem;
+}
+
+.section {
+  margin-bottom: 1.75rem;
+}
+
+/* brutal-box variant with thick accent left border */
+.accentBox {
+  border: var(--border);
+  border-left: 6px solid var(--accent);
+  border-radius: 0;
+  box-shadow: 4px 4px 0 var(--fg);
+  padding: 1.5rem 1.75rem;
+}
+
+.sectionTitle {
+  font-family: var(--font-sans);
+  font-size: 1.05rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+  color: var(--accent);
 }
 
 .body {
-  max-width: 700px;
-  line-height: 1.7;
-  font-size: 1rem;
+  line-height: 1.75;
+  font-size: 0.92rem;
+}
+
+.list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.list li {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.bullet {
+  color: var(--accent);
+  flex-shrink: 0;
+  font-size: 0.85rem;
+  margin-top: 0.05rem;
+}
+
+.codeBlock {
+  background: var(--fg);
+  color: var(--bg);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  line-height: 1.65;
+  padding: 1.25rem 1.5rem;
+  overflow-x: auto;
+  white-space: pre;
+  border: var(--border);
+}
+
+.code {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  background: rgba(0, 0, 0, 0.08);
+  padding: 0.1em 0.35em;
+  border: 1px solid rgba(0, 0, 0, 0.15);
 }
