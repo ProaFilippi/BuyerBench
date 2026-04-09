@@ -180,6 +180,12 @@ def select(output: str, filter_tag: str | None, filter_provider: str | None) -> 
     default=None,
     help="Experiment description injected into the academic report §4 (used with --academic-report)",
 )
+@click.option(
+    "--dashboard/--no-dashboard",
+    default=False,
+    show_default=True,
+    help="Launch interactive results dashboard after the run",
+)
 def run(
     agent: str | None,
     from_selection: str | None,
@@ -190,6 +196,7 @@ def run(
     output_dir: str,
     academic_report: bool,
     test_context: str | None,
+    dashboard: bool,
 ) -> None:
     """Run the benchmark suite against a named CLI agent (or all agents)."""
     import json
@@ -513,6 +520,40 @@ def run(
     )
     console.print(f"Results written to [bold]{output_dir}/[/bold]")
     console.print()
+
+    if dashboard and not dry_run:
+        from buyerbench.dashboard import run_dashboard
+
+        console.print("[bold cyan]Launching results dashboard...[/bold cyan]")
+        run_dashboard(output_dir)
+
+
+@cli.command("dashboard")
+@click.option(
+    "--results-dir",
+    required=True,
+    help="Directory containing per-scenario result JSON files",
+)
+def dashboard_cmd(results_dir: str) -> None:
+    """Browse benchmark results in an interactive terminal dashboard."""
+    from pathlib import Path as _Path
+
+    results_path = _Path(results_dir)
+    if not results_path.exists():
+        console.print(f"[red]Results directory not found: {results_path}[/red]")
+        raise SystemExit(1)
+
+    json_files = list(results_path.rglob("*.json"))
+    if not json_files:
+        console.print(
+            f"[red]No JSON result files found in {results_path}[/red]\n"
+            "[dim]Run [bold cyan]python -m buyerbench run[/bold cyan] first to generate results.[/dim]"
+        )
+        raise SystemExit(1)
+
+    from buyerbench.dashboard import run_dashboard
+
+    run_dashboard(results_dir)
 
 
 @cli.command()
