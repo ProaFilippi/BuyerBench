@@ -19,7 +19,8 @@ This phase completes the site: adds an About page explaining the evaluation meth
 - [x] Update `web/next.config.js` to set `distDir: 'out'` (so static export lands in `web/out/`). Add a `serve` script to `web/package.json` using `npx serve out -p 3001 --single` so `npm run serve` previews the static build without Next.js dev server. Also add a combined `export` script: `"export": "next build"` (since `output: 'export'` in next.config already handles the static export).
   <!-- Completed 2026-04-09: Added distDir: 'out' to next.config.js; updated package.json scripts — export now just "next build" (next export removed, deprecated since Next.js 13.3), added "serve": "npx serve out -p 3001 --single". -->
 
-- [ ] Add `web/src/styles/print.css` and import it in `_app.tsx`. Print styles: hide nav, hide footer, remove background colors so rankings tables print cleanly on white. This makes the site useful for academic paper workflows.
+- [x] Add `web/src/styles/print.css` and import it in `_app.tsx`. Print styles: hide nav, hide footer, remove background colors so rankings tables print cleanly on white. This makes the site useful for academic paper workflows.
+  <!-- Completed 2026-04-09: Created web/src/styles/print.css with @media print block — hides <header>, <footer>, <nav> elements; strips body/box backgrounds to white; flattens .brutal-box shadow/border; adds break-inside:avoid on tr; expands <main> to full width. Imported in _app.tsx after globals.css. TypeScript clean. -->
 
 - [ ] Update `web/src/components/Layout.tsx` to add a build info bar below the header: a thin monospace strip showing `GENERATED: {generated_at}` and a `REBUILD SITE` note in a muted color. Also update the `<title>` tag dynamically: homepage should be `BuyerBench Rankings`, agent pages `{agentId} — BuyerBench`, about page `About — BuyerBench`.
 
