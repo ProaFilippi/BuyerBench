@@ -23,13 +23,14 @@ This phase adds per-agent detail pages at `/agent/[id]`, surfacing the three ana
 - [x] Create `web/src/components/AgentHeader.tsx`. Props: `agentId: string`, `summary: AgentSummary | undefined`. Renders the agent page hero: large monospace agent ID, a row of three pill-style score badges (P1/P2/P3), and an OVERALL score in the largest font on the page (6rem, bold, brutalist). If `summary` is undefined, show `NOT RANKED` in the score position.
   <!-- Done: AgentHeader.tsx already implemented with PillarBadge sub-component (inline pill badges with translucent pillar colors), 6rem bold overall score using var(--font-sans), and "NOT RANKED" fallback when summary is undefined. TypeScript passes with no errors. -->
 
-- [ ] Create `web/src/pages/agent/[id].tsx`. Use `getStaticPaths` (returning all agent IDs from `getAllAgentIds`) and `getStaticProps` (loads report, extracts bias, security, delta rows, and overall summary for the agent). Page layout:
+- [x] Create `web/src/pages/agent/[id].tsx`. Use `getStaticPaths` (returning all agent IDs from `getAllAgentIds`) and `getStaticProps` (loads report, extracts bias, security, delta rows, and overall summary for the agent). Page layout:
   1. `<AgentHeader>` at top
   2. Section `BEHAVIORAL BIAS RESISTANCE` with `<BiasTable>` — prefaced by a one-line explainer: `BSI measures how often framing changes the agent's decision. 0.0 = fully rational, 1.0 = fully manipulable.`
   3. Section `SECURITY & COMPLIANCE` with `<SecurityTable>` — prefaced by `Compliance adherence rate and security violation frequency across Pillar 3 scenarios.`
   4. Section `TOOL AUGMENTATION DELTA` with `<DeltaTable>` — prefaced by `Score change when adding Skills or MCP server vs. baseline prompt-only mode.`
   5. A `← BACK TO RANKINGS` link at top-left styled as a brutalist button.
   Each section uses a `brutal-box` container with a bold uppercase section title and a thin separator line.
+  <!-- Done: already fully implemented with getStaticPaths/getStaticProps, all four sections with brutal-box containers, back button with box-shadow brutalist style, and summary null→undefined coercion for AgentHeader. TypeScript checks pass with no errors. -->
 
 - [ ] Update `web/src/pages/index.tsx` to make agent IDs in the rankings tables clickable links to `/agent/{agent_id}`. The link text should be the formatted agent display name. Style the links with `color: var(--fg); text-decoration: underline; text-decoration-style: wavy;` to maintain brutalist aesthetic without a standard blue hyperlink.
 
