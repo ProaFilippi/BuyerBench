@@ -8,6 +8,7 @@ import styles from './about.module.css';
 
 interface Props {
   pillarAggregates: PillarAggregate[];
+  generatedAt: string;
 }
 
 export const getStaticProps: GetStaticProps<Props> = async () => {
@@ -15,13 +16,14 @@ export const getStaticProps: GetStaticProps<Props> = async () => {
   return {
     props: {
       pillarAggregates: report.per_pillar_aggregate,
+      generatedAt: report.generated_at,
     },
   };
 };
 
-export default function AboutPage({ pillarAggregates }: InferGetStaticPropsType<typeof getStaticProps>) {
+export default function AboutPage({ pillarAggregates, generatedAt }: InferGetStaticPropsType<typeof getStaticProps>) {
   return (
-    <Layout>
+    <Layout generatedAt={generatedAt} title="About — BuyerBench">
       <div className={styles.page}>
         <div className={styles.backLink}>
           <Link href="/" className={styles.back}>← BACK TO RANKINGS</Link>

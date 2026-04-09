@@ -23,6 +23,27 @@
   height: 56px;
 }
 
+.buildBar {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  background: rgba(0, 0, 0, 0.25);
+  color: rgba(255, 255, 255, 0.7);
+  padding: 0.25rem 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.buildBarMuted {
+  opacity: 0.5;
+}
+
+.buildBar code {
+  font-family: var(--font-mono);
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0 0.3em;
+  border-radius: 2px;
+}
+
 .logo {
   font-family: var(--font-sans);
   font-size: 1.4rem;

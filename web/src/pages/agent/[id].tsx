@@ -104,7 +104,7 @@ export default function AgentPage({
   generatedAt,
 }: InferGetStaticPropsType<typeof getStaticProps>) {
   return (
-    <Layout generatedAt={generatedAt}>
+    <Layout generatedAt={generatedAt} title={`${agentId} — BuyerBench`}>
       <div style={{ paddingTop: '2rem' }}>
         <Link href="/" style={backButtonStyle}>
           &larr; BACK TO RANKINGS

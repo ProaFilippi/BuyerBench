@@ -101,7 +101,7 @@ export default function HomePage({
   const [activeTab, setActiveTab] = useState('OVERALL');
 
   return (
-    <Layout generatedAt={generatedAt}>
+    <Layout generatedAt={generatedAt} title="BuyerBench Rankings">
       {/* Hero */}
       <section className={styles.hero}>
         <h1 className={styles.headline}>AI BUYER AGENT<br />RANKINGS</h1>
