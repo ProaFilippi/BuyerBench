@@ -20,13 +20,14 @@ This phase extends the existing `buyerbench/selector.py` model picker into a ful
 - [x] Add `interactive_scenario_select(scenarios: list) -> list[str]` to `buyerbench/selector.py`. Each scenario has `.id`, `.title`, `.pillar`, `.difficulty`, `.tags`. Show a Rich table with columns: #, ID, Title, Pillar, Difficulty, Selected (✓/·). Support commands: `1,3,5` (toggle), `a` (all), `c` (clear), `p1`/`p2`/`p3` (select all in pillar), `done` (confirm), `q` (quit). Return list of selected scenario IDs.
   <!-- Completed 2026-04-08: Added _PILLAR_COLORS, _DIFFICULTY_COLORS, _PILLAR_CMD_MAP constants and _display_scenario_table() helper to selector.py. interactive_scenario_select() follows the same command-loop pattern as interactive_skill_select. Added TestInteractiveScenarioSelect class with 16 tests covering toggle, multi-toggle (comma/space), deselect, select-all, clear, p1/p2/p3 pillar filters, additive pillar filters, unknown command, empty input, out-of-range index, quit, and stable result ordering. All 561 tests pass. -->
 
-- [ ] Add `run_session_tui() -> SessionConfig` to `buyerbench/selector.py` that chains the three steps:
+- [x] Add `run_session_tui() -> SessionConfig` to `buyerbench/selector.py` that chains the three steps:
   1. Print a Rich header panel: "BuyerBench — Session Configuration"
   2. Step 1: Call `interactive_select()` for model selection; print step header "Step 1/3 — Select Models"
   3. Step 2: Call `interactive_skill_select(selected_agent_ids)` for per-model skill modes; print "Step 2/3 — Configure Skills"
   4. Step 3: Load all scenarios via `harness.loader.load_all_scenarios("scenarios/")`, call `interactive_scenario_select(scenarios)`; print "Step 3/3 — Select Scenarios"
   5. Build and return `SessionConfig` with `created_at=datetime.utcnow().isoformat()`
   6. Print a Rich summary Panel showing: selected agents (with skill mode), scenario count, pillars covered
+  <!-- Completed 2026-04-08: Added run_session_tui() to selector.py — prints welcome panel, rules for each step, chains interactive_select → interactive_skill_select → load_all_scenarios + interactive_scenario_select, builds SessionConfig with UTC created_at, prints summary panel. Updated module docstring to include run_session_tui in public API. Added TestRunSessionTui class with 8 tests (returns correct type, agents populated, skill modes applied, scenario IDs, ISO 8601 created_at, round-trip save/load, partial scenario selection, single-agent). All 569 tests pass. -->
 
 - [ ] Register a new `session` CLI command in `buyerbench/__main__.py`:
   ```

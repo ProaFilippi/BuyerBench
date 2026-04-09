@@ -6,6 +6,7 @@ display_catalog_table(catalog, selected_ids) — render a Rich table
 interactive_select(catalog)                   — main TUI loop (model selection)
 interactive_skill_select(agent_ids)           — per-agent skill-mode TUI loop
 interactive_scenario_select(scenarios)        — scenario multi-select TUI loop
+run_session_tui()                             — full three-pane session config TUI
 save_selection(agent_ids, path)               — persist to YAML
 load_selection(path)                          — load from YAML
 
@@ -413,6 +414,105 @@ def interactive_scenario_select(scenarios: list) -> list[str]:
     # Return IDs in original scenario order
     order_map = {s.id: i for i, s in enumerate(scenarios)}
     return sorted(selected_ids, key=lambda sid: order_map.get(sid, 9999))
+
+
+def run_session_tui() -> "SessionConfig":
+    """Run the full three-pane session configuration TUI.
+
+    Chains model selection, per-agent skill configuration, and scenario
+    selection into a single guided workflow, then returns a complete
+    :class:`SessionConfig` ready to be persisted with
+    :func:`save_session_config`.
+
+    Steps
+    -----
+    1. Print a welcome header panel.
+    2. Call :func:`interactive_select` — the user picks models.
+    3. Call :func:`interactive_skill_select` — per-model skill modes.
+    4. Load all scenarios and call :func:`interactive_scenario_select`.
+    5. Build and return :class:`SessionConfig`.
+    6. Print a rich summary panel.
+
+    Returns
+    -------
+    SessionConfig
+        Fully populated session configuration.
+    """
+    from datetime import datetime, timezone
+    from harness.loader import load_all_scenarios
+
+    # ── Welcome header ────────────────────────────────────────────────────────
+    console.print()
+    console.print(
+        Panel(
+            "[bold cyan]Configure your BuyerBench experiment in three steps:[/bold cyan]\n"
+            "  [dim]1.[/dim] Select models to evaluate\n"
+            "  [dim]2.[/dim] Choose skill mode per model\n"
+            "  [dim]3.[/dim] Pick benchmark scenarios",
+            title="[bold white]BuyerBench — Session Configuration[/bold white]",
+            border_style="cyan",
+        )
+    )
+    console.print()
+
+    # ── Step 1: Model selection ───────────────────────────────────────────────
+    console.rule("[bold cyan]Step 1/3 — Select Models[/bold cyan]")
+    console.print()
+    selected_agent_ids = interactive_select()
+
+    # ── Step 2: Skill modes ───────────────────────────────────────────────────
+    console.print()
+    console.rule("[bold cyan]Step 2/3 — Configure Skills[/bold cyan]")
+    console.print()
+    skill_modes = interactive_skill_select(selected_agent_ids)
+
+    # ── Step 3: Scenario selection ────────────────────────────────────────────
+    console.print()
+    console.rule("[bold cyan]Step 3/3 — Select Scenarios[/bold cyan]")
+    console.print()
+    scenarios = load_all_scenarios("scenarios/")
+    selected_scenario_ids = interactive_scenario_select(scenarios)
+
+    # ── Build SessionConfig ───────────────────────────────────────────────────
+    agents = [
+        AgentSlot(agent_id=aid, skill_mode=skill_modes[aid])
+        for aid in selected_agent_ids
+    ]
+    config = SessionConfig(
+        agents=agents,
+        scenario_ids=selected_scenario_ids,
+        created_at=datetime.now(timezone.utc).isoformat(),
+    )
+
+    # ── Summary panel ─────────────────────────────────────────────────────────
+    agent_lines = "\n".join(
+        f"  • [bold]{slot.agent_id}[/bold] ([cyan]{slot.skill_mode}[/cyan])"
+        for slot in config.agents
+    )
+    selected_set = set(selected_scenario_ids)
+    pillar_vals: set[str] = set()
+    for s in scenarios:
+        if s.id in selected_set:
+            pv = s.pillar.value if hasattr(s.pillar, "value") else str(s.pillar)
+            pillar_vals.add(pv.replace("PILLAR", "P"))
+    pillars_str = ", ".join(sorted(pillar_vals)) if pillar_vals else "none"
+
+    summary = (
+        f"{agent_lines}\n\n"
+        f"[dim]Scenarios: [bold]{len(selected_scenario_ids)}[/bold]  "
+        f"Pillars covered: [bold]{pillars_str}[/bold][/dim]"
+    )
+    console.print()
+    console.print(
+        Panel(
+            summary,
+            title="[bold green]Session Configuration Complete[/bold green]",
+            border_style="green",
+        )
+    )
+    console.print()
+
+    return config
 
 
 _COST_COLORS = {

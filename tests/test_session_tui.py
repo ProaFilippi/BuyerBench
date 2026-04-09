@@ -16,6 +16,7 @@ from buyerbench.selector import (
     interactive_scenario_select,
     interactive_skill_select,
     load_session_config,
+    run_session_tui,
     save_session_config,
 )
 
@@ -309,3 +310,86 @@ class TestInteractiveScenarioSelect:
         """Selected IDs are returned in the same order as the input scenarios list."""
         result = self._run(_make_scenarios(), ["3", "1", "5", "done"], monkeypatch)
         assert result == ["p1-01", "p2-01", "p3-01"]
+
+
+class TestRunSessionTui:
+    """Unit-tests for run_session_tui using mocked sub-steps."""
+
+    _AGENTS = [
+        "openrouter-openai-gpt-4o",
+        "openrouter-anthropic-claude-3.5-sonnet",
+    ]
+    _SCENARIOS = _make_scenarios()  # 5 scenarios across all 3 pillars
+
+    def _run_tui(
+        self,
+        monkeypatch,
+        selected_agents=None,
+        skill_modes=None,
+        scenario_ids=None,
+    ) -> SessionConfig:
+        """Patch sub-steps and run run_session_tui()."""
+        import buyerbench.selector as sel_mod
+        import harness.loader as loader_mod
+
+        if selected_agents is None:
+            selected_agents = self._AGENTS
+        if skill_modes is None:
+            skill_modes = {a: "baseline" for a in selected_agents}
+        if scenario_ids is None:
+            scenario_ids = [s.id for s in self._SCENARIOS]
+
+        monkeypatch.setattr(sel_mod, "interactive_select", lambda *a, **kw: selected_agents)
+        monkeypatch.setattr(sel_mod, "interactive_skill_select", lambda *a, **kw: skill_modes)
+        monkeypatch.setattr(sel_mod, "interactive_scenario_select", lambda *a, **kw: scenario_ids)
+        monkeypatch.setattr(loader_mod, "load_all_scenarios", lambda *a, **kw: self._SCENARIOS)
+
+        return run_session_tui()
+
+    def test_returns_session_config(self, monkeypatch):
+        result = self._run_tui(monkeypatch)
+        assert isinstance(result, SessionConfig)
+
+    def test_agents_populated(self, monkeypatch):
+        result = self._run_tui(monkeypatch)
+        assert len(result.agents) == len(self._AGENTS)
+        assert result.agents[0].agent_id == self._AGENTS[0]
+
+    def test_skill_modes_applied(self, monkeypatch):
+        skill_modes = {self._AGENTS[0]: "skills", self._AGENTS[1]: "mcp"}
+        result = self._run_tui(monkeypatch, skill_modes=skill_modes)
+        assert result.agents[0].skill_mode == "skills"
+        assert result.agents[1].skill_mode == "mcp"
+
+    def test_scenario_ids_populated(self, monkeypatch):
+        result = self._run_tui(monkeypatch)
+        assert len(result.scenario_ids) == len(self._SCENARIOS)
+        assert result.scenario_ids == [s.id for s in self._SCENARIOS]
+
+    def test_created_at_is_iso8601(self, monkeypatch):
+        result = self._run_tui(monkeypatch)
+        assert result.created_at
+        assert "T" in result.created_at  # ISO 8601 separator
+
+    def test_round_trip_after_tui(self, monkeypatch, tmp_path):
+        """Output of run_session_tui can be saved and reloaded without loss."""
+        result = self._run_tui(monkeypatch)
+        path = str(tmp_path / "tui-session.yaml")
+        save_session_config(result, path)
+        loaded = load_session_config(path)
+        assert len(loaded.agents) == len(result.agents)
+        assert loaded.scenario_ids == result.scenario_ids
+        assert loaded.created_at == result.created_at
+
+    def test_partial_scenario_selection(self, monkeypatch):
+        """Only selected scenarios appear in the config."""
+        scenario_ids = ["p1-01", "p3-01"]
+        result = self._run_tui(monkeypatch, scenario_ids=scenario_ids)
+        assert result.scenario_ids == ["p1-01", "p3-01"]
+
+    def test_single_agent(self, monkeypatch):
+        single = [self._AGENTS[0]]
+        skill_modes = {self._AGENTS[0]: "mcp"}
+        result = self._run_tui(monkeypatch, selected_agents=single, skill_modes=skill_modes)
+        assert len(result.agents) == 1
+        assert result.agents[0].skill_mode == "mcp"
