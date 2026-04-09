@@ -1,20 +1,56 @@
 """Tests for SessionConfig dataclasses, YAML round-trip persistence,
-and interactive_skill_select logic.
+interactive_skill_select logic, and interactive_scenario_select logic.
 """
 from __future__ import annotations
 
 import os
 import tempfile
+from dataclasses import dataclass, field
+from enum import Enum
 
 import pytest
 
 from buyerbench.selector import (
     AgentSlot,
     SessionConfig,
+    interactive_scenario_select,
     interactive_skill_select,
     load_session_config,
     save_session_config,
 )
+
+
+# ── Minimal stub types used by interactive_scenario_select tests ────────────
+
+class _Pillar(str, Enum):
+    PILLAR1 = "PILLAR1"
+    PILLAR2 = "PILLAR2"
+    PILLAR3 = "PILLAR3"
+
+
+class _Difficulty(str, Enum):
+    easy = "easy"
+    medium = "medium"
+    hard = "hard"
+
+
+@dataclass
+class _Scenario:
+    id: str
+    title: str
+    pillar: _Pillar
+    difficulty: _Difficulty
+    tags: list = field(default_factory=list)
+
+
+def _make_scenarios():
+    return [
+        _Scenario("p1-01", "Supplier Discovery", _Pillar.PILLAR1, _Difficulty.easy),
+        _Scenario("p1-02", "Quote Comparison", _Pillar.PILLAR1, _Difficulty.medium),
+        _Scenario("p2-01", "Anchoring Bias", _Pillar.PILLAR2, _Difficulty.medium),
+        _Scenario("p2-02", "Framing Effect", _Pillar.PILLAR2, _Difficulty.hard),
+        _Scenario("p3-01", "Secure Transaction", _Pillar.PILLAR3, _Difficulty.easy),
+    ]
 
 
 def _make_config() -> SessionConfig:
@@ -190,3 +226,86 @@ class TestInteractiveSkillSelect:
         """Empty input string is ignored and loop continues."""
         result = self._run(self._AGENTS, ["", "done"], monkeypatch)
         assert all(v == "baseline" for v in result.values())
+
+
+class TestInteractiveScenarioSelect:
+    """Unit-tests for interactive_scenario_select using simulated input sequences."""
+
+    def _run(self, scenarios, inputs, monkeypatch):
+        """Monkey-patch Prompt.ask and run interactive_scenario_select."""
+        from rich.prompt import Prompt
+
+        responses = iter(inputs)
+        monkeypatch.setattr(Prompt, "ask", staticmethod(lambda _prompt: next(responses)))
+        return interactive_scenario_select(scenarios)
+
+    def test_done_with_no_selection_returns_empty(self, monkeypatch):
+        result = self._run(_make_scenarios(), ["done"], monkeypatch)
+        assert result == []
+
+    def test_toggle_single_item(self, monkeypatch):
+        result = self._run(_make_scenarios(), ["1", "done"], monkeypatch)
+        assert result == ["p1-01"]
+
+    def test_toggle_multiple_comma_separated(self, monkeypatch):
+        result = self._run(_make_scenarios(), ["1,3,5", "done"], monkeypatch)
+        assert result == ["p1-01", "p2-01", "p3-01"]
+
+    def test_toggle_multiple_space_separated(self, monkeypatch):
+        result = self._run(_make_scenarios(), ["2 4", "done"], monkeypatch)
+        assert result == ["p1-02", "p2-02"]
+
+    def test_toggle_deselects_on_second_press(self, monkeypatch):
+        """Toggling the same index twice removes the scenario."""
+        result = self._run(_make_scenarios(), ["1", "1", "done"], monkeypatch)
+        assert result == []
+
+    def test_select_all(self, monkeypatch):
+        scenarios = _make_scenarios()
+        result = self._run(scenarios, ["a", "done"], monkeypatch)
+        assert result == [s.id for s in scenarios]
+
+    def test_clear_all(self, monkeypatch):
+        result = self._run(_make_scenarios(), ["a", "c", "done"], monkeypatch)
+        assert result == []
+
+    def test_pillar_filter_p1(self, monkeypatch):
+        result = self._run(_make_scenarios(), ["p1", "done"], monkeypatch)
+        assert result == ["p1-01", "p1-02"]
+
+    def test_pillar_filter_p2(self, monkeypatch):
+        result = self._run(_make_scenarios(), ["p2", "done"], monkeypatch)
+        assert result == ["p2-01", "p2-02"]
+
+    def test_pillar_filter_p3(self, monkeypatch):
+        result = self._run(_make_scenarios(), ["p3", "done"], monkeypatch)
+        assert result == ["p3-01"]
+
+    def test_pillar_filters_are_additive(self, monkeypatch):
+        result = self._run(_make_scenarios(), ["p1", "p3", "done"], monkeypatch)
+        assert result == ["p1-01", "p1-02", "p3-01"]
+
+    def test_unknown_command_ignored(self, monkeypatch):
+        result = self._run(_make_scenarios(), ["garbage", "done"], monkeypatch)
+        assert result == []
+
+    def test_empty_input_skipped(self, monkeypatch):
+        result = self._run(_make_scenarios(), ["", "1", "done"], monkeypatch)
+        assert result == ["p1-01"]
+
+    def test_out_of_range_index_ignored(self, monkeypatch):
+        result = self._run(_make_scenarios(), ["99", "done"], monkeypatch)
+        assert result == []
+
+    def test_quit_raises_system_exit(self, monkeypatch):
+        from rich.prompt import Prompt
+
+        responses = iter(["q"])
+        monkeypatch.setattr(Prompt, "ask", staticmethod(lambda _prompt: next(responses)))
+        with pytest.raises(SystemExit):
+            interactive_scenario_select(_make_scenarios())
+
+    def test_result_order_matches_input_order(self, monkeypatch):
+        """Selected IDs are returned in the same order as the input scenarios list."""
+        result = self._run(_make_scenarios(), ["3", "1", "5", "done"], monkeypatch)
+        assert result == ["p1-01", "p2-01", "p3-01"]

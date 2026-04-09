@@ -3,7 +3,9 @@
 Public API
 ----------
 display_catalog_table(catalog, selected_ids) — render a Rich table
-interactive_select(catalog)                   — main TUI loop
+interactive_select(catalog)                   — main TUI loop (model selection)
+interactive_skill_select(agent_ids)           — per-agent skill-mode TUI loop
+interactive_scenario_select(scenarios)        — scenario multi-select TUI loop
 save_selection(agent_ids, path)               — persist to YAML
 load_selection(path)                          — load from YAML
 
@@ -234,6 +236,183 @@ def interactive_skill_select(agent_ids: list[str]) -> dict[str, str]:
         )
 
     return modes
+
+
+_PILLAR_COLORS = {
+    "PILLAR1": "blue",
+    "PILLAR2": "yellow",
+    "PILLAR3": "red",
+}
+
+_DIFFICULTY_COLORS = {
+    "easy": "green",
+    "medium": "yellow",
+    "hard": "red",
+}
+
+# Maps "p1"/"p2"/"p3" command prefix → canonical pillar value string
+_PILLAR_CMD_MAP = {
+    "p1": "PILLAR1",
+    "p2": "PILLAR2",
+    "p3": "PILLAR3",
+}
+
+
+def _display_scenario_table(scenarios: list, selected_ids: set[str]) -> None:
+    """Render the scenario selection table."""
+    t = Table(
+        title="[bold cyan]BuyerBench — Scenario Selection[/bold cyan]",
+        box=box.ROUNDED,
+        show_lines=True,
+        highlight=True,
+    )
+    t.add_column("#", style="dim", justify="right", no_wrap=True)
+    t.add_column("ID", style="bold", no_wrap=True)
+    t.add_column("Title")
+    t.add_column("Pillar", justify="center")
+    t.add_column("Difficulty", justify="center")
+    t.add_column("Selected", justify="center")
+
+    for idx, scenario in enumerate(scenarios, start=1):
+        is_selected = scenario.id in selected_ids
+        row_style = "bold on dark_blue" if is_selected else ""
+
+        pillar_val = scenario.pillar.value if hasattr(scenario.pillar, "value") else str(scenario.pillar)
+        pillar_color = _PILLAR_COLORS.get(pillar_val, "white")
+        pillar_label = pillar_val.replace("PILLAR", "P")
+
+        diff_val = scenario.difficulty.value if hasattr(scenario.difficulty, "value") else str(scenario.difficulty)
+        diff_color = _DIFFICULTY_COLORS.get(diff_val, "white")
+
+        selected_cell = Text("✓", style="bold green") if is_selected else Text("·", style="dim")
+
+        t.add_row(
+            str(idx),
+            scenario.id,
+            scenario.title,
+            Text(pillar_label, style=f"bold {pillar_color}"),
+            Text(diff_val, style=diff_color),
+            selected_cell,
+            style=row_style,
+        )
+
+    console.print()
+    console.print(t)
+
+
+def interactive_scenario_select(scenarios: list) -> list[str]:
+    """Interactively select scenarios for the benchmark session.
+
+    Shows a Rich table with columns: #, ID, Title, Pillar, Difficulty, Selected.
+
+    Commands
+    --------
+    1,3,5       Toggle by comma-separated or space-separated 1-based indices
+    a           Select all scenarios
+    c           Clear all selections
+    p1/p2/p3    Select all scenarios in the given pillar
+    done        Confirm selection
+    q / quit    Abort (raises SystemExit(0))
+
+    Parameters
+    ----------
+    scenarios:
+        List of Scenario objects; each must have ``.id``, ``.title``,
+        ``.pillar``, and ``.difficulty`` attributes.
+
+    Returns
+    -------
+    list[str]
+        Ordered list of selected scenario IDs (preserving input order).
+    """
+    selected_ids: set[str] = set()
+
+    console.print(
+        Panel(
+            "[bold]Commands:[/bold]  "
+            "[cyan]1,3,5[/cyan] toggle  "
+            "[cyan]a[/cyan] select-all  "
+            "[cyan]c[/cyan] clear  "
+            "[cyan]p1/p2/p3[/cyan] select-pillar  "
+            "[cyan]done[/cyan] confirm  "
+            "[cyan]q[/cyan] quit",
+            title="Scenario Selector",
+            border_style="cyan",
+        )
+    )
+
+    while True:
+        _display_scenario_table(scenarios, selected_ids)
+        console.print(
+            f"[dim]Selected: {len(selected_ids)} / {len(scenarios)}[/dim]"
+        )
+        console.print()
+
+        raw = Prompt.ask("[bold cyan]>[/bold cyan]").strip()
+        if not raw:
+            continue
+
+        cmd = raw.lower()
+
+        # Quit
+        if cmd in ("q", "quit"):
+            console.print("[yellow]Selection aborted.[/yellow]")
+            raise SystemExit(0)
+
+        # Confirm
+        if cmd == "done":
+            break
+
+        # Select all
+        if cmd == "a":
+            for s in scenarios:
+                selected_ids.add(s.id)
+            continue
+
+        # Clear all
+        if cmd == "c":
+            selected_ids.clear()
+            continue
+
+        # Pillar filter: "p1", "p2", "p3"
+        if cmd in _PILLAR_CMD_MAP:
+            target_pillar = _PILLAR_CMD_MAP[cmd]
+            added = 0
+            for s in scenarios:
+                pillar_val = s.pillar.value if hasattr(s.pillar, "value") else str(s.pillar)
+                if pillar_val == target_pillar:
+                    selected_ids.add(s.id)
+                    added += 1
+            console.print(
+                f"[dim]Added {added} scenario(s) from pillar [bold]{target_pillar}[/bold].[/dim]"
+            )
+            continue
+
+        # Toggle by number(s): "1", "1,3", "1 3 5"
+        tokens = raw.replace(",", " ").split()
+        if tokens and all(t.isdigit() for t in tokens):
+            for tok in tokens:
+                idx = int(tok) - 1
+                if 0 <= idx < len(scenarios):
+                    s = scenarios[idx]
+                    if s.id in selected_ids:
+                        selected_ids.discard(s.id)
+                    else:
+                        selected_ids.add(s.id)
+                else:
+                    console.print(
+                        f"[yellow]Index {tok} out of range (1–{len(scenarios)})[/yellow]"
+                    )
+            continue
+
+        console.print(
+            f"[yellow]Unknown command: '{raw}'. "
+            "Use '1,3', 'a', 'c', 'p1/p2/p3', 'done', or 'q'.[/yellow]"
+        )
+
+    # Return IDs in original scenario order
+    order_map = {s.id: i for i, s in enumerate(scenarios)}
+    return sorted(selected_ids, key=lambda sid: order_map.get(sid, 9999))
 
 
 _COST_COLORS = {
