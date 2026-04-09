@@ -312,6 +312,80 @@ class TestInteractiveScenarioSelect:
         assert result == ["p1-01", "p2-01", "p3-01"]
 
 
+class TestSessionCLICommand:
+    """Integration tests for the 'session' Click command."""
+
+    def _make_config(self) -> SessionConfig:
+        return SessionConfig(
+            agents=[
+                AgentSlot(agent_id="openrouter-openai-gpt-4o", skill_mode="baseline"),
+                AgentSlot(agent_id="openrouter-anthropic-claude-3.5-sonnet", skill_mode="skills"),
+            ],
+            scenario_ids=[
+                "p1-01-supplier-discovery",
+                "p2-01-anchoring-bias",
+                "p3-01-secure-transaction",
+            ],
+            created_at="2026-04-08T12:00:00+00:00",
+        )
+
+    def test_session_command_saves_config(self, tmp_path, monkeypatch):
+        """session command calls run_session_tui, saves the config, and prints a confirmation."""
+        from click.testing import CliRunner
+        from buyerbench.__main__ import cli
+
+        cfg = self._make_config()
+        out_path = str(tmp_path / "test-session.yaml")
+
+        monkeypatch.setattr("buyerbench.selector.run_session_tui", lambda: cfg)
+        monkeypatch.setattr("buyerbench.__main__._stdin_is_tty", lambda: True)
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["session", "--output", out_path])
+
+        assert result.exit_code == 0, result.output
+        assert "Session config saved" in result.output
+        assert "run --from-session" in result.output
+        # Confirm the file was actually written (more meaningful than checking wrapped output)
+        import os
+        assert os.path.exists(out_path)
+
+    def test_session_config_round_trip_via_cli(self, tmp_path, monkeypatch):
+        """Config written by session command round-trips through load_session_config."""
+        from click.testing import CliRunner
+        from buyerbench.__main__ import cli
+
+        cfg = self._make_config()
+        out_path = str(tmp_path / "cli-round-trip.yaml")
+
+        monkeypatch.setattr("buyerbench.selector.run_session_tui", lambda: cfg)
+        monkeypatch.setattr("buyerbench.__main__._stdin_is_tty", lambda: True)
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["session", "--output", out_path])
+        assert result.exit_code == 0, result.output
+
+        loaded = load_session_config(out_path)
+        assert len(loaded.agents) == 2
+        assert len(loaded.scenario_ids) == 3
+        assert loaded.agents[0].agent_id == "openrouter-openai-gpt-4o"
+        assert loaded.agents[1].skill_mode == "skills"
+        assert loaded.created_at == "2026-04-08T12:00:00+00:00"
+
+    def test_session_command_rejects_non_tty(self, tmp_path, monkeypatch):
+        """session command exits with error when stdin is not a TTY."""
+        from click.testing import CliRunner
+        from buyerbench.__main__ import cli
+
+        monkeypatch.setattr("buyerbench.__main__._stdin_is_tty", lambda: False)
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["session", "--output", str(tmp_path / "out.yaml")])
+
+        assert result.exit_code == 1
+        assert "requires an interactive terminal" in result.output
+
+
 class TestRunSessionTui:
     """Unit-tests for run_session_tui using mocked sub-steps."""
 

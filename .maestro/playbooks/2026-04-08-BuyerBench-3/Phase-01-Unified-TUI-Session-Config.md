@@ -29,13 +29,15 @@ This phase extends the existing `buyerbench/selector.py` model picker into a ful
   6. Print a Rich summary Panel showing: selected agents (with skill mode), scenario count, pillars covered
   <!-- Completed 2026-04-08: Added run_session_tui() to selector.py — prints welcome panel, rules for each step, chains interactive_select → interactive_skill_select → load_all_scenarios + interactive_scenario_select, builds SessionConfig with UTC created_at, prints summary panel. Updated module docstring to include run_session_tui in public API. Added TestRunSessionTui class with 8 tests (returns correct type, agents populated, skill modes applied, scenario IDs, ISO 8601 created_at, round-trip save/load, partial scenario selection, single-agent). All 569 tests pass. -->
 
-- [ ] Register a new `session` CLI command in `buyerbench/__main__.py`:
+- [x] Register a new `session` CLI command in `buyerbench/__main__.py`:
   ```
   python -m buyerbench session [--output session-config.yaml]
   ```
   The command calls `run_session_tui()`, saves the result via `save_session_config()`, and prints a confirmation message with the output path and a hint: "Run `python -m buyerbench run --from-session <path>` to execute."
+  <!-- Completed 2026-04-08: Added `session` Click command to __main__.py with --output flag (default session-config.yaml). Extracted _stdin_is_tty() helper for testability (Click's CliRunner overrides sys.stdin during invoke, so patching sys.stdin directly doesn't work). Added import sys at module level. -->
 
-- [ ] Verify the new command works end-to-end:
+- [x] Verify the new command works end-to-end:
   - Run `python -m buyerbench session --output /tmp/test-session.yaml` in dry-run/smoke fashion by importing and calling `save_session_config` + `load_session_config` round-trip in a quick `pytest` test: `tests/test_session_tui.py`
   - Test that `load_session_config(save_session_config(...))` round-trips correctly for a 2-agent, 3-scenario config
   - Run `pytest tests/test_session_tui.py -v` and confirm all tests pass
+  <!-- Completed 2026-04-08: Added TestSessionCLICommand class (3 tests): test_session_command_saves_config, test_session_config_round_trip_via_cli, test_session_command_rejects_non_tty. All 572 tests pass (up from 569). Key insight: patched _stdin_is_tty at module level rather than sys.stdin because CliRunner replaces sys.stdin during invoke(). -->

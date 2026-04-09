@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import sys
 from pathlib import Path
 
 import click
@@ -9,6 +10,11 @@ from rich.table import Table
 from rich import box
 
 console = Console(highlight=False)
+
+
+def _stdin_is_tty() -> bool:
+    """Return True when stdin is an interactive terminal. Extracted for testability."""
+    return sys.stdin.isatty()
 
 
 @click.group()
@@ -94,13 +100,12 @@ def _format_decisions(decisions: dict, pillar: str) -> str:
 @click.option("--filter-provider", default=None, help="Pre-filter catalog by provider name")
 def select(output: str, filter_tag: str | None, filter_provider: str | None) -> None:
     """Interactively choose which OpenRouter models to benchmark and save the selection."""
-    import sys
     from rich.panel import Panel
 
     from buyerbench.model_catalog import filter_catalog, MODEL_CATALOG
     from buyerbench.selector import interactive_select, save_selection
 
-    if not sys.stdin.isatty():
+    if not _stdin_is_tty():
         console.print("[red]Error: 'select' requires an interactive terminal (TTY).[/red]")
         raise SystemExit(1)
 
@@ -628,6 +633,38 @@ def _write_skipped_results(
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
         (base / f"{s.id}.json").write_text(json.dumps(payload, indent=2))
+
+
+@cli.command()
+@click.option(
+    "--output",
+    default="session-config.yaml",
+    show_default=True,
+    help="Path to save the session configuration YAML",
+)
+def session(output: str) -> None:
+    """Interactively configure a full benchmark session (models + skills + scenarios)."""
+    from rich.panel import Panel
+
+    from buyerbench.selector import run_session_tui, save_session_config
+
+    if not _stdin_is_tty():
+        console.print("[red]Error: 'session' requires an interactive terminal (TTY).[/red]")
+        raise SystemExit(1)
+
+    config = run_session_tui()
+    save_session_config(config, output)
+
+    console.print()
+    console.print(
+        Panel(
+            f"[bold]{output}[/bold]\n\n"
+            f"[dim]Run [bold cyan]python -m buyerbench run --from-session {output}[/bold cyan] to execute.[/dim]",
+            title=f"[bold green]Session config saved — {len(config.agents)} agent(s), {len(config.scenario_ids)} scenario(s)[/bold green]",
+            border_style="green",
+        )
+    )
+    console.print()
 
 
 @cli.command()
