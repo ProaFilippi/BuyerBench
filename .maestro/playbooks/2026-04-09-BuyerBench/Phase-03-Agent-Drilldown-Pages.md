@@ -32,6 +32,7 @@ This phase adds per-agent detail pages at `/agent/[id]`, surfacing the three ana
   Each section uses a `brutal-box` container with a bold uppercase section title and a thin separator line.
   <!-- Done: already fully implemented with getStaticPaths/getStaticProps, all four sections with brutal-box containers, back button with box-shadow brutalist style, and summary null→undefined coercion for AgentHeader. TypeScript checks pass with no errors. -->
 
-- [ ] Update `web/src/pages/index.tsx` to make agent IDs in the rankings tables clickable links to `/agent/{agent_id}`. The link text should be the formatted agent display name. Style the links with `color: var(--fg); text-decoration: underline; text-decoration-style: wavy;` to maintain brutalist aesthetic without a standard blue hyperlink.
+- [x] Update `web/src/pages/index.tsx` to make agent IDs in the rankings tables clickable links to `/agent/{agent_id}`. The link text should be the formatted agent display name. Style the links with `color: var(--fg); text-decoration: underline; text-decoration-style: wavy;` to maintain brutalist aesthetic without a standard blue hyperlink.
+  <!-- Done: already implemented. OVERALL tab in index.tsx uses <Link href={`/agent/${agent.agent_id}`}> with wavy underline styling; per-pillar tabs delegate to PillarTable.tsx which has the same <Link> pattern plus e.stopPropagation() to prevent the row expand/collapse from firing on click. TypeScript clean. -->
 
 - [ ] Run `npx tsc --noEmit`, then `npm run build` to verify static export generates HTML for each agent page. Fix any errors. Spot-check that `/agent/mock-agent-v1` renders correctly with sample data.
