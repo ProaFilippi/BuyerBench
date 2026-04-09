@@ -1,8 +1,25 @@
+import type { GetStaticProps, InferGetStaticPropsType } from 'next';
 import Link from 'next/link';
 import Layout from '@/components/Layout';
+import ScenarioCount from '@/components/ScenarioCount';
+import { loadReport } from '@/lib/loadReport';
+import type { PillarAggregate } from '@/types/report';
 import styles from './about.module.css';
 
-export default function AboutPage() {
+interface Props {
+  pillarAggregates: PillarAggregate[];
+}
+
+export const getStaticProps: GetStaticProps<Props> = async () => {
+  const report = loadReport();
+  return {
+    props: {
+      pillarAggregates: report.per_pillar_aggregate,
+    },
+  };
+};
+
+export default function AboutPage({ pillarAggregates }: InferGetStaticPropsType<typeof getStaticProps>) {
   return (
     <Layout>
       <div className={styles.page}>
@@ -11,6 +28,10 @@ export default function AboutPage() {
         </div>
 
         <h1 className={styles.headline}>ABOUT BUYERBENCH</h1>
+
+        <div className={styles.section}>
+          <ScenarioCount pillarAggregates={pillarAggregates} />
+        </div>
 
         {/* Section 1 */}
         <section className={styles.section}>

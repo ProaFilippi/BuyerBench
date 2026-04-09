@@ -13,7 +13,8 @@ This phase completes the site: adds an About page explaining the evaluation meth
   6. `DATA FORMAT` — one-line description of FULL-REPORT.json and where it lives
   Each section uses a `brutal-box` with a thick left border in `var(--accent)`. Include a `← BACK TO RANKINGS` link at the top.
 
-- [ ] Add `web/src/components/ScenarioCount.tsx`. A small client-side component that reads `n_scenarios` from `per_pillar_aggregate` passed as a prop and renders a grid of three stat boxes (Pillar 1 scenarios, Pillar 2 scenarios, Pillar 3 scenarios) styled as `brutal-box`. Export and use it on the About page (pass static counts from the sample data or real report via `getStaticProps`).
+- [x] Add `web/src/components/ScenarioCount.tsx`. A small client-side component that reads `n_scenarios` from `per_pillar_aggregate` passed as a prop and renders a grid of three stat boxes (Pillar 1 scenarios, Pillar 2 scenarios, Pillar 3 scenarios) styled as `brutal-box`. Export and use it on the About page (pass static counts from the sample data or real report via `getStaticProps`).
+  <!-- Completed 2026-04-09: Created ScenarioCount.tsx with 3-column brutal-box grid keyed by pillar; uses max(n_scenarios) per pillar across agents. Updated about.tsx with getStaticProps loading per_pillar_aggregate from loadReport(), rendered ScenarioCount between headline and Section 1. TypeScript clean. -->
 
 - [ ] Update `web/next.config.js` to set `distDir: 'out'` (so static export lands in `web/out/`). Add a `serve` script to `web/package.json` using `npx serve out -p 3001 --single` so `npm run serve` previews the static build without Next.js dev server. Also add a combined `export` script: `"export": "next build"` (since `output: 'export'` in next.config already handles the static export).
 
