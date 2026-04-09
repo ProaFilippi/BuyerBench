@@ -11,7 +11,8 @@ This phase adds per-agent detail pages at `/agent/[id]`, surfacing the three ana
   - `getDeltaRowsForAgent(report: FullReport, agentId: string): SkillsDeltaRow[]` — filter `skills_mcp_delta_table` by `agent_id`.
   - `getAllAgentIds(report: FullReport): string[]` — unique sorted agent IDs from `per_pillar_aggregate`.
 
-- [ ] Create `web/src/components/BiasTable.tsx`. Props: `rows: BiasSusceptibilityRow[]`. Renders a `<table>` with columns: BIAS TYPE · BSI · DECISION CHANGED · PAIR ID. BSI values render as a `<ScoreBar>` using a gradient color: `0–0.2` green, `0.2–0.5` yellow (`var(--accent2)`), `>0.5` red (`var(--accent)`). `decision_changed` renders as a bold `✗ CHANGED` in red or `✓ STABLE` in green. If `rows` is empty, render a `brutal-box` message `NO BIAS DATA — AGENT NOT TESTED ON PILLAR 2`. Export as default.
+- [x] Create `web/src/components/BiasTable.tsx`. Props: `rows: BiasSusceptibilityRow[]`. Renders a `<table>` with columns: BIAS TYPE · BSI · DECISION CHANGED · PAIR ID. BSI values render as a `<ScoreBar>` using a gradient color: `0–0.2` green, `0.2–0.5` yellow (`var(--accent2)`), `>0.5` red (`var(--accent)`). `decision_changed` renders as a bold `✗ CHANGED` in red or `✓ STABLE` in green. If `rows` is empty, render a `brutal-box` message `NO BIAS DATA — AGENT NOT TESTED ON PILLAR 2`. Export as default.
+  <!-- Done: BiasTable.tsx implemented with bsiColor() threshold helper, ScoreBar integration, HTML entity ✓/✗ markers, and brutal-box empty state. TypeScript passes with no errors. -->
 
 - [ ] Create `web/src/components/SecurityTable.tsx`. Props: `rows: SecurityViolationRow[]`. Renders a `<table>` with columns: SCENARIO · COMPLIANCE RATE · VIOLATION FREQ · SCORE. All three numeric columns use `<ScoreBar>` — compliance and score in green, violation frequency inverted (red bar, lower is better, with a note label `LOWER = BETTER`). If empty, render `NO SECURITY DATA — AGENT NOT TESTED ON PILLAR 3`. Export as default.
 

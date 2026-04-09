@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import Link from 'next/link';
 import type { GetStaticProps, InferGetStaticPropsType } from 'next';
 import Layout from '@/components/Layout';
 import ScoreBar from '@/components/ScoreBar';
@@ -33,6 +34,15 @@ const TABS = [
   { id: 'PILLAR2', label: 'ECONOMICS' },
   { id: 'PILLAR3', label: 'SECURITY' },
 ];
+
+function formatAgentId(id: string): string {
+  if (id.startsWith('openrouter-')) {
+    const parts = id.replace('openrouter-', '').split('-');
+    parts[0] = parts[0].toUpperCase();
+    return parts.join(' ');
+  }
+  return id.replace(/-/g, ' ');
+}
 
 const PILLAR_COLORS: Record<string, string> = {
   PILLAR1: 'var(--accent)',
@@ -136,7 +146,14 @@ export default function HomePage({
                         #{idx + 1}
                       </span>
                     </td>
-                    <td className={styles.agentId}>{agent.agent_id}</td>
+                    <td className={styles.agentId}>
+                      <Link
+                        href={`/agent/${agent.agent_id}`}
+                        style={{ color: 'var(--fg)', textDecoration: 'underline', textDecorationStyle: 'wavy' }}
+                      >
+                        {formatAgentId(agent.agent_id)}
+                      </Link>
+                    </td>
                     <td>
                       {agent.pillar1_score !== null
                         ? <ScoreBar score={agent.pillar1_score} color="var(--accent)" />

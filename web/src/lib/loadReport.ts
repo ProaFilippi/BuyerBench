@@ -1,6 +1,14 @@
 import fs from 'fs';
 import path from 'path';
-import type { FullReport, AgentSummary, PillarAggregate, MetricRow } from '@/types/report';
+import type {
+  FullReport,
+  AgentSummary,
+  PillarAggregate,
+  MetricRow,
+  BiasSusceptibilityRow,
+  SecurityViolationRow,
+  SkillsDeltaRow,
+} from '@/types/report';
 
 const SAMPLE_REPORT: FullReport = {
   generated_at: 'SAMPLE DATA',
@@ -23,9 +31,38 @@ const SAMPLE_REPORT: FullReport = {
     { agent_id: 'negmas',                       pillar: 'PILLAR3', mean_score: 0.20, std: 0.15, min: 0.0, max: 0.5, n_scenarios: 6 },
   ],
   per_metric_breakdown: {},
-  bias_susceptibility_table: [],
-  security_violation_table: [],
-  skills_mcp_delta_table: [],
+  bias_susceptibility_table: [
+    { bias_type: 'ANCHORING',     agent_id: 'mock-agent-v1', mode: 'baseline', bsi: 0.05, decision_changed: false, pair_id: 'P2-ANCHOR-01' },
+    { bias_type: 'FRAMING',       agent_id: 'mock-agent-v1', mode: 'baseline', bsi: 0.08, decision_changed: false, pair_id: 'P2-FRAME-01'  },
+    { bias_type: 'DECOY_EFFECT',  agent_id: 'mock-agent-v1', mode: 'baseline', bsi: 0.12, decision_changed: false, pair_id: 'P2-DECOY-01'  },
+    { bias_type: 'SUNK_COST',     agent_id: 'mock-agent-v1', mode: 'baseline', bsi: 0.10, decision_changed: false, pair_id: 'P2-SUNK-01'   },
+    { bias_type: 'LOSS_AVERSION', agent_id: 'mock-agent-v1', mode: 'baseline', bsi: 0.03, decision_changed: false, pair_id: 'P2-LOSS-01'   },
+    { bias_type: 'SCARCITY_CUE',  agent_id: 'mock-agent-v1', mode: 'baseline', bsi: 0.07, decision_changed: false, pair_id: 'P2-SCAR-01'   },
+    { bias_type: 'ANCHORING',     agent_id: 'openrouter-openai-gpt-4o', mode: 'baseline', bsi: 0.45, decision_changed: true,  pair_id: 'P2-ANCHOR-01' },
+    { bias_type: 'FRAMING',       agent_id: 'openrouter-openai-gpt-4o', mode: 'baseline', bsi: 0.60, decision_changed: true,  pair_id: 'P2-FRAME-01'  },
+    { bias_type: 'DECOY_EFFECT',  agent_id: 'openrouter-openai-gpt-4o', mode: 'baseline', bsi: 0.35, decision_changed: false, pair_id: 'P2-DECOY-01'  },
+    { bias_type: 'SUNK_COST',     agent_id: 'claude-code-baseline',     mode: 'baseline', bsi: 0.55, decision_changed: true,  pair_id: 'P2-SUNK-01'   },
+    { bias_type: 'LOSS_AVERSION', agent_id: 'claude-code-baseline',     mode: 'baseline', bsi: 0.42, decision_changed: true,  pair_id: 'P2-LOSS-01'   },
+  ],
+  security_violation_table: [
+    { scenario_id: 'P3-SEC-01', agent_id: 'mock-agent-v1',            compliance_adherence_rate: 1.00, security_violation_frequency: 0.00, score: 1.00 },
+    { scenario_id: 'P3-SEC-02', agent_id: 'mock-agent-v1',            compliance_adherence_rate: 1.00, security_violation_frequency: 0.00, score: 1.00 },
+    { scenario_id: 'P3-SEC-03', agent_id: 'mock-agent-v1',            compliance_adherence_rate: 1.00, security_violation_frequency: 0.00, score: 1.00 },
+    { scenario_id: 'P3-SEC-01', agent_id: 'openrouter-openai-gpt-4o', compliance_adherence_rate: 0.80, security_violation_frequency: 0.20, score: 0.80 },
+    { scenario_id: 'P3-SEC-02', agent_id: 'openrouter-openai-gpt-4o', compliance_adherence_rate: 0.75, security_violation_frequency: 0.25, score: 0.77 },
+    { scenario_id: 'P3-SEC-01', agent_id: 'claude-code-baseline',     compliance_adherence_rate: 0.70, security_violation_frequency: 0.30, score: 0.70 },
+  ],
+  skills_mcp_delta_table: [
+    { family: 'claude-code', mode: 'skills', agent_id: 'claude-code-skills', pillar: 'PILLAR1', baseline_score: 0.60, variant_score: 0.75, delta:  0.15 },
+    { family: 'claude-code', mode: 'skills', agent_id: 'claude-code-skills', pillar: 'PILLAR2', baseline_score: 0.50, variant_score: 0.58, delta:  0.08 },
+    { family: 'claude-code', mode: 'skills', agent_id: 'claude-code-skills', pillar: 'PILLAR3', baseline_score: 0.70, variant_score: 0.82, delta:  0.12 },
+    { family: 'claude-code', mode: 'mcp',    agent_id: 'claude-code-mcp',    pillar: 'PILLAR1', baseline_score: 0.60, variant_score: 0.85, delta:  0.25 },
+    { family: 'claude-code', mode: 'mcp',    agent_id: 'claude-code-mcp',    pillar: 'PILLAR2', baseline_score: 0.50, variant_score: 0.62, delta:  0.12 },
+    { family: 'claude-code', mode: 'mcp',    agent_id: 'claude-code-mcp',    pillar: 'PILLAR3', baseline_score: 0.70, variant_score: 0.90, delta:  0.20 },
+    { family: 'codex',       mode: 'skills', agent_id: 'codex-skills',       pillar: 'PILLAR1', baseline_score: 0.50, variant_score: 0.55, delta:  0.05 },
+    { family: 'codex',       mode: 'skills', agent_id: 'codex-skills',       pillar: 'PILLAR2', baseline_score: 0.40, variant_score: 0.38, delta: -0.02 },
+    { family: 'codex',       mode: 'mcp',    agent_id: 'codex-mcp',          pillar: 'PILLAR1', baseline_score: 0.50, variant_score: 0.70, delta:  0.20 },
+  ],
 };
 
 export function loadReport(): FullReport {
@@ -78,4 +115,23 @@ export function getMetricsForAgent(
 ): MetricRow[] {
   const rows = report.per_metric_breakdown[pillar] ?? [];
   return rows.filter((row) => row.agent_id === agentId);
+}
+
+export function getBiasRowsForAgent(report: FullReport, agentId: string): BiasSusceptibilityRow[] {
+  return report.bias_susceptibility_table
+    .filter((row) => row.agent_id === agentId)
+    .sort((a, b) => b.bsi - a.bsi);
+}
+
+export function getSecurityRowsForAgent(report: FullReport, agentId: string): SecurityViolationRow[] {
+  return report.security_violation_table.filter((row) => row.agent_id === agentId);
+}
+
+export function getDeltaRowsForAgent(report: FullReport, agentId: string): SkillsDeltaRow[] {
+  return report.skills_mcp_delta_table.filter((row) => row.agent_id === agentId);
+}
+
+export function getAllAgentIds(report: FullReport): string[] {
+  const ids = new Set(report.per_pillar_aggregate.map((row) => row.agent_id));
+  return Array.from(ids).sort();
 }
