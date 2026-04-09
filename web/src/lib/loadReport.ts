@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import type { FullReport, AgentSummary } from '@/types/report';
+import type { FullReport, AgentSummary, PillarAggregate, MetricRow } from '@/types/report';
 
 const SAMPLE_REPORT: FullReport = {
   generated_at: 'SAMPLE DATA',
@@ -60,4 +60,22 @@ export function computeAgentSummaries(report: FullReport): AgentSummary[] {
   }
 
   return summaries.sort((a, b) => b.overall_score - a.overall_score);
+}
+
+export function computePillarLeaderboard(
+  report: FullReport,
+  pillar: 'PILLAR1' | 'PILLAR2' | 'PILLAR3'
+): PillarAggregate[] {
+  return report.per_pillar_aggregate
+    .filter((row) => row.pillar === pillar)
+    .sort((a, b) => b.mean_score - a.mean_score);
+}
+
+export function getMetricsForAgent(
+  report: FullReport,
+  pillar: string,
+  agentId: string
+): MetricRow[] {
+  const rows = report.per_metric_breakdown[pillar] ?? [];
+  return rows.filter((row) => row.agent_id === agentId);
 }
