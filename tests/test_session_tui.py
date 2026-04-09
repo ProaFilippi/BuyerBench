@@ -1,6 +1,5 @@
-"""Tests for SessionConfig dataclasses and YAML round-trip persistence.
-
-Covers: AgentSlot, SessionConfig, save_session_config, load_session_config.
+"""Tests for SessionConfig dataclasses, YAML round-trip persistence,
+and interactive_skill_select logic.
 """
 from __future__ import annotations
 
@@ -12,6 +11,7 @@ import pytest
 from buyerbench.selector import (
     AgentSlot,
     SessionConfig,
+    interactive_skill_select,
     load_session_config,
     save_session_config,
 )
@@ -117,3 +117,76 @@ class TestRoundTrip:
         loaded = load_session_config()  # uses default path
         assert len(loaded.agents) == 2
         assert len(loaded.scenario_ids) == 3
+
+
+class TestInteractiveSkillSelect:
+    """Unit-tests for interactive_skill_select using simulated input sequences."""
+
+    _AGENTS = [
+        "openrouter-openai-gpt-4o",
+        "openrouter-anthropic-claude-3.5-sonnet",
+        "openrouter-google-gemini-pro-1.5",
+    ]
+
+    def _run(self, agent_ids, inputs, monkeypatch):
+        """Monkey-patch Prompt.ask and run interactive_skill_select."""
+        from rich.prompt import Prompt
+
+        responses = iter(inputs)
+        monkeypatch.setattr(Prompt, "ask", staticmethod(lambda _prompt: next(responses)))
+        return interactive_skill_select(agent_ids)
+
+    def test_defaults_to_baseline(self, monkeypatch):
+        result = self._run(self._AGENTS, ["done"], monkeypatch)
+        assert all(v == "baseline" for v in result.values())
+        assert set(result.keys()) == set(self._AGENTS)
+
+    def test_set_single_agent_to_skills(self, monkeypatch):
+        result = self._run(self._AGENTS, ["1 s", "done"], monkeypatch)
+        assert result[self._AGENTS[0]] == "skills"
+        assert result[self._AGENTS[1]] == "baseline"
+
+    def test_set_single_agent_to_mcp(self, monkeypatch):
+        result = self._run(self._AGENTS, ["2 m", "done"], monkeypatch)
+        assert result[self._AGENTS[1]] == "mcp"
+        assert result[self._AGENTS[0]] == "baseline"
+
+    def test_batch_set_all_to_skills(self, monkeypatch):
+        result = self._run(self._AGENTS, ["a s", "done"], monkeypatch)
+        assert all(v == "skills" for v in result.values())
+
+    def test_batch_set_all_then_override_one(self, monkeypatch):
+        result = self._run(self._AGENTS, ["a m", "1 b", "done"], monkeypatch)
+        assert result[self._AGENTS[0]] == "baseline"
+        assert result[self._AGENTS[1]] == "mcp"
+        assert result[self._AGENTS[2]] == "mcp"
+
+    def test_unknown_command_does_not_crash(self, monkeypatch):
+        """Unknown input is silently ignored and loop continues."""
+        result = self._run(self._AGENTS, ["garbage", "done"], monkeypatch)
+        assert all(v == "baseline" for v in result.values())
+
+    def test_out_of_range_index_does_not_crash(self, monkeypatch):
+        result = self._run(self._AGENTS, ["99 s", "done"], monkeypatch)
+        assert all(v == "baseline" for v in result.values())
+
+    def test_unknown_mode_abbrev_does_not_crash(self, monkeypatch):
+        result = self._run(self._AGENTS, ["1 x", "done"], monkeypatch)
+        assert result[self._AGENTS[0]] == "baseline"
+
+    def test_quit_raises_system_exit(self, monkeypatch):
+        from rich.prompt import Prompt
+
+        responses = iter(["q"])
+        monkeypatch.setattr(Prompt, "ask", staticmethod(lambda _prompt: next(responses)))
+        with pytest.raises(SystemExit):
+            interactive_skill_select(self._AGENTS)
+
+    def test_single_agent(self, monkeypatch):
+        result = self._run(["mock-agent-v1"], ["1 m", "done"], monkeypatch)
+        assert result == {"mock-agent-v1": "mcp"}
+
+    def test_empty_input_skipped(self, monkeypatch):
+        """Empty input string is ignored and loop continues."""
+        result = self._run(self._AGENTS, ["", "done"], monkeypatch)
+        assert all(v == "baseline" for v in result.values())

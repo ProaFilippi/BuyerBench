@@ -106,6 +106,136 @@ def load_session_config(path: str = "session-config.yaml") -> SessionConfig:
         created_at=data.get("created_at", ""),
     )
 
+_SKILL_LABELS = {
+    "baseline": ("baseline", "dim"),
+    "skills": ("skills", "green"),
+    "mcp": ("mcp", "cyan"),
+}
+_SKILL_ABBREVS = {"b": "baseline", "s": "skills", "m": "mcp"}
+
+
+def _display_skill_table(agent_ids: list[str], modes: dict[str, str]) -> None:
+    """Render the per-agent skill-mode table."""
+    t = Table(
+        title="[bold cyan]BuyerBench — Per-Agent Skill Configuration[/bold cyan]",
+        box=box.ROUNDED,
+        show_lines=True,
+        highlight=True,
+    )
+    t.add_column("#", style="dim", justify="right", no_wrap=True)
+    t.add_column("Agent ID", style="bold", no_wrap=True)
+    t.add_column("Skill Mode", justify="center")
+
+    for idx, aid in enumerate(agent_ids, start=1):
+        mode = modes.get(aid, "baseline")
+        label, color = _SKILL_LABELS.get(mode, (mode, "white"))
+        t.add_row(str(idx), aid, Text(label, style=f"bold {color}"))
+
+    console.print()
+    console.print(t)
+
+
+def interactive_skill_select(agent_ids: list[str]) -> dict[str, str]:
+    """Interactively assign a skill mode to each selected agent.
+
+    Shows a Rich table listing every agent with its current skill mode.
+    The user can change modes one agent at a time or batch-set all agents.
+
+    Commands
+    --------
+    1 b / 1 s / 1 m    Set agent #1 to baseline / skills / mcp
+    a b / a s / a m    Set ALL agents to the given mode
+    done               Confirm and return
+    q / quit           Abort (raises SystemExit(0))
+
+    Parameters
+    ----------
+    agent_ids:
+        Ordered list of agent IDs selected in Step 1.
+
+    Returns
+    -------
+    dict[str, str]
+        Maps each ``agent_id`` to its chosen ``skill_mode``.
+    """
+    modes: dict[str, str] = {aid: "baseline" for aid in agent_ids}
+
+    console.print(
+        Panel(
+            "[bold]Commands:[/bold]  "
+            "[cyan]<N> b[/cyan] baseline  "
+            "[cyan]<N> s[/cyan] skills  "
+            "[cyan]<N> m[/cyan] mcp  "
+            "[cyan]a b/s/m[/cyan] set-all  "
+            "[cyan]done[/cyan] confirm  "
+            "[cyan]q[/cyan] quit",
+            title="Skill Mode Selector",
+            border_style="cyan",
+        )
+    )
+
+    while True:
+        _display_skill_table(agent_ids, modes)
+        console.print()
+
+        raw = Prompt.ask("[bold cyan]>[/bold cyan]").strip()
+        if not raw:
+            continue
+
+        tokens = raw.lower().split()
+
+        # Quit
+        if tokens[0] in ("q", "quit"):
+            console.print("[yellow]Selection aborted.[/yellow]")
+            raise SystemExit(0)
+
+        # Confirm
+        if tokens[0] == "done":
+            break
+
+        # Batch set: "a b" / "a s" / "a m"
+        if tokens[0] == "a" and len(tokens) == 2:
+            abbrev = tokens[1]
+            if abbrev not in _SKILL_ABBREVS:
+                console.print(
+                    f"[yellow]Unknown mode '{abbrev}'. Use b (baseline), s (skills), or m (mcp).[/yellow]"
+                )
+                continue
+            new_mode = _SKILL_ABBREVS[abbrev]
+            for aid in agent_ids:
+                modes[aid] = new_mode
+            console.print(f"[dim]All agents set to [bold]{new_mode}[/bold].[/dim]")
+            continue
+
+        # Per-agent: "<N> b/s/m"
+        if len(tokens) == 2 and tokens[0].isdigit():
+            idx = int(tokens[0]) - 1
+            abbrev = tokens[1]
+            if idx < 0 or idx >= len(agent_ids):
+                console.print(
+                    f"[yellow]Index {tokens[0]} out of range (1–{len(agent_ids)})[/yellow]"
+                )
+                continue
+            if abbrev not in _SKILL_ABBREVS:
+                console.print(
+                    f"[yellow]Unknown mode '{abbrev}'. Use b (baseline), s (skills), or m (mcp).[/yellow]"
+                )
+                continue
+            aid = agent_ids[idx]
+            modes[aid] = _SKILL_ABBREVS[abbrev]
+            console.print(
+                f"[dim]Agent [bold]{aid}[/bold] → [bold]{modes[aid]}[/bold][/dim]"
+            )
+            continue
+
+        console.print(
+            f"[yellow]Unknown command: '{raw}'. "
+            "Use '<N> b/s/m', 'a b/s/m', 'done', or 'q'.[/yellow]"
+        )
+
+    return modes
+
+
 _COST_COLORS = {
     "free": "bright_green",
     "low": "green",
