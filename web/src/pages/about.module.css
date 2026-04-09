@@ -1,0 +1,17 @@
+.hero {
+  padding: 3rem 0;
+}
+
+.headline {
+  font-family: var(--font-sans);
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  margin-bottom: 1.5rem;
+}
+
+.body {
+  max-width: 700px;
+  line-height: 1.7;
+  font-size: 1rem;
+}
