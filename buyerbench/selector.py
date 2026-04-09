@@ -6,10 +6,18 @@ display_catalog_table(catalog, selected_ids) — render a Rich table
 interactive_select(catalog)                   — main TUI loop
 save_selection(agent_ids, path)               — persist to YAML
 load_selection(path)                          — load from YAML
+
+Session config API
+------------------
+AgentSlot                                     — dataclass: agent_id + skill_mode
+SessionConfig                                 — dataclass: agents + scenario_ids + created_at
+save_session_config(config, path)             — serialize SessionConfig to YAML
+load_session_config(path)                     — deserialize SessionConfig from YAML
 """
 from __future__ import annotations
 
 import sys
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -24,6 +32,79 @@ from rich import box
 from buyerbench.model_catalog import MODEL_CATALOG, ModelEntry, filter_catalog
 
 console = Console()
+
+
+# ── Session Config dataclasses ─────────────────────────────────────────────────
+
+@dataclass
+class AgentSlot:
+    """One agent selected for a benchmark session, with its configured skill mode."""
+    agent_id: str
+    skill_mode: str  # "baseline" | "skills" | "mcp"
+
+
+@dataclass
+class SessionConfig:
+    """Complete pre-run session configuration produced by the TUI."""
+    agents: list[AgentSlot]
+    scenario_ids: list[str]
+    created_at: str
+
+
+def save_session_config(
+    config: SessionConfig,
+    path: str = "session-config.yaml",
+) -> None:
+    """Serialize a SessionConfig to a YAML file.
+
+    The YAML structure uses plain dicts so it remains human-editable:
+
+    .. code-block:: yaml
+
+        agents:
+          - agent_id: openrouter-openai-gpt-4o
+            skill_mode: baseline
+        scenario_ids:
+          - p1-01-supplier-discovery
+        created_at: '2026-04-08T12:00:00+00:00'
+    """
+    payload = {
+        "agents": [
+            {"agent_id": slot.agent_id, "skill_mode": slot.skill_mode}
+            for slot in config.agents
+        ],
+        "scenario_ids": config.scenario_ids,
+        "created_at": config.created_at,
+    }
+    with open(path, "w", encoding="utf-8") as fh:
+        yaml.safe_dump(payload, fh, default_flow_style=False, allow_unicode=True)
+
+
+def load_session_config(path: str = "session-config.yaml") -> SessionConfig:
+    """Deserialize a SessionConfig from a YAML file produced by save_session_config.
+
+    Parameters
+    ----------
+    path:
+        Source file path.
+
+    Returns
+    -------
+    SessionConfig
+        Populated dataclass instance.
+    """
+    with open(path, "r", encoding="utf-8") as fh:
+        data = yaml.safe_load(fh) or {}
+
+    agents = [
+        AgentSlot(agent_id=a["agent_id"], skill_mode=a["skill_mode"])
+        for a in data.get("agents", [])
+    ]
+    return SessionConfig(
+        agents=agents,
+        scenario_ids=data.get("scenario_ids", []),
+        created_at=data.get("created_at", ""),
+    )
 
 _COST_COLORS = {
     "free": "bright_green",
