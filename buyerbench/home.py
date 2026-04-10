@@ -85,20 +85,36 @@ def _show_home() -> None:
 
 
 def _new_session() -> None:
-    from buyerbench.selector import run_session_tui
+    import subprocess
+    import sys
+    from buyerbench.selector import wizard_new_session, _make_session_path
 
-    saved_path = run_session_tui()
+    config = wizard_new_session()
 
-    if saved_path:
+    session_dir = _make_session_path(config.experiment_name, config.created_at)
+    config_path = session_dir / "session-config.yaml"
+
+    if config.recurrence:
         console.print()
-        cmd = f"python -m buyerbench run --from-session {saved_path}"
-        console.print(f"[bold]Ready to run:[/bold] [cyan]{cmd}[/cyan]")
-        launch = Prompt.ask("Launch now?", choices=["y", "n"], default="y")
+        console.print(
+            Panel(
+                f"To activate recurring runs, register this session with the scheduler:\n\n"
+                f"  [bold cyan]claude /schedule[/bold cyan] "
+                f"[cyan]\"BuyerBench: {config.experiment_name}\"[/cyan] \\\\\n"
+                f"    [cyan]--cron \"{config.recurrence}\"[/cyan] \\\\\n"
+                f"    [cyan]--command \"python -m buyerbench run "
+                f"--from-session {config_path}\"[/cyan]",
+                title="[bold yellow]Scheduler Setup[/bold yellow]",
+                border_style="yellow",
+            )
+        )
+    else:
+        console.print()
+        launch = Prompt.ask("Run now?", choices=["y", "n"], default="n")
         if launch == "y":
-            import subprocess
-            import sys
-
-            subprocess.run([sys.executable, "-m", "buyerbench", "run", "--from-session", saved_path])
+            subprocess.run(
+                [sys.executable, "-m", "buyerbench", "run", "--from-session", str(config_path)]
+            )
 
 
 def _rerun_session() -> None:

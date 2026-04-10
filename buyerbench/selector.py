@@ -7,21 +7,24 @@ interactive_select(catalog)                   — main TUI loop (model selection
 interactive_skill_select(agent_ids)           — per-agent skill-mode TUI loop
 interactive_scenario_select(scenarios)        — scenario multi-select TUI loop
 run_session_tui()                             — full three-pane session config TUI
+wizard_new_session()                          — enhanced 6-step researcher wizard
 save_selection(agent_ids, path)               — persist to YAML
 load_selection(path)                          — load from YAML
 
 Session config API
 ------------------
 AgentSlot                                     — dataclass: agent_id + skill_mode
-SessionConfig                                 — dataclass: agents + scenario_ids + created_at
+SessionConfig                                 — dataclass: full session configuration
 save_session_config(config, path)             — serialize SessionConfig to YAML
 load_session_config(path)                     — deserialize SessionConfig from YAML
 """
 from __future__ import annotations
 
+import re
 import sys
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Optional
 
 import yaml
@@ -52,6 +55,11 @@ class SessionConfig:
     agents: list[AgentSlot]
     scenario_ids: list[str]
     created_at: str
+    experiment_name: str = ""
+    research_objective: str = ""
+    research_notes: str = ""
+    recurrence: Optional[str] = None
+    output_dir: str = "results"
 
 
 def save_session_config(
@@ -72,6 +80,11 @@ def save_session_config(
         created_at: '2026-04-08T12:00:00+00:00'
     """
     payload = {
+        "experiment_name": config.experiment_name,
+        "research_objective": config.research_objective,
+        "research_notes": config.research_notes,
+        "recurrence": config.recurrence,
+        "output_dir": config.output_dir,
         "agents": [
             {"agent_id": slot.agent_id, "skill_mode": slot.skill_mode}
             for slot in config.agents
@@ -79,6 +92,7 @@ def save_session_config(
         "scenario_ids": config.scenario_ids,
         "created_at": config.created_at,
     }
+    Path(path).parent.mkdir(parents=True, exist_ok=True)
     with open(path, "w", encoding="utf-8") as fh:
         yaml.safe_dump(payload, fh, default_flow_style=False, allow_unicode=True)
 
@@ -107,6 +121,11 @@ def load_session_config(path: str = "session-config.yaml") -> SessionConfig:
         agents=agents,
         scenario_ids=data.get("scenario_ids", []),
         created_at=data.get("created_at", ""),
+        experiment_name=data.get("experiment_name", ""),
+        research_objective=data.get("research_objective", ""),
+        research_notes=data.get("research_notes", ""),
+        recurrence=data.get("recurrence"),
+        output_dir=data.get("output_dir", "results"),
     )
 
 _SKILL_LABELS = {
@@ -511,6 +530,180 @@ def run_session_tui() -> "SessionConfig":
         )
     )
     console.print()
+
+    return config
+
+
+def _slugify(text: str) -> str:
+    """Convert arbitrary text to a lowercase hyphen-slug (no spaces or special chars)."""
+    text = text.strip().lower()
+    text = re.sub(r"[^a-z0-9\-]", "-", text)
+    text = re.sub(r"-+", "-", text)
+    return text.strip("-") or "session"
+
+
+def _make_session_path(experiment_name: str, created_at: str) -> Path:
+    """Compute the canonical session directory: sessions/<name>-<YYYYMMDD-HHMMSS>."""
+    slug = experiment_name or "session"
+    # created_at is ISO-8601 e.g. "2026-04-09T12:00:00+00:00"
+    ts = created_at[:19].replace("-", "").replace("T", "-").replace(":", "")
+    return Path("sessions") / f"{slug}-{ts}"
+
+
+_RECURRENCE_OPTIONS = [
+    ("One-shot (run once now)", None),
+    ("Daily at 09:00        →  cron: 0 9 * * *", "0 9 * * *"),
+    ("Weekly on Monday      →  cron: 0 9 * * 1", "0 9 * * 1"),
+    ("Custom cron expression", "__custom__"),
+]
+
+
+def wizard_new_session() -> "SessionConfig":
+    """Run the full 6-step researcher wizard for configuring a new BuyerBench session.
+
+    Steps
+    -----
+    1. Experiment Identity  — experiment name (slugified) + research objective
+    2. Model Selection      — call :func:`interactive_select`
+    3. Skill Mode           — call :func:`interactive_skill_select`
+    4. Scenario Scope       — call :func:`interactive_scenario_select`
+    5. Recurrence           — one-shot or cron schedule
+    6. Research Notes       — free-text notes for the academic report generator
+
+    After all steps a confirmation Panel is shown. On confirm the config is saved to
+    ``sessions/<experiment_name>-<timestamp>/session-config.yaml`` and returned.
+
+    Returns
+    -------
+    SessionConfig
+        Fully populated session configuration.
+    """
+    from harness.loader import load_all_scenarios
+
+    console.print()
+    console.print(
+        Panel(
+            "[bold cyan]Enhanced Researcher Wizard — 6 guided steps[/bold cyan]\n"
+            "[dim]Name your experiment, select models & scenarios, set a schedule, "
+            "and annotate hypotheses for the academic report.[/dim]",
+            title="[bold white]BuyerBench — New Session Wizard[/bold white]",
+            border_style="cyan",
+        )
+    )
+    console.print()
+
+    # ── Step 1: Experiment Identity ───────────────────────────────────────────
+    console.rule("[bold cyan][Step 1/6] Experiment Identity[/bold cyan]")
+    console.print()
+    raw_name = Prompt.ask(
+        "[bold]Experiment name[/bold] [dim](e.g. gpt4o-vs-claude-p2)[/dim]",
+        default="my-experiment",
+    )
+    experiment_name = _slugify(raw_name)
+    if experiment_name != raw_name.strip():
+        console.print(f"[dim]Slugified to: [bold]{experiment_name}[/bold][/dim]")
+    research_objective = Prompt.ask(
+        "[bold]Research objective[/bold] [dim](free text, leave blank to skip)[/dim]",
+        default="",
+    )
+
+    # ── Step 2: Model Selection ───────────────────────────────────────────────
+    console.print()
+    console.rule("[bold cyan][Step 2/6] Model Selection[/bold cyan]")
+    console.print()
+    selected_agent_ids = interactive_select()
+
+    # ── Step 3: Skill Mode ────────────────────────────────────────────────────
+    console.print()
+    console.rule("[bold cyan][Step 3/6] Skill Mode[/bold cyan]")
+    console.print()
+    skill_modes = interactive_skill_select(selected_agent_ids)
+
+    # ── Step 4: Scenario Scope ────────────────────────────────────────────────
+    console.print()
+    console.rule("[bold cyan][Step 4/6] Scenario Scope[/bold cyan]")
+    console.print()
+    scenarios = load_all_scenarios("scenarios/")
+    selected_scenario_ids = interactive_scenario_select(scenarios)
+
+    # ── Step 5: Recurrence ────────────────────────────────────────────────────
+    console.print()
+    console.rule("[bold cyan][Step 5/6] Recurrence[/bold cyan]")
+    console.print()
+    for i, (label, _) in enumerate(_RECURRENCE_OPTIONS, start=1):
+        console.print(f"  [dim][{i}][/dim] {label}")
+    console.print()
+    rec_choice = Prompt.ask(
+        "[bold]Schedule[/bold]", choices=["1", "2", "3", "4"], default="1"
+    )
+    if rec_choice == "4":
+        recurrence: Optional[str] = Prompt.ask(
+            "[bold]Enter cron expression[/bold]"
+        ).strip() or None
+    else:
+        recurrence = _RECURRENCE_OPTIONS[int(rec_choice) - 1][1]
+
+    # ── Step 6: Research Notes ────────────────────────────────────────────────
+    console.print()
+    console.rule("[bold cyan][Step 6/6] Research Notes[/bold cyan]")
+    console.print()
+    research_notes = Prompt.ask(
+        "[bold]Notes for academic paper generator[/bold] [dim][leave blank to skip][/dim]",
+        default="",
+    )
+
+    # ── Build config ──────────────────────────────────────────────────────────
+    created_at = datetime.now(timezone.utc).isoformat()
+    agents = [
+        AgentSlot(agent_id=aid, skill_mode=skill_modes[aid])
+        for aid in selected_agent_ids
+    ]
+    config = SessionConfig(
+        agents=agents,
+        scenario_ids=selected_scenario_ids,
+        created_at=created_at,
+        experiment_name=experiment_name,
+        research_objective=research_objective,
+        research_notes=research_notes,
+        recurrence=recurrence,
+    )
+
+    # ── Confirmation summary ──────────────────────────────────────────────────
+    rec_display = recurrence if recurrence else "one-shot"
+    summary_lines = [
+        f"[bold]Experiment:[/bold]  {experiment_name}",
+        f"[bold]Models:[/bold]      {len(agents)} agent(s)",
+        f"[bold]Scenarios:[/bold]   {len(selected_scenario_ids)} selected",
+        f"[bold]Skill modes:[/bold] "
+        + ", ".join(f"{slot.agent_id}={slot.skill_mode}" for slot in agents),
+        f"[bold]Recurrence:[/bold] {rec_display}",
+        f"[bold]Has notes:[/bold]  {'yes' if research_notes else 'no'}",
+    ]
+    if research_objective:
+        summary_lines.insert(1, f"[bold]Objective:[/bold]   {research_objective}")
+
+    console.print()
+    console.print(
+        Panel(
+            "\n".join(summary_lines),
+            title="[bold yellow]Session Summary[/bold yellow]",
+            border_style="yellow",
+        )
+    )
+    console.print()
+
+    confirm = Prompt.ask(
+        "Confirm and save?", choices=["y", "n"], default="n"
+    ).strip().lower()
+    if confirm != "y":
+        console.print("[yellow]Session not saved.[/yellow]")
+        raise SystemExit(0)
+
+    # ── Save ──────────────────────────────────────────────────────────────────
+    session_dir = _make_session_path(experiment_name, created_at)
+    config_path = session_dir / "session-config.yaml"
+    save_session_config(config, str(config_path))
+    console.print(f"\n[bold green]Session saved:[/bold green] [cyan]{config_path}[/cyan]")
 
     return config
 
