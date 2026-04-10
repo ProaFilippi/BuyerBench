@@ -17,8 +17,9 @@
 #   --no-web         Skip starting the Next.js dashboard
 #   --no-tui         Start web only; skip launching TUI
 #   --web-port N     Override Next.js port (default: 3001)
-#   --tui session    Launch `session` TUI (default when no results found)
-#   --tui dashboard  Launch `dashboard` TUI (default when results/ has content)
+#   --tui home       Launch home screen TUI (default — researcher navigates from here)
+#   --tui session    Launch `session` wizard directly
+#   --tui dashboard  Launch `dashboard` TUI directly
 #   --skip-check     Skip pre-flight checks
 #   -h, --help       Show this help
 #
@@ -27,7 +28,7 @@
 #   SKIP_WEB     Set to 1 to skip web dashboard startup
 #   SKIP_TUI     Set to 1 to skip TUI launch
 #   SKIP_CHECK   Set to 1 to skip pre-flight checks
-#   TUI_CMD      Override TUI command: session | dashboard
+#   TUI_CMD      Override TUI command: home (default) | session | dashboard
 # =============================================================================
 
 set -euo pipefail
@@ -52,13 +53,9 @@ WEB_PORT="${WEB_PORT:-3001}"
 WEB_PID=""
 WEB_LOG="${WEB_LOG:-/tmp/buyerbench-web.log}"
 
-# Smart TUI default: dashboard if results/ has content, otherwise session
+# Default TUI: always launch the home screen — researcher navigates to Reports/Sessions from there
 if [[ -z "${TUI_CMD:-}" ]]; then
-  if [[ -d "$ROOT_DIR/results" ]] && compgen -G "$ROOT_DIR/results/*" > /dev/null 2>&1; then
-    TUI_CMD="dashboard"
-  else
-    TUI_CMD="session"
-  fi
+  TUI_CMD="home"
 fi
 
 # Python binary — prefer venv
@@ -201,7 +198,11 @@ echo ""
 echo -e "${BOLD}${GREEN}  BuyerBench services ready:${RESET}"
 [[ "$SKIP_WEB" == "0" ]] && \
   echo -e "  ${GREEN}✓${RESET} Web Dashboard   http://localhost:${WEB_PORT}"
-echo -e "  ${CYAN}ℹ${RESET}  TUI            python3 -m buyerbench ${TUI_CMD}"
+if [[ "$TUI_CMD" == "home" ]]; then
+  echo -e "  ${CYAN}ℹ${RESET}  TUI            python3 -m buyerbench  (home screen)"
+else
+  echo -e "  ${CYAN}ℹ${RESET}  TUI            python3 -m buyerbench ${TUI_CMD}"
+fi
 echo ""
 
 # ─── Foreground TUI ───────────────────────────────────────────────────────────
@@ -209,8 +210,14 @@ if [[ "$SKIP_TUI" == "0" ]]; then
   step "Launching BuyerBench TUI: ${TUI_CMD}"
   echo ""
   cd "$ROOT_DIR"
-  exec "$PYTHON_BIN" -m buyerbench "$TUI_CMD"
+  if [[ "$TUI_CMD" == "home" ]]; then
+    exec "$PYTHON_BIN" -m buyerbench
+  elif [[ "$TUI_CMD" == "dashboard" ]]; then
+    exec "$PYTHON_BIN" -m buyerbench dashboard --results-dir "$ROOT_DIR/results"
+  else
+    exec "$PYTHON_BIN" -m buyerbench "$TUI_CMD"
+  fi
 else
-  ok "Services up. Run: python3 -m buyerbench session"
+  ok "Services up. Run: python3 -m buyerbench"
   [[ -n "$WEB_PID" ]] && wait "$WEB_PID" 2>/dev/null || true
 fi
