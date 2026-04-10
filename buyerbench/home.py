@@ -13,6 +13,7 @@ from rich import box
 console = Console(highlight=False)
 
 _RESULTS_ROOT = Path(__file__).parent.parent / "results"
+_SESSIONS_ROOT = Path(__file__).parent.parent / "sessions"
 
 
 def _count_experiments(results_dir: Path) -> int:
@@ -43,6 +44,31 @@ def _last_run_info(results_dir: Path) -> str | None:
     return f"Last run: {ts}  |  {n} experiment{'s' if n != 1 else ''} on record"
 
 
+def _is_first_launch(results_dir: Path, sessions_dir: Path) -> bool:
+    """Return True when neither a sessions directory nor any result JSON files exist."""
+    no_sessions = not sessions_dir.exists()
+    no_results = not results_dir.exists() or not any(results_dir.rglob("*.json"))
+    return no_sessions and no_results
+
+
+def _show_onboarding() -> None:
+    """Display a first-launch welcome panel and wait for the user to continue."""
+    console.print()
+    console.print(
+        Panel(
+            "[bold cyan]Welcome to BuyerBench![/bold cyan]\n\n"
+            "To get started:\n\n"
+            "  [bold][1][/bold] Run the demo first to verify your setup:\n"
+            "      [cyan]python -m buyerbench demo[/cyan]\n\n"
+            "  [bold][2][/bold] Then create your first research session with "
+            "[bold cyan][1] New Session[/bold cyan]",
+            border_style="cyan",
+            padding=(1, 4),
+        )
+    )
+    Prompt.ask("[dim]Press Enter to continue[/dim]", default="")
+
+
 def home_tui() -> None:
     """Display the BuyerBench home screen and route to sub-TUIs."""
     try:
@@ -53,6 +79,9 @@ def home_tui() -> None:
 
 
 def _show_home() -> None:
+    if _is_first_launch(_RESULTS_ROOT, _SESSIONS_ROOT):
+        _show_onboarding()
+
     console.print()
     console.print(
         Panel(

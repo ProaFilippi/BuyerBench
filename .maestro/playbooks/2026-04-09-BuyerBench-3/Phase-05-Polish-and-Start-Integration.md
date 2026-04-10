@@ -16,7 +16,7 @@ This phase ties the unified TUI together: updates `start.sh` to launch the new h
   - If both `--from-session` and `--research-notes` are provided, merge them (session notes first, then flag notes)
   <!-- Done: added --from-session (click.Path) and --research-notes (str) options to the academic-report command. Notes are collected into notes_parts list (session first, flag second), joined with \n\n, and prepended to resolved_context as "Researcher Notes:\n{combined}\n\n{context}". 4 new tests in TestAcademicReportCLISessionNotes cover all merge cases; all 21 tests pass. -->
 
-- [ ] Add first-launch detection and onboarding to `home_tui()`. On first launch (no `sessions/` directory and no `results/` directory with JSON files), display an onboarding Panel:
+- [x] Add first-launch detection and onboarding to `home_tui()`. On first launch (no `sessions/` directory and no `results/` directory with JSON files), display an onboarding Panel:
   ```
   Welcome to BuyerBench!
 
@@ -29,6 +29,7 @@ This phase ties the unified TUI together: updates `start.sh` to launch the new h
   Press any key to continue...
   ```
   Detect first launch by checking `not Path("sessions").exists() and not any(Path("results").rglob("*.json"))`.
+  <!-- Done: added _SESSIONS_ROOT (absolute path, parallel to _RESULTS_ROOT), _is_first_launch(results_dir, sessions_dir) returning True only when both dirs are absent/empty, and _show_onboarding() which renders the welcome Panel and waits for Enter. _show_home() calls _is_first_launch() at the top and invokes _show_onboarding() before continuing to the normal menu. 10 new tests in tests/test_home.py cover all detection branches and the onboarding call gate; all 72 related tests pass. -->
 
 - [ ] Run the full smoke test sequence to validate the complete researcher experience:
   - `python -m buyerbench` with no results → onboarding panel appears
