@@ -10,10 +10,11 @@ This phase ties the unified TUI together: updates `start.sh` to launch the new h
 - [x] Add a persistent keyboard shortcut help bar to `home_tui()` using a Rich `Table` or styled footer line printed below the menu. The bar should show: `Ctrl+C: quit   /: search sessions   ?: help`. This is cosmetic — `Ctrl+C` is already handled by the `KeyboardInterrupt` guard, and `/` and `?` can simply re-print the menu for now (stubs). Also add a "last run" status line that reads the most recently modified `.json` in `results/` and shows its timestamp: `Last run: 2026-04-08 14:32  |  3 experiments on record`.
   <!-- Done: added _last_run_info() that finds the most-recently-modified .json via max(stat().st_mtime), formats "Last run: YYYY-MM-DD HH:MM  |  N experiments on record". Added Rich Text help bar below the menu table showing Ctrl+C / / ? shortcuts. Extended Prompt.ask choices to include "/" and "?" as stubs that recurse into _show_home(). Replaced the old simple experiment count line with the richer last-run line. -->
 
-- [ ] Thread `research_notes` from `SessionConfig` into the academic report generation pipeline. In `buyerbench/__main__.py`, find the `academic-report` command. Read how it calls the report generator (likely `academic_tables.py` or a subprocess call to Claude CLI). Update it to:
+- [x] Thread `research_notes` from `SessionConfig` into the academic report generation pipeline. In `buyerbench/__main__.py`, find the `academic-report` command. Read how it calls the report generator (likely `academic_tables.py` or a subprocess call to Claude CLI). Update it to:
   - Accept `--research-notes <text>` as an optional CLI flag
   - When `--from-session <path>` is provided, auto-load `research_notes` from the session config and prepend it to the academic paper prompt as "Researcher Notes:" context
   - If both `--from-session` and `--research-notes` are provided, merge them (session notes first, then flag notes)
+  <!-- Done: added --from-session (click.Path) and --research-notes (str) options to the academic-report command. Notes are collected into notes_parts list (session first, flag second), joined with \n\n, and prepended to resolved_context as "Researcher Notes:\n{combined}\n\n{context}". 4 new tests in TestAcademicReportCLISessionNotes cover all merge cases; all 21 tests pass. -->
 
 - [ ] Add first-launch detection and onboarding to `home_tui()`. On first launch (no `sessions/` directory and no `results/` directory with JSON files), display an onboarding Panel:
   ```

@@ -7,8 +7,11 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
+import yaml
+from click.testing import CliRunner
 
 from buyerbench.academic_report import build_academic_prompt, generate_academic_report
+from buyerbench.__main__ import cli
 
 
 # ── Fixtures ──────────────────────────────────────────────────────────────────
@@ -237,3 +240,148 @@ class TestGenerateAcademicReport:
             )
 
         assert result.startswith("ERROR:")
+
+
+# ── CLI academic-report --from-session / --research-notes tests ───────────────
+
+class TestAcademicReportCLISessionNotes:
+    """Tests for --from-session and --research-notes flags on the academic-report command."""
+
+    def _write_results(self, tmp_dir: Path) -> None:
+        for r in SAMPLE_RESULTS:
+            (tmp_dir / f"{r['scenario_id']}.json").write_text(json.dumps(r))
+
+    def _write_bib(self, tmp_dir: Path) -> Path:
+        bib_path = tmp_dir / "references.bib"
+        bib_path.write_text(SAMPLE_BIB)
+        return bib_path
+
+    def _write_session_yaml(self, tmp_dir: Path, research_notes: str) -> Path:
+        session_path = tmp_dir / "session-config.yaml"
+        payload = {
+            "experiment_name": "test-experiment",
+            "research_objective": "test objective",
+            "research_notes": research_notes,
+            "recurrence": None,
+            "output_dir": "results",
+            "agents": [{"agent_id": "mock-agent-v1", "skill_mode": "none"}],
+            "scenario_ids": ["p1-01"],
+            "created_at": "2026-04-09T00:00:00+00:00",
+        }
+        session_path.write_text(yaml.safe_dump(payload))
+        return session_path
+
+    def _mock_proc(self, text: str) -> MagicMock:
+        mock = MagicMock()
+        mock.stdout = text
+        mock.returncode = 0
+        return mock
+
+    def test_from_session_loads_notes_into_context(self, tmp_path):
+        self._write_results(tmp_path)
+        bib_path = self._write_bib(tmp_path)
+        session_path = self._write_session_yaml(tmp_path, "Notes from session YAML.")
+        output_path = tmp_path / "out.md"
+
+        captured_prompt: list[str] = []
+
+        def fake_run(cmd, **kwargs):
+            captured_prompt.append(cmd[2])  # claude --print <prompt>
+            return self._mock_proc("## Abstract\n\nTest paper.")
+
+        with patch("subprocess.run", side_effect=fake_run):
+            runner = CliRunner()
+            result = runner.invoke(cli, [
+                "academic-report",
+                "--results-dir", str(tmp_path),
+                "--from-session", str(session_path),
+                "--output", str(output_path),
+                "--bib-path", str(bib_path),
+            ])
+
+        assert result.exit_code == 0, result.output
+        assert captured_prompt, "subprocess.run was not called"
+        assert "Researcher Notes:" in captured_prompt[0]
+        assert "Notes from session YAML." in captured_prompt[0]
+
+    def test_research_notes_flag_prepended(self, tmp_path):
+        self._write_results(tmp_path)
+        bib_path = self._write_bib(tmp_path)
+        output_path = tmp_path / "out.md"
+
+        captured_prompt: list[str] = []
+
+        def fake_run(cmd, **kwargs):
+            captured_prompt.append(cmd[2])
+            return self._mock_proc("## Abstract\n\nTest paper.")
+
+        with patch("subprocess.run", side_effect=fake_run):
+            runner = CliRunner()
+            result = runner.invoke(cli, [
+                "academic-report",
+                "--results-dir", str(tmp_path),
+                "--research-notes", "Inline flag notes.",
+                "--output", str(output_path),
+                "--bib-path", str(bib_path),
+            ])
+
+        assert result.exit_code == 0, result.output
+        assert "Researcher Notes:" in captured_prompt[0]
+        assert "Inline flag notes." in captured_prompt[0]
+
+    def test_from_session_and_research_notes_merged(self, tmp_path):
+        """Session notes appear first; flag notes appended after."""
+        self._write_results(tmp_path)
+        bib_path = self._write_bib(tmp_path)
+        session_path = self._write_session_yaml(tmp_path, "Session note.")
+        output_path = tmp_path / "out.md"
+
+        captured_prompt: list[str] = []
+
+        def fake_run(cmd, **kwargs):
+            captured_prompt.append(cmd[2])
+            return self._mock_proc("## Abstract\n\nTest paper.")
+
+        with patch("subprocess.run", side_effect=fake_run):
+            runner = CliRunner()
+            result = runner.invoke(cli, [
+                "academic-report",
+                "--results-dir", str(tmp_path),
+                "--from-session", str(session_path),
+                "--research-notes", "Flag note.",
+                "--output", str(output_path),
+                "--bib-path", str(bib_path),
+            ])
+
+        assert result.exit_code == 0, result.output
+        prompt = captured_prompt[0]
+        assert "Researcher Notes:" in prompt
+        session_pos = prompt.index("Session note.")
+        flag_pos = prompt.index("Flag note.")
+        assert session_pos < flag_pos, "Session notes must precede flag notes"
+
+    def test_from_session_with_empty_notes_does_not_prepend(self, tmp_path):
+        """No 'Researcher Notes:' block if session has no notes and no --research-notes flag."""
+        self._write_results(tmp_path)
+        bib_path = self._write_bib(tmp_path)
+        session_path = self._write_session_yaml(tmp_path, "")
+        output_path = tmp_path / "out.md"
+
+        captured_prompt: list[str] = []
+
+        def fake_run(cmd, **kwargs):
+            captured_prompt.append(cmd[2])
+            return self._mock_proc("## Abstract\n\nTest paper.")
+
+        with patch("subprocess.run", side_effect=fake_run):
+            runner = CliRunner()
+            result = runner.invoke(cli, [
+                "academic-report",
+                "--results-dir", str(tmp_path),
+                "--from-session", str(session_path),
+                "--output", str(output_path),
+                "--bib-path", str(bib_path),
+            ])
+
+        assert result.exit_code == 0, result.output
+        assert "Researcher Notes:" not in captured_prompt[0]

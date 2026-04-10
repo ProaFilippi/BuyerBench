@@ -830,6 +830,19 @@ def session(output: str) -> None:
     help="Path to a file whose contents are used as the test context",
 )
 @click.option(
+    "--from-session",
+    "from_session",
+    default=None,
+    type=click.Path(exists=True, readable=True),
+    help="Path to a session-config YAML; auto-loads research_notes as 'Researcher Notes:' context",
+)
+@click.option(
+    "--research-notes",
+    "research_notes",
+    default=None,
+    help="Researcher notes to prepend as context (merged after session notes when --from-session is also given)",
+)
+@click.option(
     "--output",
     default="ACADEMIC-REPORT.md",
     show_default=True,
@@ -851,6 +864,8 @@ def academic_report(
     results_dir: str,
     test_context: str | None,
     test_context_file: str | None,
+    from_session: str | None,
+    research_notes: str | None,
     output: str,
     bib_path: str,
     cli_path: str,
@@ -871,6 +886,19 @@ def academic_report(
             "Evaluation conducted on BuyerBench v1.0. "
             "See session-config.yaml for agent and scenario configuration."
         )
+
+    # ── Researcher notes: load from session YAML and/or inline flag ───────────
+    notes_parts: list[str] = []
+    if from_session:
+        from buyerbench.selector import load_session_config
+        session_cfg = load_session_config(from_session)
+        if session_cfg.research_notes:
+            notes_parts.append(session_cfg.research_notes.strip())
+    if research_notes:
+        notes_parts.append(research_notes.strip())
+    if notes_parts:
+        combined_notes = "\n\n".join(notes_parts)
+        resolved_context = f"Researcher Notes:\n{combined_notes}\n\n{resolved_context}"
 
     console.print("[bold cyan]Generating academic report via Claude CLI...[/bold cyan]")
     console.print("[dim]This may take several minutes — writing a full paper.[/dim]")
