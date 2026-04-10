@@ -17,9 +17,14 @@ def _stdin_is_tty() -> bool:
     return sys.stdin.isatty()
 
 
-@click.group()
-def cli() -> None:
+@click.group(invoke_without_command=True)
+@click.pass_context
+def cli(ctx: click.Context) -> None:
     """BuyerBench — benchmark framework for AI buyer agents."""
+    if ctx.invoked_subcommand is None:
+        from buyerbench.home import home_tui
+
+        home_tui()
 
 
 @cli.command()
@@ -531,7 +536,8 @@ def run(
 @cli.command("dashboard")
 @click.option(
     "--results-dir",
-    required=True,
+    default="results",
+    show_default=True,
     help="Directory containing per-scenario result JSON files",
 )
 def dashboard_cmd(results_dir: str) -> None:
