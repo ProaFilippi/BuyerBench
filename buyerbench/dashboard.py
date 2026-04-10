@@ -128,6 +128,10 @@ class ResultsDashboard:
         for p in pillars:
             render_pillar_breakdown_table(eval_results, p, console)
 
+    def run(self) -> None:
+        """Launch the interactive dashboard loop for this results directory."""
+        run_dashboard(str(self.results_dir))
+
     def render_bias_security(self, console: Console) -> None:
         """Print Pillar 2 bias table followed by a compact Pillar 3 security summary."""
         from results.academic_tables import render_bias_table

@@ -124,11 +124,6 @@ def _rerun_session() -> None:
 
 
 def _reports() -> None:
-    console.print()
-    console.print(
-        "[yellow]Reports browser coming in Phase 04 — launching dashboard for now[/yellow]"
-    )
-    from buyerbench.dashboard import run_dashboard
+    from buyerbench.reports_browser import browse_reports
 
-    results_dir = str(_RESULTS_ROOT)
-    run_dashboard(results_dir)
+    browse_reports()
