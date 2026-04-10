@@ -7,6 +7,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.prompt import Prompt
 from rich.table import Table
+from rich.text import Text
 from rich import box
 
 console = Console(highlight=False)
@@ -29,6 +30,19 @@ def _count_experiments(results_dir: Path) -> int:
     return count
 
 
+def _last_run_info(results_dir: Path) -> str | None:
+    """Return a formatted 'Last run: <timestamp>' string, or None if no results exist."""
+    from datetime import datetime
+
+    json_files = list(results_dir.rglob("*.json")) if results_dir.exists() else []
+    if not json_files:
+        return None
+    latest = max(json_files, key=lambda p: p.stat().st_mtime)
+    ts = datetime.fromtimestamp(latest.stat().st_mtime).strftime("%Y-%m-%d %H:%M")
+    n = len(json_files)
+    return f"Last run: {ts}  |  {n} experiment{'s' if n != 1 else ''} on record"
+
+
 def home_tui() -> None:
     """Display the BuyerBench home screen and route to sub-TUIs."""
     try:
@@ -49,13 +63,10 @@ def _show_home() -> None:
         )
     )
 
-    # Experiment status line
-    if _RESULTS_ROOT.exists():
-        n = _count_experiments(_RESULTS_ROOT)
-        if n:
-            console.print(f"[dim]  {n} experiment{'s' if n != 1 else ''} on record[/dim]")
-        else:
-            console.print("[dim]  No experiments yet[/dim]")
+    # Last-run status line (timestamp + experiment count)
+    last_run = _last_run_info(_RESULTS_ROOT)
+    if last_run:
+        console.print(f"[dim]  {last_run}[/dim]")
     else:
         console.print("[dim]  No experiments yet[/dim]")
 
@@ -72,7 +83,18 @@ def _show_home() -> None:
     menu.add_row("[q]", "Quit", "")
     console.print(menu)
 
-    choice = Prompt.ask("Select", choices=["1", "2", "3", "q"], show_choices=False)
+    # Keyboard shortcut help bar
+    help_bar = Text(justify="left")
+    help_bar.append("  Ctrl+C", style="bold cyan")
+    help_bar.append(": quit   ", style="dim")
+    help_bar.append("/", style="bold cyan")
+    help_bar.append(": search sessions   ", style="dim")
+    help_bar.append("?", style="bold cyan")
+    help_bar.append(": help", style="dim")
+    console.print(help_bar)
+    console.print()
+
+    choice = Prompt.ask("Select", choices=["1", "2", "3", "q", "/", "?"], show_choices=False)
 
     if choice == "1":
         _new_session()
@@ -80,6 +102,9 @@ def _show_home() -> None:
         _rerun_session()
     elif choice == "3":
         _reports()
+    elif choice in ("/", "?"):
+        # Stubs: re-display the home screen (search/help not yet implemented)
+        _show_home()
     else:
         console.print("[dim]Goodbye.[/dim]")
 
