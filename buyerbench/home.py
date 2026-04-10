@@ -118,13 +118,9 @@ def _new_session() -> None:
 
 
 def _rerun_session() -> None:
-    console.print()
-    console.print(
-        "[yellow]Rerun browser coming in Phase 03 — launching session picker for now[/yellow]"
-    )
-    from buyerbench.selector import run_session_tui
+    from buyerbench.session_browser import browse_sessions
 
-    run_session_tui()
+    browse_sessions()
 
 
 def _reports() -> None:

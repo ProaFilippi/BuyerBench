@@ -558,7 +558,7 @@ _RECURRENCE_OPTIONS = [
 ]
 
 
-def wizard_new_session() -> "SessionConfig":
+def wizard_new_session(prefill: "Optional[SessionConfig]" = None) -> "SessionConfig":
     """Run the full 6-step researcher wizard for configuring a new BuyerBench session.
 
     Steps
@@ -572,6 +572,13 @@ def wizard_new_session() -> "SessionConfig":
 
     After all steps a confirmation Panel is shown. On confirm the config is saved to
     ``sessions/<experiment_name>-<timestamp>/session-config.yaml`` and returned.
+
+    Parameters
+    ----------
+    prefill:
+        Optional existing :class:`SessionConfig` to pre-populate wizard defaults.
+        When provided, Step 1 and Step 6 prompts use values from this config as
+        defaults, and Steps 2–4 offer a "keep existing" shortcut.
 
     Returns
     -------
@@ -597,34 +604,74 @@ def wizard_new_session() -> "SessionConfig":
     console.print()
     raw_name = Prompt.ask(
         "[bold]Experiment name[/bold] [dim](e.g. gpt4o-vs-claude-p2)[/dim]",
-        default="my-experiment",
+        default=prefill.experiment_name if prefill else "my-experiment",
     )
     experiment_name = _slugify(raw_name)
     if experiment_name != raw_name.strip():
         console.print(f"[dim]Slugified to: [bold]{experiment_name}[/bold][/dim]")
     research_objective = Prompt.ask(
         "[bold]Research objective[/bold] [dim](free text, leave blank to skip)[/dim]",
-        default="",
+        default=prefill.research_objective if prefill else "",
     )
 
     # ── Step 2: Model Selection ───────────────────────────────────────────────
     console.print()
     console.rule("[bold cyan][Step 2/6] Model Selection[/bold cyan]")
     console.print()
-    selected_agent_ids = interactive_select()
+    if prefill and prefill.agents:
+        console.print(
+            "[dim]Pre-filled from existing session — press Enter to keep, or re-select[/dim]"
+        )
+        keep_models = Prompt.ask(
+            "Keep existing model selections?", choices=["y", "n"], default="y"
+        )
+        if keep_models == "y":
+            selected_agent_ids = [slot.agent_id for slot in prefill.agents]
+        else:
+            selected_agent_ids = interactive_select()
+    else:
+        selected_agent_ids = interactive_select()
 
     # ── Step 3: Skill Mode ────────────────────────────────────────────────────
     console.print()
     console.rule("[bold cyan][Step 3/6] Skill Mode[/bold cyan]")
     console.print()
-    skill_modes = interactive_skill_select(selected_agent_ids)
+    if prefill and prefill.agents:
+        console.print(
+            "[dim]Pre-filled from existing session — press Enter to keep, or re-select[/dim]"
+        )
+        keep_skills = Prompt.ask(
+            "Keep existing skill modes?", choices=["y", "n"], default="y"
+        )
+        if keep_skills == "y":
+            skill_modes = {slot.agent_id: slot.skill_mode for slot in prefill.agents}
+            # Ensure all selected agents have a mode (may differ from prefill if re-selected)
+            for aid in selected_agent_ids:
+                if aid not in skill_modes:
+                    skill_modes[aid] = "baseline"
+        else:
+            skill_modes = interactive_skill_select(selected_agent_ids)
+    else:
+        skill_modes = interactive_skill_select(selected_agent_ids)
 
     # ── Step 4: Scenario Scope ────────────────────────────────────────────────
     console.print()
     console.rule("[bold cyan][Step 4/6] Scenario Scope[/bold cyan]")
     console.print()
     scenarios = load_all_scenarios("scenarios/")
-    selected_scenario_ids = interactive_scenario_select(scenarios)
+    if prefill and prefill.scenario_ids:
+        console.print(
+            "[dim]Pre-filled from existing session — press Enter to keep, or re-select[/dim]"
+        )
+        keep_scenarios = Prompt.ask(
+            "Keep existing scenario selections?", choices=["y", "n"], default="y"
+        )
+        if keep_scenarios == "y":
+            selected_scenario_ids = list(prefill.scenario_ids)
+        else:
+            selected_scenario_ids = interactive_scenario_select(scenarios)
+    else:
+        selected_scenario_ids = interactive_scenario_select(scenarios)
 
     # ── Step 5: Recurrence ────────────────────────────────────────────────────
     console.print()
@@ -649,7 +696,7 @@ def wizard_new_session() -> "SessionConfig":
     console.print()
     research_notes = Prompt.ask(
         "[bold]Notes for academic paper generator[/bold] [dim][leave blank to skip][/dim]",
-        default="",
+        default=prefill.research_notes if prefill else "",
     )
 
     # ── Build config ──────────────────────────────────────────────────────────
