@@ -37,10 +37,11 @@
 
 ### M.2 Statistical Overclaims
 
-- [ ] **CRITIQUE 5 — Current data: N=1 run per cell:**
+- [x] **CRITIQUE 5 — Current data: N=1 run per cell:**
   > "Your session results show N=1 run per (model × scenario) cell. You have exactly one data point per cell. There is no possible inference. You've observed a realization, not a distribution."
   - **Severity:** Critical
   - **Response:** This is the core motivation for UPGRADE-1 (multi-run support). The current data is exploratory only. The paper cannot use current single-run data as evidence. **Do not claim results from current sessions — they are only useful for planning.**
+  - **Implementation:** Added `SAMPLE SIZE LIMITATION` section to `evaluators/pillar2.py` module docstring documenting: (1) why N=1 is uninformative (a biased model with p=0.4 scores BSI=0 60% of the time), (2) three critical implications (BSI=0 ≠ unbiased, BSI=1 ≠ reliably biased, no statistical test is valid), (3) the N=50 inference threshold and N=5 pilot gate, and (4) the safe-by-default protocol (current session data = exploratory only). Added `n_runs_per_cell: int | None = None` parameter to `aggregate_bias_report` and two new fields: `exploratory_only` (True when n_runs_per_cell is None or ≤ 1) and `sample_size_warning` (constant string for JSON/CSV consumers). Added 14 tests in `TestAggregateBiasReportSampleSizeLimitation` covering: field presence in empty and non-empty reports, n_runs_per_cell echoed back, exploratory_only=True for None/0/1, exploratory_only=False for 2/50, warning is non-empty string, warning mentions "exploratory", warning is constant across n_runs values and empty/non-empty inputs. All 81 pillar2 tests pass (2026-04-16).
 
 - [ ] **CRITIQUE 6 — N=10 models is too small for regression:**
   > "You ran a regression with N=10 units (models). That's not a regression — it's a description. Any OLS estimates have enormous uncertainty and no statistical meaning."

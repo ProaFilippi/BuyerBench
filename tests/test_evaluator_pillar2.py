@@ -494,6 +494,105 @@ class TestAggregateBiasReportIncentiveFraming:
         assert empty_report["incentive_framing"] == nonempty_report["incentive_framing"]
 
 
+class TestAggregateBiasReportSampleSizeLimitation:
+    """Tests for sample-size limitation fields (CRITIQUE 5 — N=1 per cell).
+
+    With N=1 run per (model × scenario) cell there is no distribution to
+    characterise — a single BSI value is a realization, not an estimate.
+    ``exploratory_only`` and ``sample_size_warning`` must appear in every
+    report so downstream consumers cannot silently treat single-run data as
+    inference-valid.
+    """
+
+    # ── field presence ────────────────────────────────────────────────────────
+
+    def test_empty_report_contains_exploratory_only(self):
+        """exploratory_only is present even with no pair results."""
+        report = aggregate_bias_report([])
+        assert "exploratory_only" in report
+
+    def test_nonempty_report_contains_exploratory_only(self):
+        """exploratory_only is present in a report with actual BSI data."""
+        pair_results = [
+            {"decision_changed": True, "bias_susceptibility_index": 0.5, "variant_type": "ANCHOR_HIGH"},
+        ]
+        report = aggregate_bias_report(pair_results)
+        assert "exploratory_only" in report
+
+    def test_empty_report_contains_sample_size_warning(self):
+        """sample_size_warning is present even with no pair results."""
+        report = aggregate_bias_report([])
+        assert "sample_size_warning" in report
+
+    def test_nonempty_report_contains_sample_size_warning(self):
+        """sample_size_warning is present in a report with actual BSI data."""
+        pair_results = [
+            {"decision_changed": False, "bias_susceptibility_index": 0.0, "variant_type": "FRAMING_GAIN"},
+        ]
+        report = aggregate_bias_report(pair_results)
+        assert "sample_size_warning" in report
+
+    def test_report_contains_n_runs_per_cell(self):
+        """n_runs_per_cell is echoed back in the report."""
+        report = aggregate_bias_report([], n_runs_per_cell=5)
+        assert "n_runs_per_cell" in report
+        assert report["n_runs_per_cell"] == 5
+
+    # ── exploratory_only logic ────────────────────────────────────────────────
+
+    def test_exploratory_only_true_when_n_runs_none(self):
+        """Default (n_runs_per_cell=None) → exploratory_only True."""
+        report = aggregate_bias_report([])
+        assert report["exploratory_only"] is True
+
+    def test_exploratory_only_true_when_n_runs_1(self):
+        """N=1 → exploratory_only True."""
+        report = aggregate_bias_report([], n_runs_per_cell=1)
+        assert report["exploratory_only"] is True
+
+    def test_exploratory_only_false_when_n_runs_2(self):
+        """N=2 is the minimum to exit exploratory mode."""
+        report = aggregate_bias_report([], n_runs_per_cell=2)
+        assert report["exploratory_only"] is False
+
+    def test_exploratory_only_false_when_n_runs_50(self):
+        """N=50 (inference threshold) → exploratory_only False."""
+        report = aggregate_bias_report([], n_runs_per_cell=50)
+        assert report["exploratory_only"] is False
+
+    def test_exploratory_only_true_when_n_runs_0(self):
+        """N=0 (nonsensical but safe fallback) → exploratory_only True."""
+        report = aggregate_bias_report([], n_runs_per_cell=0)
+        assert report["exploratory_only"] is True
+
+    # ── sample_size_warning content ───────────────────────────────────────────
+
+    def test_sample_size_warning_is_nonempty_string(self):
+        """sample_size_warning must be a non-empty string."""
+        report = aggregate_bias_report([])
+        assert isinstance(report["sample_size_warning"], str)
+        assert len(report["sample_size_warning"]) > 0
+
+    def test_sample_size_warning_mentions_exploratory(self):
+        """Warning must explicitly reference exploratory status."""
+        report = aggregate_bias_report([])
+        assert "exploratory" in report["sample_size_warning"].lower()
+
+    def test_sample_size_warning_consistent_across_n_runs(self):
+        """sample_size_warning text is constant regardless of n_runs_per_cell."""
+        r1 = aggregate_bias_report([], n_runs_per_cell=1)
+        r50 = aggregate_bias_report([], n_runs_per_cell=50)
+        assert r1["sample_size_warning"] == r50["sample_size_warning"]
+
+    def test_sample_size_warning_consistent_empty_and_nonempty(self):
+        """sample_size_warning text is constant regardless of pair_results size."""
+        empty = aggregate_bias_report([])
+        nonempty = aggregate_bias_report([
+            {"decision_changed": True, "bias_susceptibility_index": 0.8, "variant_type": "DECOY"},
+        ])
+        assert empty["sample_size_warning"] == nonempty["sample_size_warning"]
+
+
 class TestDefaultStatusQuoBias:
     """Tests for p2-06 default/status-quo bias scenario pair.
 

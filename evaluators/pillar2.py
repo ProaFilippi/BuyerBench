@@ -111,6 +111,37 @@ Claims MUST NOT be stated as:
 The ``incentive_framing`` field in ``aggregate_bias_report`` output is a
 machine-readable anchor for this limitation so that all downstream JSON/CSV
 consumers carry this framing alongside the BSI values.
+
+SAMPLE SIZE LIMITATION
+----------------------
+With N=1 run per (model × scenario) cell, BSI values are single-realization
+observations, not distributions.  A model that exhibits a bias with probability
+p=0.4 will score BSI=0 roughly 60% of the time from a single run — making
+single-run data entirely uninformative about true bias rates.
+
+Critical implications:
+  * Single-run BSI == 0 does NOT mean the model is unbiased.
+  * Single-run BSI == 1 does NOT mean the model is reliably biased.
+  * No statistical test (t-test, BH correction, mixed-effects model) is valid
+    on N=1 per cell data.  A "significant" result from a single run is
+    meaningless.
+
+The mandatory minimum is **N=50 independent runs per (model × scenario)
+cell** before any inferential claim.  N=5 is adequate for pilot feasibility
+checks (Gate 1) but not for paper evidence.
+
+Use protocol:
+  * Current single-run session data is EXPLORATORY ONLY — use it to verify
+    infrastructure, check schema correctness, and estimate costs.
+  * Do not report single-run BSI values as evidence in the paper.
+  * Gate 1 (pilot at N=5): verify error rate < 5% and at least 2/10 models
+    show mean_BSI > 0.05 on at least 1 bias type.
+
+The ``exploratory_only`` field in ``aggregate_bias_report`` is True whenever
+``n_runs_per_cell`` is None or ≤ 1, providing a machine-readable flag that
+downstream consumers can check before treating BSI values as inference-valid.
+The ``sample_size_warning`` field carries the limitation text for JSON/CSV
+consumers that log metadata alongside results.
 """
 from __future__ import annotations
 
@@ -326,7 +357,10 @@ def compute_warp_transitivity(
     }
 
 
-def aggregate_bias_report(pair_results: list[dict]) -> dict:
+def aggregate_bias_report(
+    pair_results: list[dict],
+    n_runs_per_cell: int | None = None,
+) -> dict:
     """Summarize BSI across all variant pairs.
 
     Returns per-variant-type mean BSI, overall mean BSI, and count of
@@ -340,10 +374,31 @@ def aggregate_bias_report(pair_results: list[dict]) -> dict:
     The ``incentive_framing`` field is a machine-readable anchor for the
     no-incentives limitation (CRITIQUE 4): results characterize behavioral
     consistency in hypothetical-choice tasks, not incentivized decision-making.
+
+    The ``exploratory_only`` field is True when ``n_runs_per_cell`` is None
+    or ≤ 1 (CRITIQUE 5): single-run BSI values are individual realizations,
+    not distributions, and no statistical inference is valid on them.  Pass
+    the actual run count per cell so downstream consumers can gate on this flag
+    before treating BSI values as inference-valid.
+
+    The ``sample_size_warning`` field carries the same limitation as a
+    human-readable string for JSON/CSV logging alongside BSI values.
+
+    Args:
+        pair_results: list of dicts from ``compute_bias_susceptibility``.
+        n_runs_per_cell: number of independent runs per (model × scenario)
+            cell.  None or ≤ 1 triggers ``exploratory_only=True``.
+            N ≥ 50 is required for inferential claims; N ≥ 5 for pilot gates.
     """
     _INCENTIVE_FRAMING = (
         "hypothetical-choice consistency; no monetary payoffs (cf. Camerer & Hogarth 1999)"
     )
+    _SAMPLE_SIZE_WARNING = (
+        "N=1 per cell: single-realization data; exploratory only — "
+        "N≥50 required for inference (N≥5 for pilot gates)"
+    )
+
+    exploratory_only = n_runs_per_cell is None or n_runs_per_cell <= 1
 
     if not pair_results:
         return {
@@ -353,6 +408,9 @@ def aggregate_bias_report(pair_results: list[dict]) -> dict:
             "per_variant_type": {},
             "domain_scope": "LLM-based procurement decision-making",
             "incentive_framing": _INCENTIVE_FRAMING,
+            "n_runs_per_cell": n_runs_per_cell,
+            "exploratory_only": exploratory_only,
+            "sample_size_warning": _SAMPLE_SIZE_WARNING,
         }
 
     by_type: dict[str, list[float]] = {}
@@ -381,6 +439,9 @@ def aggregate_bias_report(pair_results: list[dict]) -> dict:
         "per_variant_type": per_type_summary,
         "domain_scope": "LLM-based procurement decision-making",
         "incentive_framing": _INCENTIVE_FRAMING,
+        "n_runs_per_cell": n_runs_per_cell,
+        "exploratory_only": exploratory_only,
+        "sample_size_warning": _SAMPLE_SIZE_WARNING,
     }
 
 
