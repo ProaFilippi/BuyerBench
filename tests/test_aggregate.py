@@ -149,3 +149,158 @@ class TestRunEvaluation:
         response = mock_agent.respond(scenario)
         result = run_evaluation(scenario, response)
         assert result.pillar_scores[0].score >= 0.95
+
+
+# ---------------------------------------------------------------------------
+# UPGRADE-4: metadata propagation tests
+# ---------------------------------------------------------------------------
+
+class TestRunMetadataPropagation:
+    """Tests that UPGRADE-4 metadata fields are correctly propagated through the pipeline."""
+
+    def _make_pillar2_scenario(self, all_scenarios):
+        return next(s for s in all_scenarios if s.pillar == Pillar.PILLAR2)
+
+    def test_variant_set_on_result(self, all_scenarios, mock_agent):
+        """variant field on EvaluationResult must reflect the scenario's ScenarioVariant."""
+        scenario = all_scenarios[0]
+        response = mock_agent.respond(scenario)
+        result = run_evaluation(scenario, response)
+        assert result.variant == scenario.variant.value
+
+    def test_bias_category_inferred_for_pillar2(self, all_scenarios, mock_agent):
+        """bias_category must be derived from variant_pair_id for Pillar 2 scenarios."""
+        scenario = self._make_pillar2_scenario(all_scenarios)
+        response = mock_agent.respond(scenario)
+        result = run_evaluation(scenario, response)
+        if result.variant_pair_id:
+            assert result.bias_category is not None
+            # e.g. "p2-01-anchoring" → "anchoring"; "p2-05-sunk-cost" → "sunk_cost"
+            assert "_" not in result.bias_category or result.bias_category.replace("_", "-") in (result.variant_pair_id or "")
+
+    def test_bias_category_none_without_variant_pair_id(self, all_scenarios, mock_agent):
+        """bias_category must be None for scenarios without a variant_pair_id."""
+        scenario = next(s for s in all_scenarios if not s.variant_pair_id)
+        response = mock_agent.respond(scenario)
+        result = run_evaluation(scenario, response)
+        assert result.bias_category is None
+
+    def test_metadata_defaults_for_mock_agent(self, all_scenarios, mock_agent):
+        """MockAgent returns no API metadata; fields must use safe defaults."""
+        scenario = all_scenarios[0]
+        response = mock_agent.respond(scenario)
+        result = run_evaluation(scenario, response)
+        assert result.temperature is None
+        assert result.token_count_input == 0
+        assert result.token_count_output == 0
+        assert result.api_cost_usd is None
+        assert result.error_flag is False
+        assert result.model_version is None
+
+    def test_temperature_propagated_from_response(self, all_scenarios):
+        """temperature on AgentResponse must be propagated to EvaluationResult."""
+        from buyerbench.models import AgentResponse, Pillar, Scenario, ScenarioVariant
+
+        scenario = all_scenarios[0]
+        response = AgentResponse(
+            scenario_id=scenario.id,
+            agent_id="test-agent",
+            decisions=scenario.expected_optimal,
+            raw_output="",
+            temperature=0.7,
+        )
+        result = run_evaluation(scenario, response)
+        assert result.temperature == 0.7
+
+    def test_error_fields_propagated_from_response(self, all_scenarios):
+        """error_flag and error_message must propagate from AgentResponse."""
+        from buyerbench.models import AgentResponse
+
+        scenario = all_scenarios[0]
+        response = AgentResponse(
+            scenario_id=scenario.id,
+            agent_id="test-agent",
+            decisions={},
+            raw_output="API error: 500",
+            error_flag=True,
+            error_message="Internal Server Error",
+        )
+        result = run_evaluation(scenario, response)
+        assert result.error_flag is True
+        assert result.error_message == "Internal Server Error"
+
+    def test_latency_ms_propagated_from_response(self, all_scenarios, mock_agent):
+        """latency_ms must propagate from AgentResponse to EvaluationResult."""
+        from buyerbench.models import AgentResponse
+
+        scenario = all_scenarios[0]
+        response = AgentResponse(
+            scenario_id=scenario.id,
+            agent_id="test-agent",
+            decisions=scenario.expected_optimal,
+            raw_output="",
+            latency_ms=250.5,
+        )
+        result = run_evaluation(scenario, response)
+        assert result.latency_ms == 250.5
+
+    def test_run_id_computed_in_run_scenario(self, all_scenarios, mock_agent, tmp_path):
+        """run_id must be a 16-character hex string computed in run_scenario()."""
+        from harness.runner import run_scenario
+
+        scenario = all_scenarios[0]
+        result = run_scenario(scenario, mock_agent, output_dir=tmp_path)
+        assert len(result.run_id) == 16
+        assert all(c in "0123456789abcdef" for c in result.run_id)
+
+    def test_run_id_deterministic_given_same_inputs(self, all_scenarios, mock_agent, tmp_path):
+        """Same (agent_id, scenario_id, variant, run_index, seed) must produce same run_id."""
+        from harness.runner import run_scenario
+
+        scenario = all_scenarios[0]
+        seed = 42
+        result1 = run_scenario(scenario, mock_agent, output_dir=tmp_path, run_index=0, supplier_order_seed=seed)
+        result2 = run_scenario(scenario, mock_agent, output_dir=tmp_path, run_index=0, supplier_order_seed=seed)
+        assert result1.run_id == result2.run_id
+
+    def test_run_id_differs_for_different_run_index(self, all_scenarios, mock_agent, tmp_path):
+        """Different run_index must produce different run_id even with same seed."""
+        from harness.runner import run_scenario
+
+        scenario = all_scenarios[0]
+        seed = 99
+        result0 = run_scenario(scenario, mock_agent, output_dir=tmp_path, run_index=0, supplier_order_seed=seed)
+        result1 = run_scenario(scenario, mock_agent, output_dir=tmp_path, run_index=1, supplier_order_seed=seed)
+        assert result0.run_id != result1.run_id
+
+
+class TestInferBiasCategory:
+    """Unit tests for the _infer_bias_category helper."""
+
+    def test_anchoring(self):
+        from evaluators.aggregate import _infer_bias_category
+        assert _infer_bias_category("p2-01-anchoring") == "anchoring"
+
+    def test_framing(self):
+        from evaluators.aggregate import _infer_bias_category
+        assert _infer_bias_category("p2-02-framing") == "framing"
+
+    def test_sunk_cost_dash_to_underscore(self):
+        from evaluators.aggregate import _infer_bias_category
+        assert _infer_bias_category("p2-05-sunk-cost") == "sunk_cost"
+
+    def test_none_input(self):
+        from evaluators.aggregate import _infer_bias_category
+        assert _infer_bias_category(None) is None
+
+    def test_short_id_returns_none(self):
+        from evaluators.aggregate import _infer_bias_category
+        assert _infer_bias_category("p2-01") is None
+
+    def test_decoy(self):
+        from evaluators.aggregate import _infer_bias_category
+        assert _infer_bias_category("p2-03-decoy") == "decoy"
+
+    def test_scarcity(self):
+        from evaluators.aggregate import _infer_bias_category
+        assert _infer_bias_category("p2-04-scarcity") == "scarcity"

@@ -16,6 +16,7 @@ Usage::
 """
 from __future__ import annotations
 
+import json
 import os
 import time
 from typing import Any
@@ -75,6 +76,8 @@ class OpenRouterAgent(BaseAgent):
                 decisions={},
                 raw_output="[dry-run]",
                 latency_ms=0.0,
+                temperature=self.temperature,
+                prompt_text=prompt,
             )
 
         return self._call_openrouter(prompt, scenario)
@@ -128,14 +131,27 @@ class OpenRouterAgent(BaseAgent):
                 decisions={},
                 raw_output=str(exc),
                 latency_ms=elapsed_ms,
+                temperature=self.temperature,
+                prompt_text=prompt,
+                error_flag=True,
+                error_message=str(exc),
             )
 
         elapsed_ms = (time.monotonic() - start) * 1000
         parsed = parse_agent_output(content, scenario)
+
+        usage = data.get("usage") or {}
         return AgentResponse(
             scenario_id=scenario.id,
             agent_id=self.agent_id,
             decisions=parsed,
             raw_output=content,
             latency_ms=elapsed_ms,
+            temperature=self.temperature,
+            prompt_text=prompt,
+            model_version=data.get("model"),
+            token_count_input=usage.get("prompt_tokens", 0) or 0,
+            token_count_output=usage.get("completion_tokens", 0) or 0,
+            api_cost_usd=usage.get("cost"),
+            api_response_raw=json.dumps(data),
         )

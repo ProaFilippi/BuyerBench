@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import random
 from pathlib import Path
@@ -44,6 +45,11 @@ def run_scenario(
     result = run_evaluation(scenario, response)
     result.run_index = run_index
     result.supplier_order_seed = seed
+
+    # Compute content-addressable run_id once all key dimensions are known.
+    result.run_id = hashlib.sha256(
+        f"{result.agent_id}|{result.scenario_id}|{result.variant or ''}|{run_index}|{seed}".encode()
+    ).hexdigest()[:16]
 
     base = Path(output_dir) if output_dir else Path("results")
     dest_dir = base / response.agent_id

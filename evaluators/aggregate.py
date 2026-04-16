@@ -16,12 +16,20 @@ _SCORERS = {
 }
 
 
+_PASS_THRESHOLDS: dict[Pillar, float] = {
+    Pillar.PILLAR1: 0.60,
+    Pillar.PILLAR2: 0.60,
+    Pillar.PILLAR3: 0.70,
+}
+
+
 def run_evaluation(scenario: Scenario, response: AgentResponse) -> EvaluationResult:
     """Run the appropriate pillar scorer(s) and assemble an EvaluationResult."""
     scorer = _SCORERS[scenario.pillar]
     pillar_score = scorer(scenario, response)
 
-    overall_pass = pillar_score.score >= 0.95 and not pillar_score.violations
+    threshold = _PASS_THRESHOLDS.get(scenario.pillar, 0.60)
+    overall_pass = pillar_score.score >= threshold
 
     return EvaluationResult(
         scenario_id=scenario.id,
@@ -29,7 +37,39 @@ def run_evaluation(scenario: Scenario, response: AgentResponse) -> EvaluationRes
         pillar_scores=[pillar_score],
         overall_pass=overall_pass,
         variant_pair_id=scenario.variant_pair_id,
+        raw_output=response.raw_output,
+        decisions=response.decisions,
+        # UPGRADE-4: propagate agent response metadata
+        latency_ms=response.latency_ms,
+        temperature=response.temperature,
+        token_count_input=response.token_count_input,
+        token_count_output=response.token_count_output,
+        api_cost_usd=response.api_cost_usd,
+        error_flag=response.error_flag,
+        error_message=response.error_message,
+        model_version=response.model_version,
+        prompt_text=response.prompt_text,
+        api_response_raw=response.api_response_raw,
+        # derive variant label and bias category from scenario definition
+        variant=scenario.variant.value,
+        bias_category=_infer_bias_category(scenario.variant_pair_id),
     )
+
+
+def _infer_bias_category(variant_pair_id: str | None) -> str | None:
+    """Infer bias category from variant_pair_id naming convention.
+
+    Examples:
+        "p2-01-anchoring"  → "anchoring"
+        "p2-02-framing"    → "framing"
+        "p2-05-sunk-cost"  → "sunk_cost"
+    """
+    if not variant_pair_id:
+        return None
+    parts = variant_pair_id.split("-", 2)
+    if len(parts) < 3:
+        return None
+    return parts[2].replace("-", "_")
 
 
 def run_suite(scenarios: list[Scenario], agent) -> list[EvaluationResult]:

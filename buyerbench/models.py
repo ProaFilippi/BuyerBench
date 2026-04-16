@@ -56,6 +56,16 @@ class AgentResponse(BaseModel):
     tool_calls: list[dict[str, Any]] = Field(default_factory=list)
     raw_output: str = ""
     latency_ms: float = 0.0
+    # UPGRADE-4: run metadata fields captured from agent API calls
+    temperature: float | None = None
+    token_count_input: int = 0
+    token_count_output: int = 0
+    api_cost_usd: float | None = None
+    error_flag: bool = False
+    error_message: str | None = None
+    model_version: str | None = None
+    prompt_text: str = ""
+    api_response_raw: str = ""
 
 
 class PillarScore(BaseModel):
@@ -77,3 +87,17 @@ class EvaluationResult(BaseModel):
     decisions: dict[str, Any] = Field(default_factory=dict)
     run_index: int = 0
     supplier_order_seed: int | None = None
+    # UPGRADE-4: run metadata fields propagated from AgentResponse
+    latency_ms: float = 0.0
+    temperature: float | None = None
+    token_count_input: int = 0
+    token_count_output: int = 0
+    api_cost_usd: float | None = None
+    error_flag: bool = False
+    error_message: str | None = None
+    model_version: str | None = None
+    variant: str | None = None
+    bias_category: str | None = None
+    prompt_text: str = ""
+    api_response_raw: str = ""
+    run_id: str = ""

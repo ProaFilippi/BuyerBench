@@ -332,3 +332,174 @@ class TestTemperatureSupport:
         )
         assert isinstance(agent, OpenRouterAgent)
         assert agent.temperature == 1.0
+
+
+# ---------------------------------------------------------------------------
+# UPGRADE-4: Run metadata capture tests
+# ---------------------------------------------------------------------------
+
+class TestRunMetadataCapture:
+    """Tests that OpenRouterAgent captures API response metadata into AgentResponse."""
+
+    def _make_mock_response(self, content: str, usage: dict | None = None, model: str | None = None) -> MagicMock:
+        mock_resp = MagicMock()
+        mock_resp.raise_for_status = MagicMock()
+        data = {"choices": [{"message": {"content": content}}]}
+        if usage is not None:
+            data["usage"] = usage
+        if model is not None:
+            data["model"] = model
+        mock_resp.json.return_value = data
+        return mock_resp
+
+    def test_token_counts_captured_from_api_usage(self, monkeypatch):
+        """token_count_input and token_count_output must be populated from API usage object."""
+        monkeypatch.setenv("OPENROUTER_API_KEY", "test-key")
+        agent = OpenRouterAgent("openai/gpt-4o")
+        scenario = _make_scenario()
+
+        content = json.dumps({"selected_supplier": "SupplierA", "unit_price": 90.0})
+        mock_resp = self._make_mock_response(
+            f"```json\n{content}\n```",
+            usage={"prompt_tokens": 350, "completion_tokens": 85, "total_tokens": 435},
+        )
+
+        with patch("requests.post", return_value=mock_resp):
+            response = agent.respond(scenario)
+            assert response.token_count_input == 350
+            assert response.token_count_output == 85
+
+    def test_model_version_captured_from_api_response(self, monkeypatch):
+        """model_version must be set to the resolved model string from the API response."""
+        monkeypatch.setenv("OPENROUTER_API_KEY", "test-key")
+        agent = OpenRouterAgent("openai/gpt-4o")
+        scenario = _make_scenario()
+
+        content = json.dumps({"selected_supplier": "SupplierA", "unit_price": 90.0})
+        mock_resp = self._make_mock_response(
+            f"```json\n{content}\n```",
+            model="openai/gpt-4o-2024-11-20",  # resolved version may differ from requested
+        )
+
+        with patch("requests.post", return_value=mock_resp):
+            response = agent.respond(scenario)
+            assert response.model_version == "openai/gpt-4o-2024-11-20"
+
+    def test_api_response_raw_is_json_string(self, monkeypatch):
+        """api_response_raw must be a non-empty JSON string of the full API response."""
+        monkeypatch.setenv("OPENROUTER_API_KEY", "test-key")
+        agent = OpenRouterAgent("openai/gpt-4o")
+        scenario = _make_scenario()
+
+        content = json.dumps({"selected_supplier": "SupplierA", "unit_price": 90.0})
+        mock_resp = self._make_mock_response(
+            f"```json\n{content}\n```",
+            usage={"prompt_tokens": 100, "completion_tokens": 50},
+        )
+
+        with patch("requests.post", return_value=mock_resp):
+            response = agent.respond(scenario)
+            assert response.api_response_raw != ""
+            parsed = json.loads(response.api_response_raw)
+            assert "choices" in parsed
+            assert "usage" in parsed
+
+    def test_prompt_text_set_on_successful_response(self, monkeypatch):
+        """prompt_text must be populated with the rendered prompt on success."""
+        monkeypatch.setenv("OPENROUTER_API_KEY", "test-key")
+        agent = OpenRouterAgent("openai/gpt-4o")
+        scenario = _make_scenario()
+
+        content = json.dumps({"selected_supplier": "SupplierA", "unit_price": 90.0})
+        mock_resp = self._make_mock_response(f"```json\n{content}\n```")
+
+        with patch("requests.post", return_value=mock_resp):
+            response = agent.respond(scenario)
+            assert response.prompt_text != ""
+            assert "SupplierA" in response.prompt_text or "supplier" in response.prompt_text.lower()
+
+    def test_prompt_text_set_on_error_response(self, monkeypatch):
+        """prompt_text must be populated even when the API call fails."""
+        monkeypatch.setenv("OPENROUTER_API_KEY", "test-key")
+        agent = OpenRouterAgent("openai/gpt-4o")
+        scenario = _make_scenario()
+
+        with patch("requests.post", side_effect=Exception("network error")):
+            response = agent.respond(scenario)
+            assert response.prompt_text != ""
+
+    def test_error_flag_set_on_http_failure(self, monkeypatch):
+        """error_flag must be True and error_message populated on API failure."""
+        monkeypatch.setenv("OPENROUTER_API_KEY", "test-key")
+        agent = OpenRouterAgent("openai/gpt-4o")
+        scenario = _make_scenario()
+
+        with patch("requests.post", side_effect=Exception("timeout")):
+            response = agent.respond(scenario)
+            assert response.error_flag is True
+            assert response.error_message == "timeout"
+
+    def test_error_flag_false_on_success(self, monkeypatch):
+        """error_flag must be False on a successful API call."""
+        monkeypatch.setenv("OPENROUTER_API_KEY", "test-key")
+        agent = OpenRouterAgent("openai/gpt-4o")
+        scenario = _make_scenario()
+
+        content = json.dumps({"selected_supplier": "SupplierA", "unit_price": 90.0})
+        mock_resp = self._make_mock_response(f"```json\n{content}\n```")
+
+        with patch("requests.post", return_value=mock_resp):
+            response = agent.respond(scenario)
+            assert response.error_flag is False
+            assert response.error_message is None
+
+    def test_temperature_propagated_to_response(self, monkeypatch):
+        """temperature attribute of agent must appear on AgentResponse."""
+        monkeypatch.setenv("OPENROUTER_API_KEY", "test-key")
+        agent = OpenRouterAgent("openai/gpt-4o", temperature=0.7)
+        scenario = _make_scenario()
+
+        content = json.dumps({"selected_supplier": "SupplierA", "unit_price": 90.0})
+        mock_resp = self._make_mock_response(f"```json\n{content}\n```")
+
+        with patch("requests.post", return_value=mock_resp):
+            response = agent.respond(scenario)
+            assert response.temperature == 0.7
+
+    def test_api_cost_captured_from_usage(self, monkeypatch):
+        """api_cost_usd must be populated when OpenRouter returns a cost field."""
+        monkeypatch.setenv("OPENROUTER_API_KEY", "test-key")
+        agent = OpenRouterAgent("openai/gpt-4o")
+        scenario = _make_scenario()
+
+        content = json.dumps({"selected_supplier": "SupplierA", "unit_price": 90.0})
+        mock_resp = self._make_mock_response(
+            f"```json\n{content}\n```",
+            usage={"prompt_tokens": 100, "completion_tokens": 50, "cost": 0.00125},
+        )
+
+        with patch("requests.post", return_value=mock_resp):
+            response = agent.respond(scenario)
+            assert response.api_cost_usd == pytest.approx(0.00125)
+
+    def test_token_counts_default_to_zero_when_usage_absent(self, monkeypatch):
+        """When API response lacks a usage object, token counts must default to 0."""
+        monkeypatch.setenv("OPENROUTER_API_KEY", "test-key")
+        agent = OpenRouterAgent("openai/gpt-4o")
+        scenario = _make_scenario()
+
+        content = json.dumps({"selected_supplier": "SupplierA", "unit_price": 90.0})
+        mock_resp = self._make_mock_response(f"```json\n{content}\n```")  # no usage kwarg
+
+        with patch("requests.post", return_value=mock_resp):
+            response = agent.respond(scenario)
+            assert response.token_count_input == 0
+            assert response.token_count_output == 0
+
+    def test_dry_run_sets_prompt_text_and_temperature(self):
+        """Dry-run response must include prompt_text and temperature."""
+        agent = OpenRouterAgent("openai/gpt-4o", dry_run=True, temperature=0.3)
+        scenario = _make_scenario()
+        response = agent.respond(scenario)
+        assert response.prompt_text != ""
+        assert response.temperature == 0.3
