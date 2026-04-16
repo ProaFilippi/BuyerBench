@@ -303,10 +303,16 @@ def generate_full_report(experiment_dir: str) -> dict:
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "experiment_dir": str(exp_dir),
         # REV-1: explicit rationality-scope statement in every results section.
+        # REV-3: single-run data must be labeled EXPLORATORY ONLY.
         "methodology_notes": {
             "pillar2_rationality_scope": (
                 "Optimality is defined relative to the scenario's stated evaluation weights. "
                 "We test internal rationality, not external optimality."
+            ),
+            "exploratory_only_label": (
+                "Current data is based on single-run sessions (N=1 per cell). "
+                "This data is EXPLORATORY ONLY and must not be used as evidence in published work. "
+                "N\u226550 runs per cell are required before any statistical claims can be made."
             ),
         },
         "per_pillar_aggregate": per_pillar_aggregate,
@@ -333,11 +339,20 @@ def render_full_report_markdown(report: dict) -> str:
         "We test *internal* rationality, not external optimality."
     )
 
+    _EXPLORATORY_WARN = (
+        "> **⚠ REV-3 — EXPLORATORY DATA WARNING:** "
+        "Current data is based on single-run sessions (N=1 per cell). "
+        "This data is **EXPLORATORY ONLY** and must not be used as evidence in published work. "
+        "N≥50 runs per cell are required before any statistical claims can be made."
+    )
+
     lines = [
         "# BuyerBench Full Experiment Report",
         "",
         f"**Generated:** {report.get('generated_at', 'N/A')}  ",
         f"**Experiment dir:** `{report.get('experiment_dir', 'N/A')}`",
+        "",
+        _EXPLORATORY_WARN,
         "",
     ]
 
@@ -378,6 +393,8 @@ def render_full_report_markdown(report: dict) -> str:
         "## 3. Bias Susceptibility",
         "",
         _P2_SCOPE,
+        "",
+        _EXPLORATORY_WARN,
         "",
         "| Bias Type | Agent | Mode | BSI | Decision Changed |",
         "|-----------|-------|------|-----|-----------------|",

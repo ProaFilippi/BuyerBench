@@ -80,3 +80,9 @@ class SummaryReport(BaseModel):
         "Optimality is defined relative to the scenario's stated evaluation weights. "
         "We test internal rationality, not external optimality."
     )
+    # REV-3: single-run data is EXPLORATORY ONLY — N≥50 required before any claims.
+    exploratory_only_label: str = (
+        "Current data is based on single-run sessions (N=1 per cell). "
+        "This data is EXPLORATORY ONLY and must not be used as evidence in published work. "
+        "N\u226550 runs per cell are required before any statistical claims can be made."
+    )

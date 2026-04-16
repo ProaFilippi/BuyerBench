@@ -413,3 +413,86 @@ class TestMethodologyNotes:
         sr = SummaryReport(agent_id="test-agent", total_scenarios=5, overall_pass_rate=0.8)
         data = sr.model_dump()
         assert "evaluation weights" in data["pillar2_rationality_scope"]
+
+
+# ---------------------------------------------------------------------------
+# REV-3: exploratory_only_label — single-run data must be labeled EXPLORATORY ONLY
+# ---------------------------------------------------------------------------
+
+
+class TestExploratoryOnlyLabel:
+    """REV-3: Current single-run data is EXPLORATORY ONLY. Label clearly.
+    Do not use in paper as evidence. N≥50 per cell required before any claims.
+    """
+
+    _EXPLORATORY_FRAGMENT = "EXPLORATORY ONLY"
+    _N50_FRAGMENT = "50"
+
+    def test_exploratory_only_label_in_methodology_notes(self, experiment_dir):
+        """generate_full_report must include exploratory_only_label in methodology_notes."""
+        report = generate_full_report(str(experiment_dir))
+        assert "exploratory_only_label" in report["methodology_notes"]
+
+    def test_exploratory_only_label_content(self, experiment_dir):
+        """exploratory_only_label must mention EXPLORATORY ONLY."""
+        report = generate_full_report(str(experiment_dir))
+        label = report["methodology_notes"]["exploratory_only_label"]
+        assert self._EXPLORATORY_FRAGMENT in label
+
+    def test_exploratory_only_label_mentions_n50(self, experiment_dir):
+        """exploratory_only_label must mention N≥50 threshold."""
+        report = generate_full_report(str(experiment_dir))
+        label = report["methodology_notes"]["exploratory_only_label"]
+        assert self._N50_FRAGMENT in label
+
+    def test_exploratory_only_label_mentions_published_work(self, experiment_dir):
+        """exploratory_only_label must warn against use in published work."""
+        report = generate_full_report(str(experiment_dir))
+        label = report["methodology_notes"]["exploratory_only_label"]
+        assert "published" in label.lower()
+
+    def test_exploratory_only_label_present_for_empty_dir(self, tmp_path):
+        """exploratory_only_label must be present even when no result files exist."""
+        (tmp_path / "pillar1").mkdir()
+        report = generate_full_report(str(tmp_path))
+        assert "exploratory_only_label" in report["methodology_notes"]
+        assert self._EXPLORATORY_FRAGMENT in report["methodology_notes"]["exploratory_only_label"]
+
+    def test_markdown_header_contains_exploratory_warning(self, experiment_dir):
+        """Report Markdown must display the exploratory warning near the top."""
+        report = generate_full_report(str(experiment_dir))
+        md = render_full_report_markdown(report)
+        # The warning should appear before Section 1
+        sec1_idx = md.index("## 1. Per-Pillar Aggregate Scores")
+        header_section = md[:sec1_idx]
+        assert self._EXPLORATORY_FRAGMENT in header_section
+
+    def test_markdown_bias_section_contains_exploratory_warning(self, experiment_dir):
+        """Section 3 (Bias Susceptibility) must include the exploratory warning."""
+        report = generate_full_report(str(experiment_dir))
+        md = render_full_report_markdown(report)
+        bias_idx = md.index("## 3. Bias Susceptibility")
+        sec4_idx = md.index("## 4. Security Violation Frequency")
+        bias_section = md[bias_idx:sec4_idx]
+        assert self._EXPLORATORY_FRAGMENT in bias_section
+
+    def test_markdown_exploratory_warning_mentions_n50(self, experiment_dir):
+        """The exploratory warning in Markdown must mention N≥50."""
+        report = generate_full_report(str(experiment_dir))
+        md = render_full_report_markdown(report)
+        assert self._N50_FRAGMENT in md
+
+    def test_summary_report_contains_exploratory_only_label(self):
+        """SummaryReport schema must carry the REV-3 field in every serialised output."""
+        from results.schemas import SummaryReport
+        sr = SummaryReport(agent_id="test-agent", total_scenarios=1, overall_pass_rate=1.0)
+        data = sr.model_dump()
+        assert "exploratory_only_label" in data
+        assert self._EXPLORATORY_FRAGMENT in data["exploratory_only_label"]
+
+    def test_summary_report_exploratory_label_mentions_n50(self):
+        """SummaryReport.exploratory_only_label must mention N≥50."""
+        from results.schemas import SummaryReport
+        sr = SummaryReport(agent_id="test-agent", total_scenarios=5, overall_pass_rate=0.8)
+        data = sr.model_dump()
+        assert self._N50_FRAGMENT in data["exploratory_only_label"]
