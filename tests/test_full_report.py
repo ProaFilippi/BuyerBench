@@ -333,3 +333,83 @@ class TestReportCliCommand:
         runner = CliRunner()
         result = runner.invoke(cli, ["report", "--experiment-dir", str(tmp_path / "nonexistent")])
         assert result.exit_code != 0
+
+
+# ---------------------------------------------------------------------------
+# REV-1: methodology_notes in generate_full_report (PILLAR2 rationality scope)
+# ---------------------------------------------------------------------------
+
+
+class TestMethodologyNotes:
+    """REV-1: 'Optimality is defined relative to the scenario's stated evaluation
+    weights. We test internal rationality, not external optimality.' must appear
+    in every results section that presents Pillar 2 data.
+    """
+
+    _SCOPE_FRAGMENT = "not external optimality"
+
+    def test_methodology_notes_key_present(self, experiment_dir):
+        report = generate_full_report(str(experiment_dir))
+        assert "methodology_notes" in report
+
+    def test_pillar2_rationality_scope_field_present(self, experiment_dir):
+        report = generate_full_report(str(experiment_dir))
+        assert "pillar2_rationality_scope" in report["methodology_notes"]
+
+    def test_pillar2_rationality_scope_content(self, experiment_dir):
+        report = generate_full_report(str(experiment_dir))
+        scope = report["methodology_notes"]["pillar2_rationality_scope"]
+        assert "internal rationality" in scope
+
+    def test_pillar2_rationality_scope_mentions_evaluation_weights(self, experiment_dir):
+        report = generate_full_report(str(experiment_dir))
+        scope = report["methodology_notes"]["pillar2_rationality_scope"]
+        assert "evaluation weights" in scope
+
+    def test_methodology_notes_present_for_empty_dir(self, tmp_path):
+        """methodology_notes must be present even when no result files exist."""
+        (tmp_path / "pillar1").mkdir()
+        report = generate_full_report(str(tmp_path))
+        assert "methodology_notes" in report
+        assert "pillar2_rationality_scope" in report["methodology_notes"]
+
+    def test_markdown_bias_section_contains_scope_note(self, experiment_dir):
+        """Section 3 (Bias Susceptibility) must include the REV-1 scope note."""
+        report = generate_full_report(str(experiment_dir))
+        md = render_full_report_markdown(report)
+        # Locate section 3 and check the note appears before the table header
+        bias_idx = md.index("## 3. Bias Susceptibility")
+        sec4_idx = md.index("## 4. Security Violation Frequency")
+        bias_section = md[bias_idx:sec4_idx]
+        assert self._SCOPE_FRAGMENT in bias_section
+
+    def test_markdown_pillar2_subsection_contains_scope_note(self, experiment_dir):
+        """PILLAR2 subsection in Section 2 must include the REV-1 scope note."""
+        report = generate_full_report(str(experiment_dir))
+        md = render_full_report_markdown(report)
+        pillar2_idx = md.index("### PILLAR2")
+        # Find next subsection or section boundary
+        next_boundary = len(md)
+        for marker in ("### PILLAR3", "## 3. Bias Susceptibility"):
+            try:
+                idx = md.index(marker)
+                if idx > pillar2_idx:
+                    next_boundary = min(next_boundary, idx)
+            except ValueError:
+                pass
+        pillar2_section = md[pillar2_idx:next_boundary]
+        assert self._SCOPE_FRAGMENT in pillar2_section
+
+    def test_summary_report_contains_pillar2_rationality_scope(self):
+        """SummaryReport schema must carry the REV-1 field in every serialised output."""
+        from results.schemas import SummaryReport
+        sr = SummaryReport(agent_id="test-agent", total_scenarios=1, overall_pass_rate=1.0)
+        data = sr.model_dump()
+        assert "pillar2_rationality_scope" in data
+        assert "internal rationality" in data["pillar2_rationality_scope"]
+
+    def test_summary_report_scope_mentions_evaluation_weights(self):
+        from results.schemas import SummaryReport
+        sr = SummaryReport(agent_id="test-agent", total_scenarios=5, overall_pass_rate=0.8)
+        data = sr.model_dump()
+        assert "evaluation weights" in data["pillar2_rationality_scope"]

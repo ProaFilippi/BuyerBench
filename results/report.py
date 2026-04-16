@@ -105,24 +105,65 @@ def generate_full_report(experiment_dir: str) -> dict:
     """
     exp_dir = Path(experiment_dir)
 
-    # ── collect pillar scores across all pillar subdirs ───────────────────────
-    # agent_id → pillar_name → list[PillarScore]
+    # ── collect all result JSONs ─────────────────────────────────────────────
+    # Supports two directory layouts:
+    #   Structured: <exp_dir>/pillar1/<agent_id>/<scenario>.json
+    #   Flat:       <exp_dir>/<agent_id>/<scenario>.json
+    all_results: list[EvaluationResult] = []
+    error_result_keys: set[tuple[str, str]] = set()  # (agent_id, scenario_id) pairs with API errors
     agent_pillar_scores: dict[str, dict[str, list]] = defaultdict(lambda: defaultdict(list))
 
-    for pillar_dir in sorted(d for d in exp_dir.iterdir() if d.is_dir() and d.name.startswith("pillar")):
-        for agent_dir in sorted(d for d in pillar_dir.iterdir() if d.is_dir()):
-            agent_id = agent_dir.name
-            for json_file in sorted(agent_dir.glob("*.json")):
+    # Error patterns that indicate a failed API call rather than a real eval
+    _ERROR_PATTERNS = (
+        "Client Error:",
+        "Server Error:",
+        "Connection Error:",
+        "Timeout Error:",
+        "Rate limit",
+        "ECONNREFUSED",
+        "getaddrinfo",
+    )
+
+    def _is_error_result(result: EvaluationResult) -> bool:
+        raw = (result.raw_output or "").lower()
+        return any(pat.lower() in raw for pat in _ERROR_PATTERNS)
+
+    def _ingest_agent_dir(agent_dir: Path, agent_id: str) -> None:
+        for json_file in sorted(agent_dir.glob("*.json")):
+            if json_file.name in ("summary.json", "FULL-REPORT.json"):
+                continue
+            try:
                 raw = json.loads(json_file.read_text())
-                if raw.get("status") == "skipped":
-                    continue
-                try:
-                    result = EvaluationResult.model_validate(raw)
-                except Exception:
-                    continue
-                for ps in result.pillar_scores:
-                    pname = ps.pillar.value if isinstance(ps.pillar, Pillar) else str(ps.pillar)
-                    agent_pillar_scores[agent_id][pname].append(ps)
+            except Exception:
+                continue
+            if raw.get("status") == "skipped":
+                continue
+            try:
+                result = EvaluationResult.model_validate(raw)
+            except Exception:
+                continue
+            all_results.append(result)
+            if _is_error_result(result):
+                error_result_keys.add((result.agent_id, result.scenario_id))
+                continue  # exclude from aggregate scoring
+            for ps in result.pillar_scores:
+                pname = ps.pillar.value if isinstance(ps.pillar, Pillar) else str(ps.pillar)
+                agent_pillar_scores[agent_id][pname].append(ps)
+
+    # Try structured layout first (pillar1/, pillar2/, pillar3/)
+    pillar_dirs = sorted(d for d in exp_dir.iterdir() if d.is_dir() and d.name.startswith("pillar"))
+    if pillar_dirs:
+        for pillar_dir in pillar_dirs:
+            for agent_dir in sorted(d for d in pillar_dir.iterdir() if d.is_dir()):
+                _ingest_agent_dir(agent_dir, agent_dir.name)
+    else:
+        # Flat layout: <exp_dir>/<agent_id>/<scenario>.json
+        for agent_dir in sorted(d for d in exp_dir.iterdir() if d.is_dir()):
+            # Skip non-agent directories (experiments, __pycache__, etc.)
+            if agent_dir.name.startswith(("__", ".")) or agent_dir.name == "experiments":
+                continue
+            if any(agent_dir.glob("*.json")):
+                _ingest_agent_dir(agent_dir, agent_dir.name)
 
     # ── 1. Per-pillar aggregate table ─────────────────────────────────────────
     per_pillar_aggregate: list[dict] = []
@@ -235,14 +276,45 @@ def generate_full_report(experiment_dir: str) -> dict:
                     "delta": round(v - b, 4) if (b is not None and v is not None) else None,
                 })
 
+    # ── 6. Per-scenario results (with raw_output and decisions) ────────────────
+    scenario_results: list[dict] = []
+    for result in all_results:
+        raw = result.raw_output[:5000] if result.raw_output else ""
+        is_error = (result.agent_id, result.scenario_id) in error_result_keys
+        ts = result.timestamp.isoformat() if result.timestamp else None
+        for ps in result.pillar_scores:
+            pname = ps.pillar.value if isinstance(ps.pillar, Pillar) else str(ps.pillar)
+            scenario_results.append({
+                "agent_id": result.agent_id,
+                "scenario_id": result.scenario_id,
+                "pillar": pname,
+                "score": round(ps.score, 4),
+                "overall_pass": result.overall_pass,
+                "violations": ps.violations,
+                "notes": ps.notes,
+                "metrics": {k: round(v, 4) for k, v in ps.metrics.items()},
+                "raw_output": raw,
+                "decisions": result.decisions,
+                "timestamp": ts,
+                "is_error": is_error,
+            })
+
     return {
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "experiment_dir": str(exp_dir),
+        # REV-1: explicit rationality-scope statement in every results section.
+        "methodology_notes": {
+            "pillar2_rationality_scope": (
+                "Optimality is defined relative to the scenario's stated evaluation weights. "
+                "We test internal rationality, not external optimality."
+            ),
+        },
         "per_pillar_aggregate": per_pillar_aggregate,
         "per_metric_breakdown": dict(per_metric_breakdown),
         "bias_susceptibility_table": bsi_table,
         "security_violation_table": security_table,
         "skills_mcp_delta_table": delta_table,
+        "scenario_results": scenario_results,
     }
 
 
@@ -255,6 +327,12 @@ def render_full_report_markdown(report: dict) -> str:
     Returns:
         A Markdown string with five labelled sections, each containing a table.
     """
+    _P2_SCOPE = (
+        "> **Pillar 2 scope note (REV-1):** "
+        "Optimality is defined relative to the scenario's stated evaluation weights. "
+        "We test *internal* rationality, not external optimality."
+    )
+
     lines = [
         "# BuyerBench Full Experiment Report",
         "",
@@ -281,9 +359,10 @@ def render_full_report_markdown(report: dict) -> str:
     lines.append("## 2. Per-Metric Breakdown")
     lines.append("")
     for pillar_name in sorted(report.get("per_metric_breakdown", {})):
+        lines += [f"### {pillar_name}", ""]
+        if pillar_name == "PILLAR2":
+            lines += [_P2_SCOPE, ""]
         lines += [
-            f"### {pillar_name}",
-            "",
             "| Agent | Metric | Mean | Min | Max |",
             "|-------|--------|------|-----|-----|",
         ]
@@ -297,6 +376,8 @@ def render_full_report_markdown(report: dict) -> str:
     # ── 3. Bias susceptibility ────────────────────────────────────────────────
     lines += [
         "## 3. Bias Susceptibility",
+        "",
+        _P2_SCOPE,
         "",
         "| Bias Type | Agent | Mode | BSI | Decision Changed |",
         "|-----------|-------|------|-----|-----------------|",

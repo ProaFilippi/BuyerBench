@@ -91,7 +91,8 @@
 
 ### N.1 Mandatory Revisions to Design
 
-- [ ] **REV-1 (from M.1):** Add explicit statement in every results section: "Optimality is defined relative to the scenario's stated evaluation weights. We test internal rationality, not external optimality."
+- [x] **REV-1 (from M.1):** Add explicit statement in every results section: "Optimality is defined relative to the scenario's stated evaluation weights. We test internal rationality, not external optimality."
+  - **Implementation:** Added the REV-1 rationality-scope statement in three layers: (1) `results/schemas.py` — `pillar2_rationality_scope` as a constant default field on `SummaryReport`, so every serialised summary JSON carries the statement automatically; (2) `results/report.py` — `methodology_notes.pillar2_rationality_scope` field in the `generate_full_report` JSON output, and blockquote scope notes injected into the PILLAR2 subsection of Section 2 and all of Section 3 (Bias Susceptibility) of `render_full_report_markdown`; (3) 9 tests added in `TestMethodologyNotes` covering: JSON field presence and content, Markdown section coverage, empty-dir edge case, and SummaryReport schema. All 1783 tests pass (2026-04-16).
 
 - [ ] **REV-2 (from M.3):** Pre-register before any data collection. Post OSF pre-registration with exact hypotheses, regression specs, and correction procedures.
 

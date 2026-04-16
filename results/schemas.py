@@ -75,3 +75,8 @@ class SummaryReport(BaseModel):
         )
     )
     generated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    # REV-1: explicit scope statement required in every results section.
+    pillar2_rationality_scope: str = (
+        "Optimality is defined relative to the scenario's stated evaluation weights. "
+        "We test internal rationality, not external optimality."
+    )
