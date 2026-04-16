@@ -27,8 +27,9 @@
   - Rejection triggers: "Pure benchmarking paper without economic contribution"; "no comparison to prior work"; framework not publicly released.
   - ✅ *Completed 2026-04-15:* Full journal-by-journal analysis written at `docs/paper/journal-strategy/tier3-adjacent-journals.md`. Per-journal fit rationale, evidence thresholds, rejection triggers, and strategic timeline documented for JAIR, AI & Society, DSS, and Management Science IS. **Primary Tier 3 recommendation: DSS** (highest IF at 7.5; direct procurement domain fit) with JAIR as a recommended first publication to establish the framework in the AI literature. Management Science IS is a long-horizon (18–24 month) follow-on target requiring economic consequence quantification. Recommended publication sequence: JAIR (3–6 mo) → JEBO/DSS (6–12 mo) → Management Science IS (18–24 mo).
 
-- [ ] **[TIER 4 — Realistic Primary Target]** JEBO or Experimental Economics as primary submission
+- [x] **[TIER 4 — Realistic Primary Target]** JEBO or Experimental Economics as primary submission
   - Strategy: Submit flagship version here first. If rejected for scope, revise down to field-journal working paper tier.
+  - ✅ *Completed 2026-04-15:* Full primary submission strategy written at `docs/paper/journal-strategy/tier4-primary-submission-strategy.md`. Document covers: (1) why JEBO is the primary target over other Tier 2 journals, (2) a concrete decision gate (go/no-go criteria before submitting), (3) a preparation checklist for data, analysis, framing, and reproducibility, (4) a realistic milestone timeline (12–15 months from data collection to acceptance), (5) a rejection cascade strategy mapping each rejection reason to a specific corrective action and next venue, and (6) a structured cascade order: JEBO → Experimental Economics → JBDM → DSS → Tier 5. Document explicitly frames Tier 4 as a submission priority tier distinct from the prestige tier numbering in the journal fit analysis.
 
 - [ ] **[TIER 5 — Fallback]** Journal of Economic Psychology, Judgment and Decision Making, PLOS ONE
   - These accept descriptive behavioral studies with modest N. Working paper version is publishable here.
