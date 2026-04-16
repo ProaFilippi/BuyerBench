@@ -1,0 +1,159 @@
+{
+  "title": "BuyerBench Pillar 2: Behavioral Bias Susceptibility of LLM-Based Procurement Agents \u2014 Pre-Registration Document",
+  "authors": "BuyerBench Research Team",
+  "generated_at": "2026-04-16T11:43:07.368238+00:00",
+  "manifest_experiment_id": "buyerbench-pillar2-realistic-v1",
+  "manifest_git_hash": null,
+  "manifest_design_tier": "realistic",
+  "manifest_n_models": 10,
+  "manifest_n_scenarios": 10,
+  "manifest_n_runs_per_cell": 50,
+  "manifest_temperatures": [
+    0.7
+  ],
+  "manifest_prompt_versions": [
+    "standard"
+  ],
+  "manifest_total_planned_runs": 5000,
+  "manifest_pre_registration_url": null,
+  "hypotheses": [
+    {
+      "id": "H1",
+      "label": "Bias Universality",
+      "prq_dimension": "D1: Existence",
+      "statement": "LLM agents exhibit non-trivial bias susceptibility (BSI > 0.10 with 95% CI excluding zero) for at least one bias type, in at least five of ten tested models.",
+      "direction": "positive",
+      "test": "Per-bias-type one-sample t-test (H\u2080: BSI = 0) aggregated across models; BH-FDR correction at q = 0.05 across 5 tests.",
+      "null_outcome": "If BSI \u2248 0 across all bias types, the finding is 'domain structure suppresses bias susceptibility' \u2014 a valid contribution, not a failed study.",
+      "data_requirement": "N \u2265 30 runs per (model \u00d7 bias type \u00d7 variant) cell."
+    },
+    {
+      "id": "H2",
+      "label": "Capability-Bias Tradeoff",
+      "prq_dimension": "D3: Capability variation",
+      "statement": "There is a negative Spearman rank correlation between Pillar 1 composite score (agent capability proxy) and mean BSI across bias types at the model level.",
+      "direction": "negative",
+      "test": "Spearman rank correlation (\u03c1) between pillar1_score and mean_BSI across N = 10 models. OLS regression flagged as descriptive only (N = 10 is below inference threshold).",
+      "null_outcome": "Higher-capability models show equal or greater bias susceptibility, consistent with Hagendorff et al. (2023) 'reverse capability' effect in cognitive tasks.",
+      "data_requirement": "Pillar 1 scores for all 10 models + full Pillar 2 BSI battery."
+    },
+    {
+      "id": "H3",
+      "label": "Decoy Effect Reliability",
+      "prq_dimension": "D2: Bias type variation",
+      "statement": "The decoy bias type (p2-03) produces a BSI significantly greater than zero and higher than the mean BSI across all other bias types.",
+      "direction": "positive",
+      "test": "One-sample t-test (decoy BSI > 0); pairwise contrast between decoy mean_BSI and grand mean across remaining 4 bias types (Dunnett or Tukey HSD post-hoc).",
+      "null_outcome": "Decoy manipulation fails to reliably shift supplier choice in structured procurement scenarios \u2014 explicit cost/quality rubrics suppress asymmetric dominance effects.",
+      "data_requirement": "N \u2265 30 per (model \u00d7 variant) cell for p2-03."
+    },
+    {
+      "id": "H4",
+      "label": "Anchoring Magnitude Proportionality",
+      "prq_dimension": "D2: Bias type variation",
+      "statement": "BSI for high-magnitude anchoring (p2-01, ANCHOR_HIGH) is greater than for low-magnitude anchoring (p2-01b, ANCHOR_LOW), demonstrating proportionality.",
+      "direction": "positive",
+      "test": "Paired t-test comparing BSI_HIGH vs BSI_LOW across models.",
+      "null_outcome": "Anchoring effect magnitude does not scale with anchor distance from market price; LLMs may exhibit threshold-based rather than continuous anchoring susceptibility.",
+      "data_requirement": "Requires p2-01b (ANCHOR_LOW scenario) \u2014 not yet implemented. H4 is flagged as a design limitation until p2-01b is run."
+    },
+    {
+      "id": "H5",
+      "label": "Framing Asymmetry (Loss > Gain)",
+      "prq_dimension": "D2: Bias type variation",
+      "statement": "The LOSS frame (p2-02, FRAMING_LOSS) produces higher BSI than the GAIN frame (p2-02, FRAMING_GAIN), consistent with loss aversion predictions.",
+      "direction": "positive",
+      "test": "Paired t-test: mean BSI under FRAMING_LOSS vs FRAMING_GAIN across models.",
+      "null_outcome": "No framing asymmetry \u2014 LLMs respond symmetrically to gain and loss frames, suggesting RLHF training has suppressed loss aversion in structured domains.",
+      "data_requirement": "N \u2265 30 per (model \u00d7 variant) cell for p2-02."
+    },
+    {
+      "id": "H6",
+      "label": "Sunk Cost \u00d7 Capability Non-Monotone Interaction",
+      "prq_dimension": "D2/D3: Bias \u00d7 capability interaction",
+      "statement": "High-capability models show greater sunk cost susceptibility than low-capability models, producing a positive (not negative) capability\u2013BSI slope for p2-05.",
+      "direction": "positive",
+      "test": "Spearman correlation between pillar1_score and BSI_sunk_cost. Expected sign: positive (opposite to H2 overall direction).",
+      "null_outcome": "Sunk cost susceptibility decreases with capability (consistent with H2), suggesting structured rubrics override narrative cost-justification reasoning.",
+      "data_requirement": "Pillar 1 scores + N \u2265 30 per (model \u00d7 variant) cell for p2-05."
+    },
+    {
+      "id": "H7",
+      "label": "Stochastic Variance Proportional to BSI",
+      "prq_dimension": "D4: Stochastic vs. systematic variance",
+      "statement": "Within-cell variance (std_bsi) is positively correlated with mean BSI across all cells, consistent with a boundary-response mechanism.",
+      "direction": "positive",
+      "test": "OLS regression: std_bsi ~ \u03b2\u2080 + \u03b2\u2081\u00b7mean_bsi. Significant positive \u03b2\u2081 supports H7.",
+      "null_outcome": "No variance\u2013mean relationship; BSI variance is uniform across susceptibility levels, suggesting stochastic noise is independent of bias signal.",
+      "data_requirement": "N \u2265 2 runs per cell to estimate within-cell variance."
+    },
+    {
+      "id": "H8",
+      "label": "CoT Reduces Anchoring but Not Decoy",
+      "prq_dimension": "D4: Prompt moderation",
+      "statement": "Chain-of-thought prompting reduces anchoring BSI (p2-01) but does not reduce \u2014 and may increase \u2014 decoy BSI (p2-03), producing a significant bias_type \u00d7 prompt_version interaction.",
+      "direction": "non_directional",
+      "test": "2\u00d72 ANOVA: BSI ~ bias_type \u00d7 prompt_version (standard | cot). Key interaction contrast: \u0394(decoy CoT \u2212 decoy standard) > \u0394(anchor CoT \u2212 anchor standard).",
+      "null_outcome": "CoT has no differential effect \u2014 structured procurement prompts already engage sufficient deliberate reasoning to suppress both effects equally.",
+      "data_requirement": "CoT prompt variants for p2-01 and p2-03 (requires UPGRADE-7)."
+    },
+    {
+      "id": "H9",
+      "label": "Model-Specific Bias Profiles",
+      "prq_dimension": "D3: Model-specific patterns",
+      "statement": "Cronbach's alpha across the 5-dimension BSI vector (one dimension per bias type) is low (< 0.50) across the 10-model sample, indicating bias-specific rather than general susceptibility patterns.",
+      "direction": "null",
+      "test": "Cronbach's alpha on [BSI_anchor, BSI_frame, BSI_decoy, BSI_scar, BSI_sunk] across N = 10 models. Spearman inter-bias correlation matrix. Hierarchical clustering (Ward linkage, Euclidean distance in 5D BSI space).",
+      "null_outcome": "High alpha (> 0.70) implies a general bias susceptibility factor \u2014 a surprising finding that would suggest 'rationality' is a single latent trait.",
+      "data_requirement": "Complete BSI estimates for all 5 bias types \u00d7 all 10 models."
+    },
+    {
+      "id": "H10",
+      "label": "Human Benchmark Calibration",
+      "prq_dimension": "D5: Human comparison",
+      "statement": "LLM BSI effect sizes (Cohen's d vs. 0) are smaller than human meta-analytic benchmarks for the same bias categories from behavioral economics literature.",
+      "direction": "negative",
+      "test": "Per-bias-type Cohen's d comparison between BuyerBench LLM estimates and published human baselines: anchoring (d \u2248 2.7), framing (d \u2248 1.8), decoy (d \u2248 0.4), sunk cost (d \u2248 0.85), scarcity (d \u2248 0.60\u20130.80). For human arm data: independent two-sample Welch t-test on BSI.",
+      "null_outcome": "LLM effect sizes match or exceed human benchmarks \u2014 LLMs are as or more susceptible than humans to behavioral biases in structured procurement tasks.",
+      "data_requirement": "Multi-run BSI estimates for all 5 bias types. Human comparison arm requires UPGRADE-13 + IRB approval (Phase 4)."
+    }
+  ],
+  "primary_outcome": "Bias Susceptibility Index (BSI) per (model \u00d7 bias type \u00d7 variant) cell, estimated from N = 50 independent runs. BSI = |P(non-optimal | VARIANT) \u2212 P(non-optimal | BASELINE)|, where optimality is defined by the scenario scoring rubric (quality \u00d7 weight + delivery \u00d7 weight + cost \u00d7 weight).",
+  "secondary_outcomes": [
+    "Within-cell variance of BSI (std_bsi) \u2014 stochastic noise component",
+    "Optimality gap \u2014 economic distance from optimal supplier choice",
+    "Choice rate distribution \u2014 frequency of each supplier selection across runs",
+    "Model-level BSI profile \u2014 5-dimension vector of bias-type-specific means",
+    "Reasoning trace length \u2014 token count as a proxy for deliberate reasoning"
+  ],
+  "bias_types_tested": [
+    "anchoring",
+    "framing",
+    "decoy",
+    "scarcity",
+    "sunk_cost"
+  ],
+  "model_set": [
+    "openai/gpt-4o",
+    "anthropic/claude-3.5-sonnet",
+    "google/gemini-pro-1.5",
+    "meta-llama/llama-3.1-405b-instruct",
+    "mistralai/mistral-large",
+    "mistralai/mixtral-8x22b-instruct",
+    "deepseek/deepseek-chat",
+    "qwen/qwen-2.5-72b-instruct",
+    "cohere/command-r-plus",
+    "01-ai/yi-large"
+  ],
+  "bsi_significance_threshold": "BSI > 0.10 with 95% CI excluding zero, two-sided, \u03b1 = 0.05 with BH-FDR correction at q = 0.05 across the primary test family (10 models \u00d7 5 bias types = 50 tests).",
+  "alpha_level": 0.05,
+  "fdr_q_level": 0.05,
+  "null_result_framing": "If BH-FDR-corrected tests fail to reject H\u2080: BSI = 0 for \u2265 3 of 5 bias types at the planned N, the primary finding is: 'Domain structure (explicit scoring rubrics, constrained supplier comparison) suppresses behavioral bias susceptibility in LLM procurement agents.' This outcome is a scientifically valid contribution and will be reported as such, not treated as a failed study.",
+  "exclusion_criteria": [
+    "Runs with error_flag = True (API failures, malformed responses) are excluded from BSI computation; included in n_runs but counted in n_error_runs.",
+    "Runs where extracted_choice is None (unparseable output) are excluded from choice_is_correct and optimality_gap calculations.",
+    "Models with < 80% valid runs across all cells are flagged for exclusion from aggregate analyses; their individual results are still reported.",
+    "Attention check failures in the human comparison arm (Phase 4) are excluded before human BSI computation."
+  ],
+  "stopping_rule": "Data collection stops when all planned 50 runs per (agent \u00d7 scenario \u00d7 variant) cell have completed without error. If API rate limits cause > 20% failure rate for a given model, that model's data collection is paused and resumed in a new session; partial runs are included if n_valid_runs \u2265 40 (80% threshold). No data-dependent stopping rule is applied \u2014 the pre-specified N is fixed."
+}

@@ -25,6 +25,9 @@ CLI::
     python -m buyerbench prereg \\
         --manifest results/my-experiment/experiment_manifest.json \\
         --output-dir results/my-experiment/
+
+    # Standalone mode — no manifest required; uses planned experiment defaults:
+    python -m buyerbench prereg --standalone --output-dir docs/preregistration/
 """
 from __future__ import annotations
 
@@ -317,6 +320,86 @@ _DEFAULT_BIAS_TYPES: list[str] = [
     "scarcity",
     "sunk_cost",
 ]
+
+
+#: Planned experiment parameters for the Realistic Design (N=50 per cell).
+#: These constants represent the intended experiment configuration and are used
+#: to generate pre-registration documents BEFORE data collection begins.
+_PLANNED_N_RUNS_PER_CELL: int = 50
+_PLANNED_EXPERIMENT_ID: str = "buyerbench-pillar2-realistic-v1"
+_PLANNED_DESIGN_TIER: str = "realistic"
+_PLANNED_N_SCENARIOS: int = 10  # 5 bias types × 2 variants each
+_PLANNED_N_BIAS_TYPES: int = 5
+_PLANNED_N_VARIANTS_PER_BIAS: int = 2
+_PLANNED_TEMPERATURES: list[float | None] = [0.7]
+_PLANNED_PROMPT_VERSIONS: list[str] = ["standard"]
+
+
+def build_planned_manifest(
+    *,
+    experiment_id: str = _PLANNED_EXPERIMENT_ID,
+    n_runs_per_cell: int = _PLANNED_N_RUNS_PER_CELL,
+    temperatures: list[float | None] | None = None,
+    prompt_versions: list[str] | None = None,
+    git_commit_hash: str | None = None,
+    pre_registration_url: str | None = None,
+) -> ExperimentManifest:
+    """Build a *planned* :class:`~results.experiment_manifest.ExperimentManifest`.
+
+    Creates a synthetic manifest representing the *intended* experiment design
+    before any data collection begins.  This is the correct input for
+    :func:`build_prereg_document` when pre-registering on OSF ahead of running
+    the experiment.
+
+    The planned manifest uses the Realistic Design defaults:
+      * 10 models (OpenRouter registry)
+      * 10 scenarios (5 bias types × 2 variants each)
+      * N = 50 runs per cell
+      * Temperature = 0.7
+      * Prompt version = "standard"
+
+    Args:
+        experiment_id:        Identifier for the planned experiment.
+        n_runs_per_cell:      Planned runs per (agent × scenario) cell.
+        temperatures:         Temperature values for the experiment.
+        prompt_versions:      Prompt version identifiers.
+        git_commit_hash:      Optional current commit hash for provenance tracking.
+        pre_registration_url: OSF or AsPredicted URL (fill in after registration).
+
+    Returns:
+        An :class:`~results.experiment_manifest.ExperimentManifest` representing
+        the planned experiment scope.
+    """
+    from datetime import datetime, timezone as _tz
+
+    if temperatures is None:
+        temperatures = list(_PLANNED_TEMPERATURES)
+    if prompt_versions is None:
+        prompt_versions = list(_PLANNED_PROMPT_VERSIONS)
+
+    n_models = len(_DEFAULT_MODEL_SET)
+    n_scenarios = _PLANNED_N_SCENARIOS
+    n_variants = _PLANNED_N_VARIANTS_PER_BIAS
+    n_bias_types = _PLANNED_N_BIAS_TYPES
+    total_planned = n_models * n_scenarios * n_runs_per_cell * len(temperatures) * len(prompt_versions)
+
+    return ExperimentManifest(
+        experiment_id=experiment_id,
+        design_tier=_PLANNED_DESIGN_TIER,
+        n_models=n_models,
+        n_scenarios=n_scenarios,
+        n_bias_types=n_bias_types,
+        n_variants_per_bias=n_variants,
+        n_runs_per_cell=n_runs_per_cell,
+        temperatures=temperatures,
+        prompt_versions=prompt_versions,
+        total_planned_runs=total_planned,
+        pre_registration_url=pre_registration_url,
+        git_commit_hash=git_commit_hash,
+        start_time_utc=datetime.now(_tz.utc).isoformat(),
+        pillars=[2],
+        output_dir="",
+    )
 
 
 def build_prereg_document(
@@ -797,18 +880,23 @@ def render_prereg_markdown(doc: PreregistrationDocument) -> str:
 # ─────────────────────────────────────────────────────────────────────────────
 
 def generate_prereg_document(
-    manifest: ExperimentManifest,
+    manifest: ExperimentManifest | None = None,
     **kwargs,
 ) -> tuple[PreregistrationDocument, str]:
     """Build and render the pre-registration document in one step.
 
     Args:
         manifest: Experiment manifest from :func:`~results.experiment_manifest.create_manifest`.
+                  If ``None``, a planned manifest is built via
+                  :func:`build_planned_manifest` using Realistic Design defaults.
+                  This enables standalone pre-registration before data collection.
         **kwargs: Forwarded to :func:`build_prereg_document`.
 
     Returns:
         A ``(document, markdown_text)`` tuple.
     """
+    if manifest is None:
+        manifest = build_planned_manifest()
     doc = build_prereg_document(manifest, **kwargs)
     md = render_prereg_markdown(doc)
     return doc, md

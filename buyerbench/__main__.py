@@ -1692,13 +1692,26 @@ def stats(experiment_dir: str, output_dir: str | None, p1_scores_str: str | None
 @cli.command()
 @click.option(
     "--manifest",
-    required=True,
-    help="Path to experiment_manifest.json produced by `buyerbench run`.",
+    default=None,
+    help=(
+        "Path to experiment_manifest.json produced by `buyerbench run`. "
+        "Mutually exclusive with --standalone."
+    ),
+)
+@click.option(
+    "--standalone",
+    is_flag=True,
+    default=False,
+    help=(
+        "Generate a pre-registration document without a manifest, using the "
+        "Realistic Design defaults (N=50, 10 models).  Use this to register on "
+        "OSF BEFORE running experiments."
+    ),
 )
 @click.option(
     "--output-dir",
     default=None,
-    help="Directory for prereg_osf.md and prereg_metadata.json (default: manifest directory).",
+    help="Directory for prereg_osf.md and prereg_metadata.json (default: manifest directory or cwd).",
 )
 @click.option(
     "--title",
@@ -1712,17 +1725,25 @@ def stats(experiment_dir: str, output_dir: str | None, p1_scores_str: str | None
     help="Author attribution string for the pre-registration document.",
 )
 def prereg(
-    manifest: str,
+    manifest: str | None,
+    standalone: bool,
     output_dir: str | None,
     title: str | None,
     authors: str,
 ) -> None:
     """Generate an OSF-compatible pre-registration document.
 
-    Reads an experiment manifest produced by `buyerbench run` and outputs:
+    Two modes:
 
     \b
-    - prereg_osf.md       — Structured Markdown for OSF/AsPredicted upload
+    --manifest PATH   Read from an existing experiment_manifest.json (post-run).
+    --standalone      Build from Realistic Design defaults; no manifest needed.
+                      Use this to register on OSF BEFORE data collection begins.
+
+    Outputs:
+
+    \b
+    - prereg_osf.md        — Structured Markdown for OSF/AsPredicted upload
     - prereg_metadata.json — Machine-readable document model
 
     The document includes all pre-specified hypotheses (H1–H10), the registered
@@ -1733,30 +1754,44 @@ def prereg(
 
     from results.experiment_manifest import ExperimentManifest
     from results.prereg_export import (
+        build_planned_manifest,
         generate_prereg_document,
         write_prereg_document,
     )
 
-    manifest_path = _Path(manifest)
-    if not manifest_path.exists():
-        console.print(f"[red]Manifest file not found: {manifest_path}[/red]")
+    if standalone and manifest:
+        console.print("[red]--standalone and --manifest are mutually exclusive.[/red]")
+        raise SystemExit(1)
+    if not standalone and not manifest:
+        console.print("[red]Provide either --manifest PATH or --standalone.[/red]")
         raise SystemExit(1)
 
-    try:
-        manifest_data = ExperimentManifest.model_validate_json(manifest_path.read_text())
-    except Exception as exc:
-        console.print(f"[red]Failed to parse manifest: {exc}[/red]")
-        raise SystemExit(1)
+    if standalone:
+        manifest_data = build_planned_manifest()
+        out_path = _Path(output_dir) if output_dir else _Path("docs/preregistration")
+        console.print(
+            f"\n[bold cyan]Generating standalone pre-registration document…[/bold cyan]\n"
+            f"  [dim]Mode:[/dim]      standalone (planned defaults, N=50)\n"
+            f"  [dim]Output:[/dim]    {out_path}"
+        )
+    else:
+        manifest_path = _Path(manifest)  # type: ignore[arg-type]
+        if not manifest_path.exists():
+            console.print(f"[red]Manifest file not found: {manifest_path}[/red]")
+            raise SystemExit(1)
+        try:
+            manifest_data = ExperimentManifest.model_validate_json(manifest_path.read_text())
+        except Exception as exc:
+            console.print(f"[red]Failed to parse manifest: {exc}[/red]")
+            raise SystemExit(1)
+        out_path = _Path(output_dir) if output_dir else manifest_path.parent
+        console.print(
+            f"\n[bold cyan]Generating pre-registration document…[/bold cyan]\n"
+            f"  [dim]Manifest:[/dim]  {manifest_path}\n"
+            f"  [dim]Output:[/dim]    {out_path}"
+        )
 
-    out_path = _Path(output_dir) if output_dir else manifest_path.parent
-
-    console.print(
-        f"\n[bold cyan]Generating pre-registration document…[/bold cyan]\n"
-        f"  [dim]Manifest:[/dim]  {manifest_path}\n"
-        f"  [dim]Output:[/dim]    {out_path}"
-    )
-
-    kwargs = {}
+    kwargs: dict = {}
     if title:
         kwargs["title"] = title
     kwargs["authors"] = authors

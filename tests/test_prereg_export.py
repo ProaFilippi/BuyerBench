@@ -11,6 +11,7 @@ from results.prereg_export import (
     BUYERBENCH_HYPOTHESES,
     HypothesisDef,
     PreregistrationDocument,
+    build_planned_manifest,
     build_prereg_document,
     generate_prereg_document,
     render_prereg_markdown,
@@ -691,3 +692,202 @@ class TestCLIIntegration:
             ["prereg", "--manifest", str(manifest_path), "--output-dir", str(tmp_path)],
         )
         assert result.exit_code == 1
+
+    def test_prereg_standalone_writes_files(self, tmp_path):
+        """Standalone mode generates prereg document without a manifest file."""
+        from click.testing import CliRunner
+        from buyerbench.__main__ import cli
+
+        runner = CliRunner()
+        result = runner.invoke(
+            cli,
+            ["prereg", "--standalone", "--output-dir", str(tmp_path)],
+        )
+        assert result.exit_code == 0, result.output
+        assert (tmp_path / "prereg_osf.md").exists()
+        assert (tmp_path / "prereg_metadata.json").exists()
+
+    def test_prereg_standalone_document_contains_hypotheses(self, tmp_path):
+        """Standalone prereg document includes the registered hypotheses."""
+        from click.testing import CliRunner
+        from buyerbench.__main__ import cli
+
+        runner = CliRunner()
+        runner.invoke(
+            cli, ["prereg", "--standalone", "--output-dir", str(tmp_path)]
+        )
+        content = (tmp_path / "prereg_osf.md").read_text()
+        assert "H1" in content
+        assert "H10" in content
+        assert "BuyerBench" in content
+
+    def test_prereg_standalone_and_manifest_mutually_exclusive(self, tmp_path):
+        """--standalone and --manifest together should exit with code 1."""
+        from click.testing import CliRunner
+        from buyerbench.__main__ import cli
+
+        manifest = _make_manifest()
+        manifest_path = tmp_path / "experiment_manifest.json"
+        manifest_path.write_text(
+            json.dumps(manifest.model_dump(), default=str), encoding="utf-8"
+        )
+
+        runner = CliRunner()
+        result = runner.invoke(
+            cli,
+            ["prereg", "--standalone", "--manifest", str(manifest_path), "--output-dir", str(tmp_path)],
+        )
+        assert result.exit_code == 1
+
+    def test_prereg_no_flags_exits_1(self, tmp_path):
+        """Calling prereg without --manifest or --standalone exits with code 1."""
+        from click.testing import CliRunner
+        from buyerbench.__main__ import cli
+
+        runner = CliRunner()
+        result = runner.invoke(
+            cli, ["prereg", "--output-dir", str(tmp_path)]
+        )
+        assert result.exit_code == 1
+
+
+# ── TestBuildPlannedManifest ──────────────────────────────────────────────────
+
+class TestBuildPlannedManifest:
+    def test_returns_experiment_manifest(self):
+        manifest = build_planned_manifest()
+        assert isinstance(manifest, ExperimentManifest)
+
+    def test_default_n_models_is_10(self):
+        manifest = build_planned_manifest()
+        assert manifest.n_models == 10
+
+    def test_default_n_scenarios_is_10(self):
+        manifest = build_planned_manifest()
+        assert manifest.n_scenarios == 10
+
+    def test_default_n_runs_per_cell_is_50(self):
+        manifest = build_planned_manifest()
+        assert manifest.n_runs_per_cell == 50
+
+    def test_default_design_tier_is_realistic(self):
+        manifest = build_planned_manifest()
+        assert manifest.design_tier == "realistic"
+
+    def test_default_pillars_is_2(self):
+        manifest = build_planned_manifest()
+        assert manifest.pillars == [2]
+
+    def test_default_temperatures(self):
+        manifest = build_planned_manifest()
+        assert manifest.temperatures == [0.7]
+
+    def test_default_prompt_versions(self):
+        manifest = build_planned_manifest()
+        assert manifest.prompt_versions == ["standard"]
+
+    def test_total_planned_runs_computed(self):
+        # 10 models × 10 scenarios × 50 runs × 1 temperature × 1 prompt version = 5000
+        manifest = build_planned_manifest()
+        assert manifest.total_planned_runs == 5000
+
+    def test_custom_n_runs_per_cell(self):
+        manifest = build_planned_manifest(n_runs_per_cell=30)
+        assert manifest.n_runs_per_cell == 30
+
+    def test_custom_n_runs_changes_total_planned(self):
+        manifest = build_planned_manifest(n_runs_per_cell=30)
+        assert manifest.total_planned_runs == 10 * 10 * 30  # 3000
+
+    def test_custom_experiment_id(self):
+        manifest = build_planned_manifest(experiment_id="my-experiment-v2")
+        assert manifest.experiment_id == "my-experiment-v2"
+
+    def test_default_pre_registration_url_is_none(self):
+        manifest = build_planned_manifest()
+        assert manifest.pre_registration_url is None
+
+    def test_pre_registration_url_can_be_set(self):
+        manifest = build_planned_manifest(pre_registration_url="https://osf.io/abc123")
+        assert manifest.pre_registration_url == "https://osf.io/abc123"
+
+    def test_git_commit_hash_defaults_to_none(self):
+        manifest = build_planned_manifest()
+        assert manifest.git_commit_hash is None
+
+    def test_git_commit_hash_can_be_set(self):
+        manifest = build_planned_manifest(git_commit_hash="deadbeef")
+        assert manifest.git_commit_hash == "deadbeef"
+
+    def test_custom_temperatures(self):
+        manifest = build_planned_manifest(temperatures=[0.0, 0.7])
+        assert manifest.temperatures == [0.0, 0.7]
+
+    def test_custom_prompt_versions(self):
+        manifest = build_planned_manifest(prompt_versions=["standard", "cot"])
+        assert manifest.prompt_versions == ["standard", "cot"]
+
+    def test_multiple_temperatures_scales_total_runs(self):
+        manifest = build_planned_manifest(temperatures=[0.0, 0.7])
+        assert manifest.total_planned_runs == 10 * 10 * 50 * 2  # 10000
+
+    def test_multiple_prompt_versions_scales_total_runs(self):
+        manifest = build_planned_manifest(prompt_versions=["standard", "cot"])
+        assert manifest.total_planned_runs == 10 * 10 * 50 * 2  # 10000
+
+    def test_start_time_utc_is_set(self):
+        manifest = build_planned_manifest()
+        assert manifest.start_time_utc is not None
+        assert "T" in manifest.start_time_utc  # ISO datetime format
+
+    def test_n_bias_types_is_5(self):
+        manifest = build_planned_manifest()
+        assert manifest.n_bias_types == 5
+
+    def test_n_variants_per_bias_is_2(self):
+        manifest = build_planned_manifest()
+        assert manifest.n_variants_per_bias == 2
+
+
+# ── TestGeneratePreregDocumentStandalone ──────────────────────────────────────
+
+class TestGeneratePreregDocumentStandalone:
+    def test_none_manifest_returns_tuple(self):
+        """generate_prereg_document(None) uses planned manifest defaults."""
+        result = generate_prereg_document(None)
+        assert isinstance(result, tuple)
+        assert len(result) == 2
+
+    def test_none_manifest_document_has_10_hypotheses(self):
+        doc, _ = generate_prereg_document(None)
+        assert len(doc.hypotheses) == 10
+
+    def test_none_manifest_document_has_50_runs(self):
+        doc, _ = generate_prereg_document(None)
+        assert doc.manifest_n_runs_per_cell == 50
+
+    def test_none_manifest_markdown_is_nonempty_string(self):
+        _, md = generate_prereg_document(None)
+        assert isinstance(md, str)
+        assert len(md) > 100
+
+    def test_none_manifest_title_is_set(self):
+        doc, _ = generate_prereg_document(None)
+        assert "BuyerBench" in doc.title
+
+    def test_no_args_call_is_equivalent_to_none_manifest(self):
+        """generate_prereg_document() with no args == generate_prereg_document(None)."""
+        doc1, _ = generate_prereg_document()
+        doc2, _ = generate_prereg_document(None)
+        assert doc1.manifest_experiment_id == doc2.manifest_experiment_id
+        assert doc1.manifest_n_runs_per_cell == doc2.manifest_n_runs_per_cell
+
+    def test_none_manifest_accepts_kwargs(self):
+        doc, _ = generate_prereg_document(None, title="Custom Standalone Title")
+        assert doc.title == "Custom Standalone Title"
+
+    def test_explicit_manifest_still_works(self):
+        """Passing an actual manifest still works as before."""
+        manifest = _make_manifest(n_runs_per_cell=20)
+        doc, _ = generate_prereg_document(manifest)
+        assert doc.manifest_n_runs_per_cell == 20
