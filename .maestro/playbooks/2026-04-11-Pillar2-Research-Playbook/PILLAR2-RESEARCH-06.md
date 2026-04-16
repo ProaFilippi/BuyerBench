@@ -154,7 +154,8 @@
 
 ### L.5 FIRST SCRIPT — Experiment Grid Definition
 
-- [ ] Create `research/scripts/00_define_experiment.py`:
+- [x] Create `research/scripts/00_define_experiment.py`:
+  <!-- Implemented: REALISTIC_DESIGN and FLAGSHIP_DESIGN moved to research/experiments/grid.py (importable module); script imports from grid.py + manifest.py + run_experiment.py; main() writes manifest.json (via freeze_manifest), run_plan.csv, cost_estimate.txt under {output_dir}/{experiment_id}/; supports --design, --output-dir, --no-pin-versions flags; sys.path fix enables direct invocation. Tests: tests/test_define_experiment.py (41 tests, all pass). -->
   ```python
   """
   Script 00: Define Experiment Grid
