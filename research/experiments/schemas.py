@@ -223,6 +223,14 @@ class ExperimentManifest:
     git_commit_hash: str = "unknown"
     """Output of ``git rev-parse HEAD`` at manifest creation time."""
 
+    pinned_model_versions: dict = field(default_factory=dict)
+    """Mapping of agent_id → exact model ID string returned by OpenRouter at manifest creation.
+
+    Example: {'openrouter-openai-gpt-4o': 'openai/gpt-4o-2024-11-20', ...}.
+    Populated by ``manifest.query_openrouter_model_versions`` at experiment start.
+    Empty dict when API is unavailable or for non-OpenRouter agents.
+    """
+
     created_at_utc: Optional[str] = None
     """ISO-8601 UTC timestamp when the manifest was first written to disk."""
 

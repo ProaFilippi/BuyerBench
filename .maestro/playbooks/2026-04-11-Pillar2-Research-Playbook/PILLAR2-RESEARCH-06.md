@@ -141,15 +141,16 @@
 
 ### L.4 Reproducibility Plan
 
-- [ ] Pin all model versions at experiment start by querying OpenRouter model list and logging exact model IDs
-- [ ] Seed `supplier_order_seed = hash(run_id) % 2**32` for deterministic supplier ordering
-- [ ] Store `git_commit_hash = subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode().strip()` in manifest
-- [ ] All intermediate files in `results/experiments/{experiment_id}/`:
+- [x] Pin all model versions at experiment start by querying OpenRouter model list and logging exact model IDs
+- [x] Seed `supplier_order_seed = hash(run_id) % 2**32` for deterministic supplier ordering
+- [x] Store `git_commit_hash = subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode().strip()` in manifest
+- [x] All intermediate files in `results/experiments/{experiment_id}/`:
   - `manifest.json` — frozen at run start
   - `runs.jsonl` — append-mode run records
   - `cells.json` — aggregated after completion
   - `figures/` — generated plots
   - `tables/` — LaTeX and CSV tables
+  <!-- Implemented: research/experiments/manifest.py — get_git_commit_hash, _agent_id_to_openrouter_slug, query_openrouter_model_versions, create_manifest, freeze_manifest, load_manifest. ExperimentManifest.pinned_model_versions field added to schemas.py. Tests: tests/test_manifest.py (47 tests, all pass). -->
 
 ### L.5 FIRST SCRIPT — Experiment Grid Definition
 
