@@ -323,6 +323,12 @@ def generate_full_report(experiment_dir: str) -> dict:
                 "Present capability scatter as a descriptive figure only; "
                 "all within-model analyses (H1, H3, H5, H7) remain inferential at N\u226550 runs per cell."
             ),
+            # REV-7: abstract/introduction pipeline scope statement.
+            "pipeline_scope": (
+                "We evaluate the final selection stage of AI buyer agents \u2014 specifically, "
+                "the economic judgment call when structured options are presented \u2014 "
+                "not the full agent pipeline."
+            ),
         },
         "per_pillar_aggregate": per_pillar_aggregate,
         "per_metric_breakdown": dict(per_metric_breakdown),
@@ -363,6 +369,13 @@ def render_full_report_markdown(report: dict) -> str:
         "Within-model analyses (H1, H3, H5, H7) remain inferential at N≥50 runs per cell."
     )
 
+    _REV7_PIPELINE_SCOPE = (
+        "> **REV-7 — PIPELINE SCOPE (use verbatim in abstract/introduction):** "
+        "We evaluate the **final selection stage** of AI buyer agents — specifically, "
+        "the economic judgment call when structured options are presented — "
+        "not the full agent pipeline."
+    )
+
     lines = [
         "# BuyerBench Full Experiment Report",
         "",
@@ -370,6 +383,8 @@ def render_full_report_markdown(report: dict) -> str:
         f"**Experiment dir:** `{report.get('experiment_dir', 'N/A')}`",
         "",
         _EXPLORATORY_WARN,
+        "",
+        _REV7_PIPELINE_SCOPE,
         "",
     ]
 

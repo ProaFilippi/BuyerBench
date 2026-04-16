@@ -563,3 +563,69 @@ class TestRev6CrossModelRegressionScope:
         assert "pillar2_rationality_scope" in notes
         assert "exploratory_only_label" in notes
         assert "cross_model_regression_scope" in notes
+
+
+class TestRev7PipelineScope:
+    """REV-7: Abstract/introduction must contain the pipeline scope statement.
+
+    The exact phrasing 'final selection stage of AI buyer agents' must appear
+    in ``methodology_notes['pipeline_scope']`` (JSON) and as a REV-7 blockquote
+    in the Markdown header section.
+    """
+
+    _SCOPE_FRAGMENT = "final selection stage"
+    _NOT_PIPELINE_FRAGMENT = "not the full agent pipeline"
+
+    def test_pipeline_scope_in_methodology_notes(self, experiment_dir):
+        """generate_full_report must include pipeline_scope in methodology_notes."""
+        report = generate_full_report(str(experiment_dir))
+        assert "pipeline_scope" in report["methodology_notes"]
+
+    def test_pipeline_scope_content_mentions_final_selection(self, experiment_dir):
+        """pipeline_scope must reference the 'final selection stage'."""
+        report = generate_full_report(str(experiment_dir))
+        scope = report["methodology_notes"]["pipeline_scope"]
+        assert self._SCOPE_FRAGMENT in scope
+
+    def test_pipeline_scope_content_mentions_not_full_pipeline(self, experiment_dir):
+        """pipeline_scope must state it does not cover the full agent pipeline."""
+        report = generate_full_report(str(experiment_dir))
+        scope = report["methodology_notes"]["pipeline_scope"]
+        assert self._NOT_PIPELINE_FRAGMENT in scope
+
+    def test_pipeline_scope_present_for_empty_dir(self, tmp_path):
+        """pipeline_scope must be present even with no result files."""
+        (tmp_path / "pillar1").mkdir()
+        report = generate_full_report(str(tmp_path))
+        assert "pipeline_scope" in report["methodology_notes"]
+        scope = report["methodology_notes"]["pipeline_scope"]
+        assert self._SCOPE_FRAGMENT in scope
+
+    def test_markdown_header_contains_rev7_note(self, experiment_dir):
+        """Markdown header must include the REV-7 pipeline scope blockquote."""
+        report = generate_full_report(str(experiment_dir))
+        md = render_full_report_markdown(report)
+        sec1_idx = md.index("## 1. Per-Pillar Aggregate Scores")
+        header_body = md[:sec1_idx]
+        assert "REV-7" in header_body
+
+    def test_markdown_rev7_note_mentions_final_selection(self, experiment_dir):
+        """The REV-7 blockquote in Markdown must reference 'final selection'."""
+        report = generate_full_report(str(experiment_dir))
+        md = render_full_report_markdown(report)
+        assert "final selection" in md.lower()
+
+    def test_markdown_rev7_note_mentions_not_full_pipeline(self, experiment_dir):
+        """The REV-7 blockquote must state 'not the full agent pipeline'."""
+        report = generate_full_report(str(experiment_dir))
+        md = render_full_report_markdown(report)
+        assert "not the full agent pipeline" in md.lower()
+
+    def test_methodology_notes_has_four_keys(self, experiment_dir):
+        """methodology_notes must contain all four REV keys after REV-7."""
+        report = generate_full_report(str(experiment_dir))
+        notes = report["methodology_notes"]
+        assert "pillar2_rationality_scope" in notes
+        assert "exploratory_only_label" in notes
+        assert "cross_model_regression_scope" in notes
+        assert "pipeline_scope" in notes

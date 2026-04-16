@@ -86,3 +86,9 @@ class SummaryReport(BaseModel):
         "This data is EXPLORATORY ONLY and must not be used as evidence in published work. "
         "N\u226550 runs per cell are required before any statistical claims can be made."
     )
+    # REV-7: abstract/introduction scope statement — final selection stage only.
+    pipeline_scope: str = (
+        "We evaluate the final selection stage of AI buyer agents \u2014 specifically, "
+        "the economic judgment call when structured options are presented \u2014 "
+        "not the full agent pipeline."
+    )

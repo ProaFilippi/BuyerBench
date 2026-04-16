@@ -403,6 +403,36 @@ Claims MUST NOT be stated as:
 The ``decision_module_scope`` field in ``aggregate_bias_report`` is a
 machine-readable anchor for this limitation so that all downstream JSON/CSV
 consumers carry the scope restriction alongside BSI values.
+
+PIPELINE SCOPE STATEMENT (REV-7)
+---------------------------------
+The abstract and introduction of any paper using this evaluator MUST contain
+the following exact scope statement (verbatim or close paraphrase):
+
+  "We evaluate the final selection stage of AI buyer agents — specifically,
+   the economic judgment call when structured options are presented — not
+   the full agent pipeline."
+
+This statement appears as ``pipeline_scope`` in ``SummaryReport`` and in the
+``methodology_notes`` dict of ``generate_full_report()`` output, so that every
+serialised summary JSON carries it and downstream report consumers can inject
+it automatically into abstract/introduction templates.
+
+Rationale: reviewers of AI benchmarking papers frequently object that
+"prompting an LLM" is not the same as evaluating a "buyer agent."  This scope
+statement pre-empts that objection by making the evaluation boundary explicit
+in the first paragraph of the paper, before any results are presented.  Placing
+it in the report JSON also enables automated compliance checking during the
+writing process.
+
+Claims MUST use this framing:
+  "At the final selection stage of AI buyer agents..."
+  "...when structured procurement options are presented..."
+
+Claims MUST NOT imply:
+  "We evaluate AI buyer agents end-to-end" — that would require also testing
+  the retrieval, orchestration, and multi-turn context layers that BuyerBench
+  explicitly does not cover.
 """
 from __future__ import annotations
 
