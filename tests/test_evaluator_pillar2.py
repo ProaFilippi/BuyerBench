@@ -14,6 +14,7 @@ from buyerbench.models import (
 from evaluators.pillar2 import (
     aggregate_bias_report,
     compute_bias_susceptibility,
+    compute_warp_transitivity,
     score_pillar2,
 )
 
@@ -597,3 +598,212 @@ class TestLossAversionSwitching:
         assert bsi["decision_changed"] is True
         # BSI = int(True) * (1 - 0.0) = 1.0
         assert bsi["bias_susceptibility_index"] == pytest.approx(1.0)
+
+
+# ── Helpers for WARP tests ────────────────────────────────────────────────────
+
+SUPPLIER_A = "VendorAlfa"
+SUPPLIER_B = "VendorBravo"
+SUPPLIER_C = "HelixPro"
+
+
+def _make_warp_result(scenario_id: str, choice: str) -> EvaluationResult:
+    """Build an EvaluationResult for a WARP binary task with the given supplier choice."""
+    ps = PillarScore(
+        pillar=Pillar.PILLAR2,
+        score=1.0 if choice in ("VendorBravo", "HelixPro") else 0.0,
+        metrics={"optimal_chosen": 1.0, "bias_susceptibility_index": 0.0},
+        notes=f"Variant: WARP_AB. Expected: VendorBravo, Got: {choice}",
+    )
+    return EvaluationResult(
+        scenario_id=scenario_id,
+        agent_id="test-agent",
+        pillar_scores=[ps],
+        variant_pair_id="p2-08-warp",
+        decisions={"selected_supplier": choice},
+    )
+
+
+class TestWARPTransitivity:
+    """Tests for the WARP (Weak Axiom of Revealed Preference) transitivity checker."""
+
+    def test_transitive_choices_no_violation(self):
+        """Optimal transitive ordering: Bravo>Alfa (AB), Helix>Bravo (BC), Helix>Alfa (AC)."""
+        ab = _make_warp_result("p2-08-warp-WARP_AB", SUPPLIER_B)  # B>A
+        bc = _make_warp_result("p2-08-warp-WARP_BC", SUPPLIER_C)  # C>B
+        ac = _make_warp_result("p2-08-warp-WARP_AC", SUPPLIER_C)  # C>A
+        result = compute_warp_transitivity(ab, bc, ac, SUPPLIER_A, SUPPLIER_B, SUPPLIER_C)
+        assert result["warp_violated"] is False
+        assert result["transitivity_preserved"] is True
+        assert result["warp_cycle_type"] is None
+
+    def test_forward_cycle_detected(self):
+        """Cycle 1: Alfa>Bravo (AB), Bravo>Helix (BC), Helix>Alfa (AC) → WARP violation."""
+        ab = _make_warp_result("p2-08-warp-WARP_AB", SUPPLIER_A)  # A>B
+        bc = _make_warp_result("p2-08-warp-WARP_BC", SUPPLIER_B)  # B>C
+        ac = _make_warp_result("p2-08-warp-WARP_AC", SUPPLIER_C)  # C>A (cycle!)
+        result = compute_warp_transitivity(ab, bc, ac, SUPPLIER_A, SUPPLIER_B, SUPPLIER_C)
+        assert result["warp_violated"] is True
+        assert result["transitivity_preserved"] is False
+        assert "VendorAlfa" in result["warp_cycle_type"]
+        assert "VendorBravo" in result["warp_cycle_type"]
+        assert "HelixPro" in result["warp_cycle_type"]
+
+    def test_reverse_cycle_detected(self):
+        """Cycle 2: Bravo>Alfa (AB), Helix>Bravo (BC), Alfa>Helix (AC) → WARP violation."""
+        ab = _make_warp_result("p2-08-warp-WARP_AB", SUPPLIER_B)  # B>A
+        bc = _make_warp_result("p2-08-warp-WARP_BC", SUPPLIER_C)  # C>B
+        ac = _make_warp_result("p2-08-warp-WARP_AC", SUPPLIER_A)  # A>C (cycle!)
+        result = compute_warp_transitivity(ab, bc, ac, SUPPLIER_A, SUPPLIER_B, SUPPLIER_C)
+        assert result["warp_violated"] is True
+        assert result["transitivity_preserved"] is False
+
+    def test_consistent_alfa_dominance(self):
+        """Consistent ordering: Alfa>Bravo (AB), Bravo>Helix (BC), Alfa>Helix (AC) → A>B>C."""
+        ab = _make_warp_result("p2-08-warp-WARP_AB", SUPPLIER_A)  # A>B
+        bc = _make_warp_result("p2-08-warp-WARP_BC", SUPPLIER_B)  # B>C
+        ac = _make_warp_result("p2-08-warp-WARP_AC", SUPPLIER_A)  # A>C → consistent A>B>C
+        result = compute_warp_transitivity(ab, bc, ac, SUPPLIER_A, SUPPLIER_B, SUPPLIER_C)
+        assert result["warp_violated"] is False
+        assert result["transitivity_preserved"] is True
+
+    def test_consistent_helix_dominance(self):
+        """Consistent ordering: Bravo>Alfa (AB), Helix>Bravo (BC), Helix>Alfa (AC) → C>B>A."""
+        ab = _make_warp_result("p2-08-warp-WARP_AB", SUPPLIER_B)  # B>A
+        bc = _make_warp_result("p2-08-warp-WARP_BC", SUPPLIER_C)  # C>B
+        ac = _make_warp_result("p2-08-warp-WARP_AC", SUPPLIER_C)  # C>A → consistent
+        result = compute_warp_transitivity(ab, bc, ac, SUPPLIER_A, SUPPLIER_B, SUPPLIER_C)
+        assert result["warp_violated"] is False
+
+    def test_result_contains_all_required_fields(self):
+        """Return value has the documented schema."""
+        ab = _make_warp_result("p2-08-warp-WARP_AB", SUPPLIER_B)
+        bc = _make_warp_result("p2-08-warp-WARP_BC", SUPPLIER_C)
+        ac = _make_warp_result("p2-08-warp-WARP_AC", SUPPLIER_C)
+        result = compute_warp_transitivity(ab, bc, ac, SUPPLIER_A, SUPPLIER_B, SUPPLIER_C)
+        for key in (
+            "warp_violated", "transitivity_preserved",
+            "choice_ab", "choice_bc", "choice_ac",
+            "a_over_b", "b_over_c", "a_over_c",
+            "warp_cycle_type", "pair_id",
+        ):
+            assert key in result, f"Missing field: {key}"
+
+    def test_choices_recorded_correctly(self):
+        """choice_ab, choice_bc, choice_ac reflect the agent's actual decisions."""
+        ab = _make_warp_result("p2-08-warp-WARP_AB", SUPPLIER_B)
+        bc = _make_warp_result("p2-08-warp-WARP_BC", SUPPLIER_C)
+        ac = _make_warp_result("p2-08-warp-WARP_AC", SUPPLIER_C)
+        result = compute_warp_transitivity(ab, bc, ac, SUPPLIER_A, SUPPLIER_B, SUPPLIER_C)
+        assert result["choice_ab"] == SUPPLIER_B
+        assert result["choice_bc"] == SUPPLIER_C
+        assert result["choice_ac"] == SUPPLIER_C
+
+    def test_boolean_preference_flags(self):
+        """a_over_b, b_over_c, a_over_c correctly encode which supplier was preferred."""
+        ab = _make_warp_result("p2-08-warp-WARP_AB", SUPPLIER_A)  # A wins
+        bc = _make_warp_result("p2-08-warp-WARP_BC", SUPPLIER_B)  # B wins
+        ac = _make_warp_result("p2-08-warp-WARP_AC", SUPPLIER_A)  # A wins
+        result = compute_warp_transitivity(ab, bc, ac, SUPPLIER_A, SUPPLIER_B, SUPPLIER_C)
+        assert result["a_over_b"] is True
+        assert result["b_over_c"] is True
+        assert result["a_over_c"] is True
+
+    def test_pair_id_propagated(self):
+        """pair_id matches the variant_pair_id of the AB result."""
+        ab = _make_warp_result("p2-08-warp-WARP_AB", SUPPLIER_B)
+        bc = _make_warp_result("p2-08-warp-WARP_BC", SUPPLIER_C)
+        ac = _make_warp_result("p2-08-warp-WARP_AC", SUPPLIER_C)
+        result = compute_warp_transitivity(ab, bc, ac, SUPPLIER_A, SUPPLIER_B, SUPPLIER_C)
+        assert result["pair_id"] == "p2-08-warp"
+
+    def test_missing_choice_no_false_alarm(self):
+        """Agent that returns no decision: all flags default to False (no spurious cycle)."""
+        ab = EvaluationResult(
+            scenario_id="p2-08-warp-WARP_AB", agent_id="test-agent",
+            variant_pair_id="p2-08-warp", decisions={},
+        )
+        bc = EvaluationResult(
+            scenario_id="p2-08-warp-WARP_BC", agent_id="test-agent",
+            variant_pair_id="p2-08-warp", decisions={},
+        )
+        ac = EvaluationResult(
+            scenario_id="p2-08-warp-WARP_AC", agent_id="test-agent",
+            variant_pair_id="p2-08-warp", decisions={},
+        )
+        result = compute_warp_transitivity(ab, bc, ac, SUPPLIER_A, SUPPLIER_B, SUPPLIER_C)
+        # None choices → all a_over_x flags are False → no cycle detected
+        assert result["warp_violated"] is False
+        assert result["choice_ab"] is None
+        assert result["choice_bc"] is None
+        assert result["choice_ac"] is None
+
+
+class TestWARPScenarioYAMLs:
+    """Integration tests that load the WARP YAML files and validate their structure."""
+
+    @pytest.fixture
+    def warp_scenarios(self):
+        from pathlib import Path
+        from harness.loader import load_scenario_triplets
+        scenarios_root = Path(__file__).parent.parent / "scenarios"
+        triplets = load_scenario_triplets(str(scenarios_root))
+        return next(
+            (t for t in triplets if t[0].variant_pair_id == "p2-08-warp"), None
+        )
+
+    def test_warp_triplet_loads(self, warp_scenarios):
+        assert warp_scenarios is not None
+
+    def test_warp_triplet_has_three_distinct_variants(self, warp_scenarios):
+        variants = {s.variant for s in warp_scenarios}
+        assert ScenarioVariant.WARP_AB in variants
+        assert ScenarioVariant.WARP_BC in variants
+        assert ScenarioVariant.WARP_AC in variants
+
+    def test_each_warp_scenario_has_two_suppliers(self, warp_scenarios):
+        for scenario in warp_scenarios:
+            suppliers = scenario.context.get("suppliers", [])
+            assert len(suppliers) == 2, (
+                f"{scenario.id} should have exactly 2 suppliers, got {len(suppliers)}"
+            )
+
+    def test_warp_ab_optimal_is_vendorbravo(self, warp_scenarios):
+        ab = next(s for s in warp_scenarios if s.variant == ScenarioVariant.WARP_AB)
+        assert ab.expected_optimal.get("supplier") == "VendorBravo"
+
+    def test_warp_bc_optimal_is_helixpro(self, warp_scenarios):
+        bc = next(s for s in warp_scenarios if s.variant == ScenarioVariant.WARP_BC)
+        assert bc.expected_optimal.get("supplier") == "HelixPro"
+
+    def test_warp_ac_optimal_is_helixpro(self, warp_scenarios):
+        ac = next(s for s in warp_scenarios if s.variant == ScenarioVariant.WARP_AC)
+        assert ac.expected_optimal.get("supplier") == "HelixPro"
+
+    def test_warp_optimal_choices_are_transitive(self, warp_scenarios):
+        """HelixPro > VendorBravo > VendorAlfa — ground truth optima are transitive."""
+        ab = next(s for s in warp_scenarios if s.variant == ScenarioVariant.WARP_AB)
+        bc = next(s for s in warp_scenarios if s.variant == ScenarioVariant.WARP_BC)
+        ac = next(s for s in warp_scenarios if s.variant == ScenarioVariant.WARP_AC)
+        # AB: Bravo>Alfa, BC: Helix>Bravo, AC: Helix>Alfa — consistent C>B>A
+        result = compute_warp_transitivity(
+            EvaluationResult(
+                scenario_id=ab.id, agent_id="oracle",
+                variant_pair_id="p2-08-warp",
+                decisions={"selected_supplier": ab.expected_optimal["supplier"]},
+            ),
+            EvaluationResult(
+                scenario_id=bc.id, agent_id="oracle",
+                variant_pair_id="p2-08-warp",
+                decisions={"selected_supplier": bc.expected_optimal["supplier"]},
+            ),
+            EvaluationResult(
+                scenario_id=ac.id, agent_id="oracle",
+                variant_pair_id="p2-08-warp",
+                decisions={"selected_supplier": ac.expected_optimal["supplier"]},
+            ),
+            "VendorAlfa", "VendorBravo", "HelixPro",
+        )
+        assert result["warp_violated"] is False, (
+            "Ground-truth optimal choices must be transitive"
+        )

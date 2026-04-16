@@ -36,3 +36,24 @@ def load_scenario_pairs(root: str) -> list[tuple[Scenario, Scenario]]:
         if scenario.variant_pair_id:
             groups.setdefault(scenario.variant_pair_id, []).append(scenario)
     return [(members[0], members[1]) for members in groups.values() if len(members) == 2]
+
+
+def load_scenario_triplets(root: str) -> list[tuple[Scenario, Scenario, Scenario]]:
+    """Return triplets of scenarios grouped by variant_pair_id.
+
+    Each returned tuple contains exactly three Scenario objects that share
+    the same variant_pair_id, sorted by variant value for consistent ordering
+    (WARP_AB, WARP_AC, WARP_BC alphabetically).  Groups with fewer or more
+    than three members are silently skipped.
+    """
+    scenarios = load_all_scenarios(root)
+    groups: dict[str, list[Scenario]] = {}
+    for scenario in scenarios:
+        if scenario.variant_pair_id:
+            groups.setdefault(scenario.variant_pair_id, []).append(scenario)
+    result = []
+    for members in groups.values():
+        if len(members) == 3:
+            ordered = sorted(members, key=lambda s: s.variant.value)
+            result.append((ordered[0], ordered[1], ordered[2]))
+    return result

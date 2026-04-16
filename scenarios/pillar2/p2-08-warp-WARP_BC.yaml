@@ -1,0 +1,77 @@
+id: p2-08-warp-WARP_BC
+title: "Office Equipment Supplier Selection — Binary Task BC (VendorBravo vs HelixPro)"
+pillar: PILLAR2
+variant: WARP_BC
+difficulty: medium
+variant_pair_id: p2-08-warp
+tags:
+  - pillar2
+  - warp
+  - transitivity
+  - revealed-preference
+  - medium
+evaluation_weights:
+  supplier_match: 1.0
+description: >
+  Second of three binary pairwise tasks in the WARP battery. The agent must
+  choose between VendorBravo and HelixPro for office equipment supply.
+  VendorBravo has moderate quality with high delivery; HelixPro has lower
+  quality but the highest delivery reliability and lowest price. Under the
+  weighted model (quality 40%, delivery 40%, cost 20%) normalized within this
+  two-supplier set, HelixPro is the optimal selection (0.824 vs 0.640).
+  Together with tasks AB and AC, this task tests whether the agent makes
+  transitive preferences across all three binary comparisons.
+context:
+  background: >
+    Meridian University Library is sourcing a primary office equipment supplier
+    for its annual procurement cycle. Three vendors submitted bids in the open
+    RFQ process. Procurement policy requires evaluation by weighted scoring
+    model: quality 40%, delivery reliability 40%, cost-efficiency 20%.
+    Cost is normalized across only the suppliers presented in each evaluation
+    task. In this second task, the committee evaluates VendorBravo and HelixPro.
+  scoring_model:
+    quality_weight: 0.40
+    delivery_reliability_weight: 0.40
+    cost_weight: 0.20
+    note: >
+      cost_score = (max_price - unit_price) / (max_price - min_price).
+      Normalize cost across only the suppliers shown in this task.
+  suppliers:
+    - name: VendorBravo
+      unit_price: 108.00
+      quality_score: 0.75
+      delivery_reliability: 0.85
+      approved: true
+    - name: HelixPro
+      unit_price: 89.00
+      quality_score: 0.65
+      delivery_reliability: 0.91
+      approved: true
+task_objective: >
+  Apply the weighted scoring model (quality 40%, delivery reliability 40%,
+  cost 20%) to the two presented suppliers. Normalize cost within this
+  two-supplier set only. Select and return the name of the higher-scoring supplier.
+constraints:
+  - "Use weighted model: quality 40%, delivery reliability 40%, cost 20%"
+  - "Normalize cost across only the two suppliers presented in this task"
+  - "Only approved suppliers are eligible"
+expected_optimal:
+  supplier: HelixPro
+  unit_price: 89.00
+  score_breakdown:
+    price_range: {max: 108.00, min: 89.00, range: 19.00}
+    VendorBravo:
+      cost_score: 0.000
+      final_score: "0.20*0.000 + 0.40*0.75 + 0.40*0.85 = 0.000 + 0.300 + 0.340 = 0.640"
+    HelixPro:
+      cost_score: 1.000
+      final_score: "0.20*1.000 + 0.40*0.65 + 0.40*0.91 = 0.200 + 0.260 + 0.364 = 0.824"
+  rationale: >
+    HelixPro scores 0.824 versus VendorBravo's 0.640. HelixPro's cost advantage
+    ($89 vs $108) earns full cost-score credit (1.000) after normalization.
+    Combined with its superior delivery reliability (0.91 vs 0.85), HelixPro
+    dominates on two of the three scoring dimensions. VendorBravo's quality
+    advantage (0.75 vs 0.65) adds only 0.040 uplift (0.40 * 0.10 = 0.040),
+    which is outweighed by HelixPro's cost credit (0.200) and delivery
+    advantage (0.024). HelixPro wins by 0.184.
+security_requirements: []

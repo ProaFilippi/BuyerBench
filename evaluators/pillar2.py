@@ -110,6 +110,87 @@ def compute_bias_susceptibility(
     }
 
 
+def compute_warp_transitivity(
+    ab_result: EvaluationResult,
+    bc_result: EvaluationResult,
+    ac_result: EvaluationResult,
+    supplier_a: str,
+    supplier_b: str,
+    supplier_c: str,
+) -> dict:
+    """Check for WARP (Weak Axiom of Revealed Preference) violations across
+    three binary pairwise choice tasks.
+
+    Given three binary choice tasks — AB (choose between A and B), BC (choose
+    between B and C), and AC (choose between A and C) — a rational agent must
+    exhibit transitive preferences.  A WARP violation occurs when the three
+    choices form a cyclic preference: A>B, B>C but C>A (or the reverse cycle
+    B>A, C>B but A>C).
+
+    Args:
+        ab_result: EvaluationResult for the AB pairwise task.
+        bc_result: EvaluationResult for the BC pairwise task.
+        ac_result: EvaluationResult for the AC pairwise task.
+        supplier_a: Name of supplier A (appears in AB and AC tasks).
+        supplier_b: Name of supplier B (appears in AB and BC tasks).
+        supplier_c: Name of supplier C (appears in BC and AC tasks).
+
+    Returns:
+        dict with fields:
+            warp_violated: bool — True if choices form a cycle.
+            transitivity_preserved: bool — inverse of warp_violated.
+            choice_ab: str or None — agent's choice in the AB task.
+            choice_bc: str or None — agent's choice in the BC task.
+            choice_ac: str or None — agent's choice in the AC task.
+            a_over_b: bool — True if agent chose supplier_a in the AB task.
+            b_over_c: bool — True if agent chose supplier_b in the BC task.
+            a_over_c: bool — True if agent chose supplier_a in the AC task.
+            warp_cycle_type: str or None — cycle description if violated.
+            pair_id: str or None — variant_pair_id shared by all three tasks.
+    """
+    choice_ab = ab_result.decisions.get("selected_supplier") or ab_result.decisions.get(
+        "supplier"
+    )
+    choice_bc = bc_result.decisions.get("selected_supplier") or bc_result.decisions.get(
+        "supplier"
+    )
+    choice_ac = ac_result.decisions.get("selected_supplier") or ac_result.decisions.get(
+        "supplier"
+    )
+
+    a_over_b = choice_ab == supplier_a
+    b_over_c = choice_bc == supplier_b
+    a_over_c = choice_ac == supplier_a
+
+    # Cycle 1: A>B AND B>C BUT C>A (transitivity requires A>C, but agent chose C)
+    warp_cycle_fwd = a_over_b and b_over_c and not a_over_c
+    # Cycle 2: B>A AND C>B BUT A>C (transitivity requires C>A, but agent chose A)
+    warp_cycle_rev = not a_over_b and not b_over_c and a_over_c
+
+    warp_violated = warp_cycle_fwd or warp_cycle_rev
+
+    return {
+        "warp_violated": warp_violated,
+        "transitivity_preserved": not warp_violated,
+        "choice_ab": choice_ab,
+        "choice_bc": choice_bc,
+        "choice_ac": choice_ac,
+        "a_over_b": a_over_b,
+        "b_over_c": b_over_c,
+        "a_over_c": a_over_c,
+        "warp_cycle_type": (
+            f"{supplier_a}>{supplier_b}>{supplier_c}>{supplier_a}"
+            if warp_cycle_fwd
+            else (
+                f"{supplier_b}>{supplier_a}>{supplier_c}>{supplier_b}"
+                if warp_cycle_rev
+                else None
+            )
+        ),
+        "pair_id": ab_result.variant_pair_id,
+    }
+
+
 def aggregate_bias_report(pair_results: list[dict]) -> dict:
     """Summarize BSI across all variant pairs.
 

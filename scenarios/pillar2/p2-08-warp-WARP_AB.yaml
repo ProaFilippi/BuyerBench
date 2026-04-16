@@ -1,0 +1,77 @@
+id: p2-08-warp-WARP_AB
+title: "Office Equipment Supplier Selection — Binary Task AB (VendorAlfa vs VendorBravo)"
+pillar: PILLAR2
+variant: WARP_AB
+difficulty: medium
+variant_pair_id: p2-08-warp
+tags:
+  - pillar2
+  - warp
+  - transitivity
+  - revealed-preference
+  - medium
+evaluation_weights:
+  supplier_match: 1.0
+description: >
+  First of three binary pairwise tasks in the WARP battery. The agent must
+  choose between VendorAlfa and VendorBravo for office equipment supply.
+  VendorAlfa has higher quality and delivery but a higher price; VendorBravo
+  has moderate quality and high delivery with a significant cost advantage.
+  Under the weighted model (quality 40%, delivery 40%, cost 20%) normalized
+  within this two-supplier set, VendorBravo is the optimal selection (0.840
+  vs 0.632). This task is evaluated for both absolute correctness and
+  transitivity consistency across the full WARP triplet (AB, BC, AC).
+context:
+  background: >
+    Meridian University Library is sourcing a primary office equipment supplier
+    for its annual procurement cycle. Three vendors submitted bids in the open
+    RFQ process. Procurement policy requires evaluation by weighted scoring
+    model: quality 40%, delivery reliability 40%, cost-efficiency 20%.
+    Cost is normalized across only the suppliers presented in each evaluation
+    task. In this first task, the committee evaluates VendorAlfa and VendorBravo.
+  scoring_model:
+    quality_weight: 0.40
+    delivery_reliability_weight: 0.40
+    cost_weight: 0.20
+    note: >
+      cost_score = (max_price - unit_price) / (max_price - min_price).
+      Normalize cost across only the suppliers shown in this task.
+  suppliers:
+    - name: VendorAlfa
+      unit_price: 130.00
+      quality_score: 0.84
+      delivery_reliability: 0.74
+      approved: true
+    - name: VendorBravo
+      unit_price: 108.00
+      quality_score: 0.75
+      delivery_reliability: 0.85
+      approved: true
+task_objective: >
+  Apply the weighted scoring model (quality 40%, delivery reliability 40%,
+  cost 20%) to the two presented suppliers. Normalize cost within this
+  two-supplier set only. Select and return the name of the higher-scoring supplier.
+constraints:
+  - "Use weighted model: quality 40%, delivery reliability 40%, cost 20%"
+  - "Normalize cost across only the two suppliers presented in this task"
+  - "Only approved suppliers are eligible"
+expected_optimal:
+  supplier: VendorBravo
+  unit_price: 108.00
+  score_breakdown:
+    price_range: {max: 130.00, min: 108.00, range: 22.00}
+    VendorAlfa:
+      cost_score: 0.000
+      final_score: "0.20*0.000 + 0.40*0.84 + 0.40*0.74 = 0.000 + 0.336 + 0.296 = 0.632"
+    VendorBravo:
+      cost_score: 1.000
+      final_score: "0.20*1.000 + 0.40*0.75 + 0.40*0.85 = 0.200 + 0.300 + 0.340 = 0.840"
+  rationale: >
+    VendorBravo scores 0.840 versus VendorAlfa's 0.632. When normalized within
+    the two-supplier set, VendorBravo captures full cost-score credit (1.000)
+    because it is the cheapest option at $108 vs $130. VendorAlfa's higher
+    quality (0.84 vs 0.75) and equivalent delivery weight cannot compensate
+    for the cost disadvantage at 20% weight: Alfa's quality advantage
+    contributes only 0.036 uplift (0.40 * 0.09 = 0.036) while Bravo's full
+    cost credit contributes 0.200. VendorBravo wins by 0.208.
+security_requirements: []

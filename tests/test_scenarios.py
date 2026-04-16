@@ -39,7 +39,7 @@ def scenario_pairs():
 
 class TestSuiteCompleteness:
     def test_total_scenario_count(self, all_scenarios):
-        assert len(all_scenarios) == 26
+        assert len(all_scenarios) == 29
 
     def test_pillar1_count(self, all_scenarios):
         p1 = [s for s in all_scenarios if s.pillar == Pillar.PILLAR1]
@@ -47,7 +47,7 @@ class TestSuiteCompleteness:
 
     def test_pillar2_count(self, all_scenarios):
         p2 = [s for s in all_scenarios if s.pillar == Pillar.PILLAR2]
-        assert len(p2) == 14
+        assert len(p2) == 17
 
     def test_pillar3_count(self, all_scenarios):
         p3 = [s for s in all_scenarios if s.pillar == Pillar.PILLAR3]

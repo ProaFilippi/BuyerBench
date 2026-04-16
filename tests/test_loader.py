@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 
 from buyerbench.models import Pillar, Scenario
-from harness.loader import load_all_scenarios, load_scenario, load_scenario_pairs
+from harness.loader import load_all_scenarios, load_scenario, load_scenario_pairs, load_scenario_triplets
 
 
 SCENARIOS_ROOT = Path(__file__).parent.parent / "scenarios"
@@ -45,7 +45,7 @@ class TestLoadScenario:
 class TestLoadAllScenarios:
     def test_loads_exactly_eighteen_scenarios(self):
         scenarios = load_all_scenarios(str(SCENARIOS_ROOT))
-        assert len(scenarios) == 26
+        assert len(scenarios) == 29
 
     def test_all_pillars_represented(self):
         scenarios = load_all_scenarios(str(SCENARIOS_ROOT))
@@ -77,3 +77,37 @@ class TestLoadScenarioPairs:
         pairs = load_scenario_pairs(str(SCENARIOS_ROOT))
         for a, b in pairs:
             assert a.variant != b.variant
+
+
+class TestLoadScenarioTriplets:
+    def test_returns_one_triplet(self):
+        triplets = load_scenario_triplets(str(SCENARIOS_ROOT))
+        assert len(triplets) == 1
+
+    def test_each_triplet_is_three_scenarios(self):
+        triplets = load_scenario_triplets(str(SCENARIOS_ROOT))
+        for triplet in triplets:
+            assert len(triplet) == 3
+            assert all(isinstance(s, Scenario) for s in triplet)
+
+    def test_triplet_members_share_variant_pair_id(self):
+        triplets = load_scenario_triplets(str(SCENARIOS_ROOT))
+        for a, b, c in triplets:
+            assert a.variant_pair_id == b.variant_pair_id == c.variant_pair_id
+            assert a.variant_pair_id is not None
+
+    def test_triplet_members_have_distinct_variants(self):
+        triplets = load_scenario_triplets(str(SCENARIOS_ROOT))
+        for a, b, c in triplets:
+            assert a.variant != b.variant
+            assert b.variant != c.variant
+            assert a.variant != c.variant
+
+    def test_warp_triplet_sorted_alphabetically(self):
+        triplets = load_scenario_triplets(str(SCENARIOS_ROOT))
+        warp_triplet = next(
+            (t for t in triplets if t[0].variant_pair_id == "p2-08-warp"), None
+        )
+        assert warp_triplet is not None
+        variants = [s.variant.value for s in warp_triplet]
+        assert variants == sorted(variants)  # WARP_AB, WARP_AC, WARP_BC alphabetically
