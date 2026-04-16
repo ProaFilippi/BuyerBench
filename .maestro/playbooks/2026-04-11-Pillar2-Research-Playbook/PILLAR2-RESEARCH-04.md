@@ -589,9 +589,10 @@
 
 ### I.2 Minimal Upgrade (Realistic Paper — ~2 weeks engineering)
 
-- [ ] **[UPGRADE-1] Multi-run support:** Add `--n-runs N` CLI parameter to `buyerbench run`. Re-run each scenario N times independently per model. Log `run_index`.
+- [x] **[UPGRADE-1] Multi-run support:** Add `--n-runs N` CLI parameter to `buyerbench run`. Re-run each scenario N times independently per model. Log `run_index`.
   - Implementation: loop in `harness/runner.py`; each run gets fresh session; store run_index in result
   - Estimated effort: 2 days
+  - ✅ **Implemented (2026-04-16):** Added `run_index: int = 0` to `EvaluationResult` (`buyerbench/models.py:78`) and `EvaluationResultJSON` (`results/schemas.py:28`). Added `run_index: int = 0` parameter to `run_scenario()` (`harness/runner.py`); result stored on model and filename changed to `{scenario_id}-run{NNN:03d}.json` (zero-padded, collision-free for N runs). Added `--n-runs N` (`click.IntRange(min=1)`) CLI option to `buyerbench run` (`buyerbench/__main__.py`); inner loop wraps the per-scenario `run_scenario()` call with `for run_idx in range(n_runs)`. `SessionMetadata.scenarios_run` updated to `len(scenarios) * len(agents) * n_runs`. `run_index` added to CSV export fieldnames (`results/session_export.py`). 6 new tests in `TestMultiRunSupport` cover: run_index on result, file naming, JSON persistence, `--n-runs` CLI, sequential indices, and backward-compat default N=1. All 620 tests pass.
 
 - [ ] **[UPGRADE-2] Supplier order randomization:** Add `supplier_order_seed` parameter to scenario runner. Shuffle supplier list in prompt before each run using this seed.
   - Implementation: `harness/prompt.py`: accept seed, shuffle `context.suppliers` list

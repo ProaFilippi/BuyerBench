@@ -6,6 +6,7 @@ Covers:
 - `run --agent all` with no available agents writes status=skipped for all
 - `run --agent all` with available agent runs normally and writes real results
 - `run --agent <id>` still works single-agent (regression)
+- Multi-run support: --n-runs N, run_index field, file naming
 """
 from __future__ import annotations
 
@@ -36,7 +37,7 @@ class TestRunScenarioOutputDir:
         agent = MockAgent()
         result = run_scenario(scenarios[0], agent, output_dir=str(tmp_path))
 
-        expected = tmp_path / agent.agent_id / f"{scenarios[0].id}.json"
+        expected = tmp_path / agent.agent_id / f"{scenarios[0].id}-run000.json"
         assert expected.exists(), f"Expected result file not found: {expected}"
 
         data = json.loads(expected.read_text())
@@ -58,7 +59,7 @@ class TestRunScenarioOutputDir:
 
         run_scenario(scenarios[0], agent, output_dir=None)
 
-        expected = tmp_path / "results" / agent.agent_id / f"{scenarios[0].id}.json"
+        expected = tmp_path / "results" / agent.agent_id / f"{scenarios[0].id}-run000.json"
         assert expected.exists()
 
 
@@ -188,3 +189,110 @@ class TestRunAllAgents:
             data = json.loads(f.read_text())
             assert "scenario_id" in data
             assert "overall_pass" in data
+
+
+# ---------------------------------------------------------------------------
+# Multi-run support (UPGRADE-1)
+# ---------------------------------------------------------------------------
+
+class TestMultiRunSupport:
+    def test_run_index_stored_on_result(self, tmp_path):
+        """run_scenario() must store run_index on the returned EvaluationResult."""
+        from agents.mock import MockAgent
+        from harness.loader import load_all_scenarios
+        from harness.runner import run_scenario
+
+        scenarios_root = Path(__file__).parent.parent / "scenarios"
+        scenarios = load_all_scenarios(str(scenarios_root))
+        agent = MockAgent()
+
+        result_0 = run_scenario(scenarios[0], agent, output_dir=str(tmp_path), run_index=0)
+        result_3 = run_scenario(scenarios[0], agent, output_dir=str(tmp_path), run_index=3)
+
+        assert result_0.run_index == 0
+        assert result_3.run_index == 3
+
+    def test_file_named_with_run_index(self, tmp_path):
+        """Output file must be <scenario_id>-run<NNN>.json."""
+        from agents.mock import MockAgent
+        from harness.loader import load_all_scenarios
+        from harness.runner import run_scenario
+
+        scenarios_root = Path(__file__).parent.parent / "scenarios"
+        scenarios = load_all_scenarios(str(scenarios_root))
+        agent = MockAgent()
+
+        run_scenario(scenarios[0], agent, output_dir=str(tmp_path), run_index=0)
+        run_scenario(scenarios[0], agent, output_dir=str(tmp_path), run_index=1)
+
+        agent_dir = tmp_path / agent.agent_id
+        expected_0 = agent_dir / f"{scenarios[0].id}-run000.json"
+        expected_1 = agent_dir / f"{scenarios[0].id}-run001.json"
+
+        assert expected_0.exists(), f"run000 file missing: {expected_0}"
+        assert expected_1.exists(), f"run001 file missing: {expected_1}"
+
+    def test_run_index_persisted_in_json(self, tmp_path):
+        """run_index must be serialised into the JSON result file."""
+        from agents.mock import MockAgent
+        from harness.loader import load_all_scenarios
+        from harness.runner import run_scenario
+
+        scenarios_root = Path(__file__).parent.parent / "scenarios"
+        scenarios = load_all_scenarios(str(scenarios_root))
+        agent = MockAgent()
+
+        run_scenario(scenarios[0], agent, output_dir=str(tmp_path), run_index=7)
+
+        json_file = tmp_path / agent.agent_id / f"{scenarios[0].id}-run007.json"
+        data = json.loads(json_file.read_text())
+        assert data["run_index"] == 7
+
+    def test_n_runs_cli_flag(self, tmp_path):
+        """--n-runs 3 must produce 3 result files per scenario."""
+        runner = CliRunner()
+        result = runner.invoke(
+            cli,
+            ["run", "--agent", "mock-agent-v1", "--pillar", "1",
+             "--n-runs", "3", "--output-dir", str(tmp_path)],
+        )
+        assert result.exit_code == 0, f"Non-zero exit:\n{result.output}"
+
+        agent_dir = tmp_path / "mock-agent-v1"
+        assert agent_dir.is_dir()
+        result_files = sorted(agent_dir.glob("*.json"))
+        # 6 pillar-1 scenarios × 3 runs = 18 files
+        assert len(result_files) == 18, f"Expected 18 files, got {len(result_files)}"
+
+    def test_n_runs_run_index_sequential(self, tmp_path):
+        """With --n-runs 3, run indices stored in JSON files must be 0, 1, 2."""
+        runner = CliRunner()
+        runner.invoke(
+            cli,
+            ["run", "--agent", "mock-agent-v1", "--pillar", "1",
+             "--n-runs", "3", "--output-dir", str(tmp_path)],
+        )
+
+        agent_dir = tmp_path / "mock-agent-v1"
+        # Collect all unique run_index values across result files
+        run_indices: set[int] = set()
+        for f in agent_dir.glob("*.json"):
+            data = json.loads(f.read_text())
+            if "run_index" in data:
+                run_indices.add(data["run_index"])
+
+        assert run_indices == {0, 1, 2}
+
+    def test_default_n_runs_is_one(self, tmp_path):
+        """Without --n-runs, behaviour is identical to N=1 (backward compat)."""
+        runner = CliRunner()
+        result = runner.invoke(
+            cli,
+            ["run", "--agent", "mock-agent-v1", "--pillar", "1",
+             "--output-dir", str(tmp_path)],
+        )
+        assert result.exit_code == 0
+
+        agent_dir = tmp_path / "mock-agent-v1"
+        result_files = list(agent_dir.glob("*.json"))
+        assert len(result_files) == 6  # 6 pillar-1 scenarios × 1 run

@@ -97,6 +97,7 @@ def test_export_session_csv_columns():
         "session_id",
         "agent_id",
         "scenario_id",
+        "run_index",
         "pillar",
         "variant",
         "score",

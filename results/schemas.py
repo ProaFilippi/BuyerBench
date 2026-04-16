@@ -23,6 +23,9 @@ class EvaluationResultJSON(BaseModel):
     overall_pass: bool = False
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     variant_pair_id: str | None = None
+    raw_output: str = ""
+    decisions: dict[str, Any] = Field(default_factory=dict)
+    run_index: int = 0
 
 
 class PillarStats(BaseModel):

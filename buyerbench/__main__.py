@@ -191,6 +191,14 @@ def select(output: str, filter_tag: str | None, filter_provider: str | None) -> 
     show_default=True,
     help="Launch interactive results dashboard after the run",
 )
+@click.option(
+    "--n-runs",
+    "n_runs",
+    default=1,
+    show_default=True,
+    type=click.IntRange(min=1),
+    help="Number of independent runs per (agent, scenario) cell for statistical analysis.",
+)
 def run(
     agent: str | None,
     from_selection: str | None,
@@ -202,6 +210,7 @@ def run(
     academic_report: bool,
     test_context: str | None,
     dashboard: bool,
+    n_runs: int,
 ) -> None:
     """Run the benchmark suite against a named CLI agent (or all agents)."""
     import json
@@ -379,11 +388,15 @@ def run(
         table.add_column("Status", justify="center")
 
         for s in all_scenarios:
-            result = run_scenario(s, agent_instance, output_dir=output_dir)
-            all_results.append(result)
-            score = result.pillar_scores[0].score if result.pillar_scores else 0.0
-            status = "[green]PASS[/green]" if result.overall_pass else "[red]FAIL[/red]"
-            table.add_row(s.title[:50], s.pillar.value, f"{score:.2f}", status)
+            for run_idx in range(n_runs):
+                result = run_scenario(
+                    s, agent_instance, output_dir=output_dir, run_index=run_idx
+                )
+                all_results.append(result)
+                score = result.pillar_scores[0].score if result.pillar_scores else 0.0
+                status = "[green]PASS[/green]" if result.overall_pass else "[red]FAIL[/red]"
+                run_label = f"{s.title[:44]} [{run_idx+1}/{n_runs}]" if n_runs > 1 else s.title[:50]
+                table.add_row(run_label, s.pillar.value, f"{score:.2f}", status)
 
         console.print()
         console.print(table)
@@ -465,7 +478,7 @@ def run(
         meta = SessionMetadata(
             session_id=session_id,
             agents=agent_ids,
-            scenarios_run=len(all_scenarios) * len(agents_to_run),
+            scenarios_run=len(all_scenarios) * len(agents_to_run) * n_runs,
             pillars=pillar_ints,
             started_at=started_at,
             completed_at=completed_at,
@@ -525,6 +538,43 @@ def run(
     )
     console.print(f"Results written to [bold]{output_dir}/[/bold]")
     console.print()
+
+    # ── Publish to web dashboard prompt ──────────────────────────────────────
+    if not dry_run and all_results and sys.stdin.isatty():
+        from rich.prompt import Confirm
+
+        if Confirm.ask(
+            "[bold cyan]Publish results to web dashboard?[/bold cyan]",
+            default=True,
+        ):
+            try:
+                import json as _json
+                from results.report import generate_full_report
+
+                exp_dir = Path(output_dir)
+                console.print(
+                    f"[dim]Generating FULL-REPORT.json from {exp_dir} ...[/dim]"
+                )
+                full_report = generate_full_report(str(exp_dir))
+                report_path = exp_dir / "FULL-REPORT.json"
+                report_path.write_text(_json.dumps(full_report, indent=2, default=str))
+                console.print(
+                    f"[bold green]Published![/bold green] "
+                    f"Report → [bold]{report_path}[/bold]"
+                )
+                n_scenarios = len(full_report.get("scenario_results", []))
+                console.print(
+                    f"[dim]{n_scenarios} scenario results with logs included.[/dim]"
+                )
+                console.print(
+                    "[dim]Web dashboard will pick up changes automatically in dev mode "
+                    "(npm run dev). For production, rebuild with: cd web && npm run build[/dim]"
+                )
+            except Exception as _pub_err:
+                console.print(
+                    f"[dim yellow]Publish failed: {_pub_err}[/dim yellow]"
+                )
+        console.print()
 
     if dashboard and not dry_run:
         from buyerbench.dashboard import run_dashboard
