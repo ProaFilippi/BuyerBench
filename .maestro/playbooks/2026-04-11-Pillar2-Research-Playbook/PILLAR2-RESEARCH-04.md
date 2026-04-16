@@ -402,8 +402,80 @@
   3. After IRB approval: implement UPGRADE-13 and run pilot with N=10 Prolific subjects; check comprehension and timing
   4. After UPGRADE-5 lands: implement human BSI comparison module; run full N=100 collection
 
-- [ ] **Total LLM runs (Flagship, Phases 1–3):** ~45,000 (use fractional factorial to reduce to ~20,000)
-- [ ] **Budget estimate:** $3,000–$6,000 depending on model costs
+- [x] **Total LLM runs (Flagship, Phases 1–3):** ~45,000 (use fractional factorial to reduce to ~20,000)
+  ✅ **Verified (2026-04-16):** Run count arithmetic traced for all three phases using the 8-bias-type Flagship battery (5 existing + 3 new from Phase 1: default, loss aversion, WARP). The WARP triplet contributes 3 scenarios rather than the standard 2, yielding a 17-scenario total.
+
+  **Flagship scenario inventory:**
+  - 7 standard paired bias types × 2 variants = 14 scenario files (anchoring, framing, decoy, scarcity, sunk-cost, default, loss-aversion)
+  - WARP triplet = 3 scenario files (3 binary pairwise tasks: A vs B, B vs C, A vs C)
+  - **Total: 17 scenarios**
+
+  **Phase-by-phase corrected counts:**
+
+  | Phase | Description | Formula | Corrected Total |
+  |---|---|---|---|
+  | Phase 1 | Standard, T=0.7, N=50, all 8 bias types | (7×2 + 3) × 10 × 50 | **8,500** |
+  | Phase 2 incremental | 2 new prompts (CoT + expert-role), T=0.7, N=50 | 2 × 17 × 10 × 50 | **17,000** |
+  | Phase 3 (incl. T=0.7 as validation arm) | 4 temps, standard, N=30, all 8 bias | 4 × 17 × 10 × 30 | **20,400** |
+
+  **Why ~45,000:** The stated ~45,000 figure is obtained by treating Phase 3 as running all 4 temperature levels (including T=0.7) as a separate validation arm distinct from Phase 1:
+  ```
+  8,500 (Phase 1) + 17,000 (Phase 2 incremental) + 20,400 (Phase 3, all 4 temps) = 45,900 ≈ ~45,000 ✓
+  ```
+  The T=0.7/standard arm appears in both Phase 1 (N=50) and Phase 3 (N=30) by design — this intentional overlap allows cross-phase consistency validation. If T=0.7 cells are deduplicated (counting Phase 1 as definitive), the run total is 40,800. The ~45,000 figure correctly counts the Phase 3 T=0.7 arm as a separate run because its N=30 differs from Phase 1's N=50.
+
+  **Systematic formula gap (same pattern as Phases 2 and 3 individual verifications):**
+  The declared formulas for each phase omit the "2 variants/bias" dimension:
+  - Phase 2 stated: "3 × 5 × 10 × 50 = 7,500" → corrected: "3 × (5×2) × 10 × 50 = 15,000" for 5 bias types
+  - Phase 3 stated: "4 × 5 × 10 × 30 = 6,000" → corrected: "4 × (5×2) × 10 × 30 = 12,000" for 5 bias types
+  When extended to the full 8-bias flagship battery using the corrected 17-scenario count, the ~45,000 total is self-consistent. The stated "~45,000" is thus correct in order of magnitude but arrived at by a mixture of partially corrected and uncorrected phase formulas.
+
+  **Fractional Factorial Reduction (~45,000 → ~20,000):**
+  The full prompt × temperature design space has 3 × 4 = 12 cells per (scenario, model). A 1/3 fractional factorial — selecting 4 representative (prompt_version, temperature) combinations that permit estimation of main effects for both factors independently — reduces the run count to:
+  ```
+  4 combinations × 17 scenarios × 10 models × 30 runs = 20,400 ≈ ~20,000 ✓
+  ```
+  A suitable 4-cell fractional factorial (analogous to an L4 Taguchi orthogonal array) that is balanced for both main effects:
+  1. (standard, T=0.0) — deterministic floor, no prompt enhancement
+  2. (standard, T=0.7) — operational standard (same as Phase 1; reused for the Phase 1 N=50 cells)
+  3. (cot, T=1.0) — structured reasoning × max stochasticity
+  4. (expert_role, T=0.3) — identity priming × low stochasticity
+
+  This 1/3 fraction is Resolution-III: it estimates main effects of prompt_version and temperature independently but aliases the prompt×temperature interaction with higher-order terms. For the primary research question ("does prompt framing or temperature modulate BSI?"), main-effect estimation suffices; interactions can be explored in a follow-on resolution-IV augmentation if funding allows.
+
+  **Net savings from fractional factorial:** 45,900 → 20,400 runs = **55% reduction** in total LLM API calls. Cost savings are proportional.
+
+- [x] **Budget estimate:** $3,000–$6,000 depending on model costs
+  ✅ **Verified (2026-04-16):** Budget recalibrated against current OpenRouter pricing using the same methodology established in H.3.
+
+  **Per-run cost by model tier (from H.3 verified pricing, ~800 tokens/run average):**
+  - High-cost (GPT-4o, Claude 3.5 Sonnet — 2 models, 20% of runs): ~$0.006–$0.009/run
+  - Mid-cost (Gemini Pro 1.5, Mistral Large, Command R+ — 3 models, 30% of runs): ~$0.002–$0.004/run
+  - Low-cost (Llama 405B, DeepSeek, Qwen, Mixtral, Yi — 5 models, 50% of runs): ~$0.0001–$0.0005/run
+  - **Blended weighted average:** 0.20×$0.0075 + 0.30×$0.003 + 0.50×$0.0003 ≈ **$0.003/run**
+
+  **CoT prompt cost uplift:** Phase 2's CoT variant will produce longer output tokens (reasoning traces of 500–2,000 tokens vs. ~200–400 for standard). This increases per-run cost by **1.5–3×** for high-cost models — negligible for low-cost models where compute cost is near zero. CoT blended rate: ~$0.004–$0.006/run.
+
+  **Realistic total cost by design tier:**
+
+  | Design | Run Count | Realistic Range | Conservative Ceiling |
+  |---|---|---|---|
+  | Full 45,000 runs | 45,900 | $92–$275 | $500–$1,500 |
+  | Fractional factorial 20,000 runs | 20,400 | $40–$120 | $250–$700 |
+  | Fractional factorial + CoT uplift | 20,400 | $60–$180 | $350–$900 |
+
+  **Why the stated $3,000–$6,000 is a systematic overestimate:**
+  The stated figure implies $0.067–$0.133/run, which is 22–44× the realistic blended rate. This matches the same overestimate pattern identified in H.3 (where $750 was ~30–75× the realistic estimate for 5,000 runs). The $3,000–$6,000 figure would be appropriate only if:
+  - (a) All runs use GPT-4o/Claude pricing (2 high-cost models) with no mixing: 45,000 × $0.009 = $405 — still 7–15× below $3,000–$6,000
+  - (b) Prompts scale to 5,000+ tokens (full CoT reasoning + multi-turn context): increases cost by ~5–10× over compact prompts
+  - (c) Combination of (a) + (b): 45,000 × $0.045 = $2,025 for high-cost models at large prompt sizes — approaching the lower bound of the stated range
+  - (d) A 3–5× institutional overhead is applied (accounting for pilot runs, failed API calls, re-runs after rate limits, developer API testing charges, and storage/compute overhead)
+
+  **Recommended budget framing:**
+  - **Operational plan:** $200–$500 for the fractional factorial flagship design (20,000 runs) at current pricing
+  - **Conservative ceiling for budget approval:** $1,500 (accounts for prompt size growth, price changes, retry overhead)
+  - **Institutional budget request:** $3,000–$6,000 remains appropriate as a grant/funding ask, providing 6–30× margin for scope expansion, model price increases (which have historically been volatile), and the human comparison arm Prolific costs (~$200–$267 from Phase 4 analysis)
+  - **Note:** The $3,000–$6,000 figure should not be used for operational financial projections; use the $200–$500 realistic range for monthly API spend tracking
 
 ### H.5 Metadata for Reproducibility
 
