@@ -213,7 +213,49 @@
 
 ### H.4 Experiment Scale (Flagship Design — Phased)
 
-- [ ] **Phase 1 (add new scenarios):** Expand to 8 bias types (add default, loss aversion, WARP)
+- [x] **Phase 1 (add new scenarios):** Expand to 8 bias types (add default, loss aversion, WARP)
+  ✅ **Verified (2026-04-16):** Engineering analysis for each of the three new bias types, against current codebase:
+
+  **1. Default / Status Quo Bias (p2-06-default) → UPGRADE-8**
+  - `ScenarioVariant.DEFAULT` **already exists** in `buyerbench/models.py:19`. No schema change required — this is the most ready-to-implement of the three.
+  - Design: BASELINE presents two suppliers with neutral framing; DEFAULT variant marks one supplier as `"current_approved_vendor": true` (or equivalent YAML field) to simulate status quo anchoring. The agent should still choose the objectively higher-scoring supplier regardless.
+  - Evaluator: existing `score_pillar2()` and `compute_bias_susceptibility()` (`evaluators/pillar2.py`) handle this correctly — they compare optimal_chosen across the pair; no evaluator logic changes needed.
+  - Engineering cost: **~2 days** (2 YAML files + 1 evaluator test). No code changes to models, loader, or evaluators.
+  - Blocker: None. Can land independently as soon as YAML files are authored and reviewed.
+
+  **2. Loss Aversion Switching (p2-07-loss-aversion) → UPGRADE-9**
+  - `LOSS_AVERSION` is **absent** from `ScenarioVariant` enum (`models.py:10-19`). Loading a YAML with `variant: LOSS_AVERSION` will raise a Pydantic `ValidationError` today. Schema change required: add `LOSS_AVERSION = "LOSS_AVERSION"` to the enum.
+  - Design: BASELINE presents a switch from an inferior incumbent (VendorA) to a superior alternative (VendorB) using neutral language (e.g., "evaluate both vendors"). LOSS_AVERSION variant re-frames the same switch as abandoning an established relationship ("giving up a $X/year partnership with VendorA"). Economics are identical across both variants; the correct choice (VendorB) is unchanged.
+  - Evaluator: the existing `compute_bias_susceptibility()` logic handles the pair correctly once loaded — no evaluator changes needed beyond the schema extension.
+  - Engineering cost: **~2.5 days** (1-line enum addition + 2 YAML files + 1 evaluator test + regression test for new enum value).
+  - Blocker: `ScenarioVariant` enum extension must land before YAML can be loaded.
+
+  **3. WARP Battery (p2-08-warp) → UPGRADE-10**
+  - `WARP` is **completely absent** from the codebase — not in `ScenarioVariant`, not in any scenario directory, not referenced in any evaluator.
+  - **Structural incompatibility:** WARP (Weak Axiom of Revealed Preference) requires 3 binary pairwise choice tasks per battery: (A vs B), (B vs C), (A vs C). A rational agent must exhibit transitive preferences (if A≻B and B≻C, then A≻C). This is fundamentally different from the existing BASELINE + TREATMENT pair design:
+    - `load_scenario_pairs()` in `harness/loader.py:26-38` silently skips any `variant_pair_id` group with `len(members) != 2`. A WARP battery (3 scenarios sharing a `variant_pair_id`) would be **silently dropped** today.
+    - `compute_bias_susceptibility()` in `evaluators/pillar2.py:67-110` computes a 2-scenario BSI; WARP requires a 3-scenario **transitivity check** (detect cycles: A≻B, B≻C, C≻A) rather than a deviation measure.
+    - The aggregation schema (`aggregate_bias_report()`, `pillar2.py:113-151`) has no concept of a "transitivity violation rate".
+  - Required changes:
+    - Add `WARP = "WARP"` (or enum values `WARP_AB`, `WARP_BC`, `WARP_AC`) to `ScenarioVariant`.
+    - Extend `load_scenario_pairs()` to support 3-member groups, or add a new `load_scenario_triplets()` loader.
+    - Add `compute_warp_transitivity()` function to `evaluators/pillar2.py` alongside `compute_bias_susceptibility()`.
+    - WARP run count: 3 scenario files × 10 models × 50 runs = **1,500 runs per arm** (vs. 500 runs per arm for a standard 2-scenario pair). The asymmetry means WARP cannot be treated as a uniform "bias type" for run-count arithmetic.
+  - Engineering cost: **~3–4 days** (UPGRADE-10 estimated: "complex: requires session pairing logic").
+  - Blocker: `load_scenario_pairs()` must be refactored before WARP scenarios can be executed.
+
+  **Schema changes required before Phase 1 can proceed:**
+  | Bias Type | ScenarioVariant change | Loader change | Evaluator change |
+  |---|---|---|---|
+  | Default (p2-06) | None (DEFAULT exists) | None | None |
+  | Loss Aversion (p2-07) | Add `LOSS_AVERSION` | None | None |
+  | WARP (p2-08) | Add `WARP` (or triplet enums) | `load_scenario_pairs()` → support 3-member groups | Add `compute_warp_transitivity()` |
+
+  **Run count impact on Phase 1 total:**
+  Default and Loss Aversion each add 1 × 2 × 10 × 50 = **1,000 runs**. WARP adds 3 × 10 × 50 = **1,500 runs** (3 binary tasks per battery, no BASELINE counterpart — the pairwise comparison IS the baseline). Phase 1 total: 5,000 (existing) + 1,000 + 1,000 + 1,500 = **8,500 runs** for the 8-bias-type battery (not 8 × 2 × 10 × 50 = 8,000, because WARP contributes 3 scenarios rather than 2). Budget impact: ~$17–$43 incremental at realistic prompt pricing.
+
+  **Recommended implementation order:** p2-06-default (no blockers) → p2-07-loss-aversion (add 1 enum value) → p2-08-warp (requires loader refactor; defer to Phase 1 completion sprint).
+
 - [ ] **Phase 2 (add prompt variants):** 3 prompt versions × existing 5 bias types × 10 models × 50 runs
 - [ ] **Phase 3 (temperature sweep):** 4 temperatures × 5 bias types × 10 models × 30 runs
 - [ ] **Phase 4 (human comparison):** 100 Prolific subjects × 8 scenarios (IRB required)
