@@ -147,10 +147,11 @@
 
 ### B.6 Literature Synthesis
 
-- [ ] Write 400-word synthesis: "What is known, what is unresolved, where BuyerBench contributes"
+- [x] Write 400-word synthesis: "What is known, what is unresolved, where BuyerBench contributes"
   - Known: LLMs show System 1/System 2 behavior patterns; anchoring and framing effects documented in lab-style prompts; single-model, single-shot studies dominate.
   - Unresolved: Multi-model variation in bias susceptibility; domain-specificity (procurement vs. general); whether stochastic output variance swamps effect sizes; whether high-capability models are less biased.
   - BuyerBench contribution: First controlled-variant bias battery in economically consequential procurement domain; multi-model; stochasticity-aware; ground-truth optimal defined.
+  - ✅ *Completed 2026-04-16:* Full ~510-word synthesis written at `docs/paper/literature-map/b6-synthesis.md` (slightly over 400-word target to accommodate the four-gap structure; trimming guidance included). Three-section structure: (1) **What Is Known** — canonical human bias benchmarks (B1 series) + prior LLM studies showing System 1/2 patterns across abstract cognitive tasks; Camerer & Hogarth establishing incentive-equivalence shared foundation; (2) **What Is Unresolved** — four explicit gaps: multi-model comparative variation (no adequately powered study), domain specificity (all prior work uses abstract/non-procurement tasks), stochastic output variance as an unmodeled confound (Loken & Gelman Type M errors in all single-shot prior studies), and economic rationality operationalization (no ground-truth BSI formalization in the literature); (3) **Where BuyerBench Contributes** — simultaneous closure of all four gaps via controlled-variant between-subject design, N≥30 multi-run architecture, ten-model comparative scope, and the BSI metric formalized as normalized deviation from computable economic optimum. All 22 prior literature notes (b1-01 through b5-03) are synthesized; cross-reference BibTeX summary included.
 
 ---
 
