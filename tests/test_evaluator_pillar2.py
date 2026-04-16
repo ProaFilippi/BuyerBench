@@ -820,6 +820,89 @@ class TestAggregateBiasReportStochasticParroting:
             assert field in report, f"Missing field: {field}"
 
 
+class TestAggregateBiasReportAnchorInstructionFollowing:
+    """Tests for the anchor_instruction_following_confound field (CRITIQUE 9).
+
+    When an anchor is placed explicitly in the prompt, a model that ignores it
+    may be exhibiting bias resistance *or* instruction-following ability.  The
+    two mechanisms are observationally equivalent in this design.  The
+    ``anchor_instruction_following_confound`` field is a machine-readable anchor
+    for downstream consumers to carry this limitation alongside BSI values.
+    """
+
+    def test_empty_report_contains_anchor_instruction_following_confound(self):
+        """Field is present even with no pair results."""
+        report = aggregate_bias_report([])
+        assert "anchor_instruction_following_confound" in report
+
+    def test_nonempty_report_contains_anchor_instruction_following_confound(self):
+        """Field is present when BSI data is provided."""
+        pair_results = [
+            {"decision_changed": True, "bias_susceptibility_index": 0.5, "variant_type": "ANCHOR_HIGH"},
+        ]
+        report = aggregate_bias_report(pair_results)
+        assert "anchor_instruction_following_confound" in report
+
+    def test_anchor_instruction_following_confound_is_string(self):
+        """Field value must be a non-empty string."""
+        report = aggregate_bias_report([])
+        assert isinstance(report["anchor_instruction_following_confound"], str)
+        assert len(report["anchor_instruction_following_confound"]) > 0
+
+    def test_anchor_instruction_following_confound_mentions_instruction(self):
+        """Value must explicitly reference instruction-following as a confounding mechanism."""
+        report = aggregate_bias_report([])
+        value = report["anchor_instruction_following_confound"].lower()
+        assert "instruction" in value
+
+    def test_anchor_instruction_following_confound_mentions_bias(self):
+        """Value must reference bias resistance as the other candidate mechanism."""
+        report = aggregate_bias_report([])
+        value = report["anchor_instruction_following_confound"].lower()
+        assert "bias" in value
+
+    def test_anchor_instruction_following_confound_mentions_equivalent(self):
+        """Value must note that the two mechanisms are observationally equivalent."""
+        report = aggregate_bias_report([])
+        value = report["anchor_instruction_following_confound"].lower()
+        assert "equivalent" in value
+
+    def test_anchor_instruction_following_confound_consistent_across_empty_and_nonempty(self):
+        """The field value must be identical regardless of input size."""
+        empty_report = aggregate_bias_report([])
+        nonempty_report = aggregate_bias_report([
+            {"decision_changed": False, "bias_susceptibility_index": 0.0, "variant_type": "ANCHOR_LOW"},
+        ])
+        assert (
+            empty_report["anchor_instruction_following_confound"]
+            == nonempty_report["anchor_instruction_following_confound"]
+        )
+
+    def test_anchor_instruction_following_confound_constant_across_n_runs(self):
+        """The field value does not depend on n_runs_per_cell."""
+        r1 = aggregate_bias_report([], n_runs_per_cell=1)
+        r50 = aggregate_bias_report([], n_runs_per_cell=50)
+        assert (
+            r1["anchor_instruction_following_confound"]
+            == r50["anchor_instruction_following_confound"]
+        )
+
+    def test_schema_completeness_all_nine_limitation_fields(self):
+        """Report schema includes all nine limitation fields after CRITIQUE 9."""
+        report = aggregate_bias_report([])
+        for field in (
+            "domain_scope",
+            "incentive_framing",
+            "exploratory_only",
+            "sample_size_warning",
+            "cross_model_analysis",
+            "multiple_comparisons",
+            "training_data_confound",
+            "anchor_instruction_following_confound",
+        ):
+            assert field in report, f"Missing field: {field}"
+
+
 class TestDefaultStatusQuoBias:
     """Tests for p2-06 default/status-quo bias scenario pair.
 

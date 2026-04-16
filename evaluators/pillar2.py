@@ -276,6 +276,54 @@ The ``training_data_confound`` field in ``aggregate_bias_report`` is a
 machine-readable anchor for this limitation so that all downstream JSON/CSV
 consumers carry a reminder that training-data effects cannot be excluded
 from any observed BSI pattern.
+
+ANCHOR VALIDITY / INSTRUCTION-FOLLOWING CONFOUND
+-------------------------------------------------
+A structural ambiguity in anchor-type scenarios: when the prompt contains
+phrasing such as "the previous emergency procurement was $91/unit," a
+sophisticated model may correctly recognize this information as irrelevant
+to the current selection task and deliberately ignore it.  In that case
+the model is exhibiting *instruction-following ability* — it is reasoning
+"this prior datum is not a valid input to the current decision" — rather
+than manifesting or resisting an *anchoring bias*.
+
+This creates an identification problem: a model that scores BSI=0 (no bias
+detected) on anchor scenarios might be either (a) genuinely not susceptible
+to anchoring, or (b) capable enough to detect and override the anchor cue.
+The two mechanisms are empirically indistinguishable with this design —
+they produce identical BSI values for opposite reasons.
+
+The appropriate response is to acknowledge that instruction-following ability
+and bias resistance are likely *empirically correlated* across models in this
+study, and to frame results accordingly:
+
+  "We cannot fully separate bias resistance from instruction-following
+   ability in anchor-type scenarios.  A high-capability model that ignores
+   the anchor may be optimizing the stated objective *or* detecting and
+   discarding an irrelevant cue.  These mechanisms are observationally
+   equivalent in our design; effect sizes may be attenuated in frontier
+   models that are stronger instruction followers."
+
+This correlation may actually underlie the expected capability gradient:
+higher-capability models (higher Pillar 1 scores) may show lower BSI on
+anchor scenarios not because they are less susceptible to anchoring per se,
+but because they are better at recognizing contextually irrelevant signals —
+which is a different (and arguably more operationally important) property.
+
+Claims from anchor-type scenarios MUST acknowledge this framing:
+  "BSI on anchor scenarios reflects a combination of bias susceptibility
+   and instruction-following ability; the two cannot be separated in this
+   design."
+
+Claims MUST NOT be stated as:
+  "Model X is not susceptible to anchoring bias" — that requires a design
+  where the anchor cannot be consciously detected and overridden, which
+  is not achievable with explicit prompt-level anchors.
+
+The ``anchor_instruction_following_confound`` field in ``aggregate_bias_report``
+is a machine-readable anchor for this limitation so that all downstream
+JSON/CSV consumers carry a reminder that instruction-following ability and
+bias resistance are confounded in anchor scenarios.
 """
 from __future__ import annotations
 
@@ -537,6 +585,13 @@ def aggregate_bias_report(
     cannot be fully excluded; results must be framed as behavioral patterns
     observed in deployment conditions, regardless of underlying mechanism.
 
+    The ``anchor_instruction_following_confound`` field is a machine-readable
+    anchor for the structural ambiguity in anchor-type scenarios (CRITIQUE 9):
+    a model that ignores an anchor may be exhibiting either bias resistance or
+    instruction-following ability — the two mechanisms are observationally
+    equivalent in this design.  Effect sizes may be attenuated in high-capability
+    models that are stronger instruction followers.
+
     Args:
         pair_results: list of dicts from ``compute_bias_susceptibility``.
         n_runs_per_cell: number of independent runs per (model × scenario)
@@ -561,6 +616,11 @@ def aggregate_bias_report(
         "training data confound unexcluded: results characterize behavioral patterns "
         "in deployment conditions regardless of mechanism (stochastic parroting threat)"
     )
+    _ANCHOR_INSTRUCTION_FOLLOWING_CONFOUND = (
+        "anchor scenarios confound bias resistance with instruction-following ability: "
+        "a model ignoring an irrelevant anchor may be unbiased or a capable instruction follower; "
+        "the two mechanisms are observationally equivalent in this design"
+    )
 
     exploratory_only = n_runs_per_cell is None or n_runs_per_cell <= 1
 
@@ -578,6 +638,7 @@ def aggregate_bias_report(
             "cross_model_analysis": _CROSS_MODEL_ANALYSIS,
             "multiple_comparisons": _MULTIPLE_COMPARISONS,
             "training_data_confound": _TRAINING_DATA_CONFOUND,
+            "anchor_instruction_following_confound": _ANCHOR_INSTRUCTION_FOLLOWING_CONFOUND,
         }
 
     by_type: dict[str, list[float]] = {}
@@ -612,6 +673,7 @@ def aggregate_bias_report(
         "cross_model_analysis": _CROSS_MODEL_ANALYSIS,
         "multiple_comparisons": _MULTIPLE_COMPARISONS,
         "training_data_confound": _TRAINING_DATA_CONFOUND,
+        "anchor_instruction_following_confound": _ANCHOR_INSTRUCTION_FOLLOWING_CONFOUND,
     }
 
 
