@@ -981,6 +981,86 @@ class TestAggregateBiasReportCeilingEffect:
             assert field in report, f"Missing field: {field}"
 
 
+class TestAggregateBiasReportDecisionModuleScope:
+    """Tests for the decision_module_scope field (CRITIQUE 11 — not real agents).
+
+    BuyerBench evaluates the final selection stage of the procurement pipeline
+    only.  Tool use, database retrieval, and multi-turn context maintenance are
+    upstream and are not evaluated.  The ``decision_module_scope`` field is a
+    machine-readable anchor that downstream consumers can use to qualify any
+    claim about "AI buyer agents" with "at the final selection stage."
+    """
+
+    def test_empty_report_contains_decision_module_scope(self):
+        """Field is present even with no pair results."""
+        report = aggregate_bias_report([])
+        assert "decision_module_scope" in report
+
+    def test_nonempty_report_contains_decision_module_scope(self):
+        """Field is present when BSI data is provided."""
+        pair_results = [
+            {"decision_changed": False, "bias_susceptibility_index": 0.0, "variant_type": "ANCHOR_HIGH"},
+        ]
+        report = aggregate_bias_report(pair_results)
+        assert "decision_module_scope" in report
+
+    def test_decision_module_scope_is_nonempty_string(self):
+        """Field value must be a non-empty string."""
+        report = aggregate_bias_report([])
+        assert isinstance(report["decision_module_scope"], str)
+        assert len(report["decision_module_scope"]) > 0
+
+    def test_decision_module_scope_mentions_selection(self):
+        """Value must reference the 'final selection stage' scope."""
+        report = aggregate_bias_report([])
+        value = report["decision_module_scope"].lower()
+        assert "selection" in value
+
+    def test_decision_module_scope_mentions_pipeline_components(self):
+        """Value must reference the upstream pipeline components not evaluated."""
+        report = aggregate_bias_report([])
+        value = report["decision_module_scope"].lower()
+        # At least one of: tool use, retrieval, multi-turn, context, orchestration
+        assert any(term in value for term in ("tool", "retrieval", "multi-turn", "context", "upstream"))
+
+    def test_decision_module_scope_mentions_not_evaluated(self):
+        """Value must state that upstream components are not evaluated."""
+        report = aggregate_bias_report([])
+        value = report["decision_module_scope"].lower()
+        assert "not evaluated" in value or "upstream" in value
+
+    def test_decision_module_scope_consistent_across_empty_and_nonempty(self):
+        """The field value must be identical regardless of input size."""
+        empty_report = aggregate_bias_report([])
+        nonempty_report = aggregate_bias_report([
+            {"decision_changed": True, "bias_susceptibility_index": 1.0, "variant_type": "FRAMING"},
+        ])
+        assert empty_report["decision_module_scope"] == nonempty_report["decision_module_scope"]
+
+    def test_decision_module_scope_constant_across_n_runs(self):
+        """The field value does not depend on n_runs_per_cell."""
+        r1 = aggregate_bias_report([], n_runs_per_cell=1)
+        r50 = aggregate_bias_report([], n_runs_per_cell=50)
+        assert r1["decision_module_scope"] == r50["decision_module_scope"]
+
+    def test_schema_completeness_all_eleven_limitation_fields(self):
+        """Report schema includes all eleven limitation fields after CRITIQUE 11."""
+        report = aggregate_bias_report([])
+        for field in (
+            "domain_scope",
+            "incentive_framing",
+            "exploratory_only",
+            "sample_size_warning",
+            "cross_model_analysis",
+            "multiple_comparisons",
+            "training_data_confound",
+            "anchor_instruction_following_confound",
+            "ceiling_effect",
+            "decision_module_scope",
+        ):
+            assert field in report, f"Missing field: {field}"
+
+
 class TestDefaultStatusQuoBias:
     """Tests for p2-06 default/status-quo bias scenario pair.
 

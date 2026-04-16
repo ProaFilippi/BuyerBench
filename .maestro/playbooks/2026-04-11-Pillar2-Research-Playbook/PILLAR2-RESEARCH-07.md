@@ -77,10 +77,11 @@
 
 ### M.4 External Validity
 
-- [ ] **CRITIQUE 11 — These aren't real agents:**
+- [x] **CRITIQUE 11 — These aren't real agents:**
   > "Real buyer agents don't just answer a single question from a chat prompt. They retrieve information from databases, call APIs, maintain multi-turn context. Your prompt-level 'agent' is a toy."
   - **Severity:** Medium
   - **Response:** Acknowledged. Frame scope precisely: "We evaluate the decision-making module of LLM agents — specifically, the judgment call made when an agent receives structured procurement options and must select among them. Tool use and retrieval are upstream; the decision bias occurs at this final selection stage."
+  - **Implementation:** Added `DECISION MODULE SCOPE` section to `evaluators/pillar2.py` module docstring documenting: (1) the distinction between the full agent pipeline (retrieval, API calls, multi-turn context) and the final selection stage evaluated here, (2) the rationale for why testing the selection stage in isolation provides cleaner bias identification free from tool-use noise, (3) the correct scope statement ("at the final selection stage of the procurement decision pipeline"), and (4) MUST / MUST NOT phrasing examples requiring claims about "AI buyer agents" to be qualified with the pipeline scope. Added `decision_module_scope` field to both return paths of `aggregate_bias_report` — a machine-readable anchor so every downstream JSON/CSV export carries the scope restriction alongside BSI values. Updated `aggregate_bias_report` docstring to document the new field. Added `TestAggregateBiasReportDecisionModuleScope` with 9 tests covering: field presence in empty/non-empty reports, value is non-empty string, mentions "selection", mentions pipeline components (tool/retrieval/upstream), mentions "not evaluated" or "upstream", consistent across empty/non-empty inputs, constant across n_runs_per_cell values, and full schema completeness across all eleven limitation fields. All 135 pillar2 tests pass (2026-04-16).
 
 ---
 

@@ -367,6 +367,42 @@ The ``ceiling_effect`` field in ``aggregate_bias_report`` is a machine-readable
 anchor for this limitation so that all downstream JSON/CSV consumers carry a
 reminder that N=1 ceiling effects cannot distinguish genuine rationality from
 artifactually easy scenarios.
+
+DECISION MODULE SCOPE
+---------------------
+Real buyer agents are not simple question-answering systems.  A deployed
+procurement agent retrieves supplier data from databases, calls external APIs,
+maintains multi-turn conversation context, and executes tool-use pipelines —
+all before arriving at a final selection decision.  BuyerBench prompts model
+a single step in that pipeline: the final judgment call when structured
+procurement options are presented.  They do not capture database retrieval,
+API orchestration, or multi-turn context maintenance.
+
+This is not a flaw in the design — it is a deliberate scope decision.
+Decision biases occur at the *selection stage*, not in retrieval or
+orchestration.  Anchoring, framing, and decoy effects operate on the
+structured choice set that an agent receives, not on how the set was
+assembled.  Testing this stage in isolation provides clean identification of
+the bias effect, free from confounds introduced by tool-use noise or
+retrieval variability.
+
+The correct scope statement is:
+  "We evaluate the decision-making module of LLM-based buyer agents —
+   specifically, the economic judgment call made when structured procurement
+   options are presented.  Tool use, database retrieval, and multi-turn
+   context maintenance are upstream of this stage and are not evaluated here."
+
+Claims about "AI buyer agents" MUST be qualified as:
+  "...at the final selection stage of the procurement decision pipeline."
+
+Claims MUST NOT be stated as:
+  "AI buyer agents are [biased / rational] in procurement" — without
+  acknowledging that the evaluation covers only the selection module, not
+  the full agent pipeline including retrieval and orchestration.
+
+The ``decision_module_scope`` field in ``aggregate_bias_report`` is a
+machine-readable anchor for this limitation so that all downstream JSON/CSV
+consumers carry the scope restriction alongside BSI values.
 """
 from __future__ import annotations
 
@@ -641,6 +677,12 @@ def aggregate_bias_report(
     N=50 is required to estimate true bias rates.  If ceiling effects persist
     at N=50, the paper must pivot to the "robust rationality" framing (REV-4).
 
+    The ``decision_module_scope`` field is a machine-readable anchor for the
+    pipeline-scope limitation (CRITIQUE 11): BuyerBench evaluates the final
+    selection stage only.  Tool use, database retrieval, and multi-turn context
+    maintenance are upstream and are not evaluated here.  All claims about
+    "AI buyer agents" must be qualified as "at the final selection stage."
+
     Args:
         pair_results: list of dicts from ``compute_bias_susceptibility``.
         n_runs_per_cell: number of independent runs per (model × scenario)
@@ -675,6 +717,11 @@ def aggregate_bias_report(
         "artifactually easy scenarios; N=50 required to estimate true bias rates — "
         "if ceiling persists at N=50, pivot to 'robust rationality' framing (REV-4 harder variants)"
     )
+    _DECISION_MODULE_SCOPE = (
+        "final selection stage only: tool use, database retrieval, and multi-turn "
+        "context maintenance are upstream and not evaluated — "
+        "all claims about AI buyer agents must be qualified as 'at the final selection stage'"
+    )
 
     exploratory_only = n_runs_per_cell is None or n_runs_per_cell <= 1
 
@@ -694,6 +741,7 @@ def aggregate_bias_report(
             "training_data_confound": _TRAINING_DATA_CONFOUND,
             "anchor_instruction_following_confound": _ANCHOR_INSTRUCTION_FOLLOWING_CONFOUND,
             "ceiling_effect": _CEILING_EFFECT,
+            "decision_module_scope": _DECISION_MODULE_SCOPE,
         }
 
     by_type: dict[str, list[float]] = {}
@@ -730,6 +778,7 @@ def aggregate_bias_report(
         "training_data_confound": _TRAINING_DATA_CONFOUND,
         "anchor_instruction_following_confound": _ANCHOR_INSTRUCTION_FOLLOWING_CONFOUND,
         "ceiling_effect": _CEILING_EFFECT,
+        "decision_module_scope": _DECISION_MODULE_SCOPE,
     }
 
 
