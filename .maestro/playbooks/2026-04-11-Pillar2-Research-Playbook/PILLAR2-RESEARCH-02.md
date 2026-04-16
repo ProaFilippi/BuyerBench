@@ -16,11 +16,12 @@
 
 ### D.2 Secondary Research Questions
 
-- [ ] **SRQ1:** Which of the 5 tested bias types (anchoring, framing, decoy, scarcity, sunk cost) produce statistically significant bias susceptibility in LLM agents across repeated trials?
-- [ ] **SRQ2:** Does model capability (as proxied by Pillar 1 scores or model parameter count) predict lower bias susceptibility?
-- [ ] **SRQ3:** How much of observed output variance is attributable to stochastic sampling vs. systematic bias?
-- [ ] **SRQ4:** Does chain-of-thought (CoT) prompting attenuate or amplify bias susceptibility?
-- [ ] **SRQ5:** Are bias susceptibility profiles correlated across bias types within a model, or are they bias-specific?
+- [x] **SRQ1:** Which of the 5 tested bias types (anchoring, framing, decoy, scarcity, sunk cost) produce statistically significant bias susceptibility in LLM agents across repeated trials?
+- [x] **SRQ2:** Does model capability (as proxied by Pillar 1 scores or model parameter count) predict lower bias susceptibility?
+- [x] **SRQ3:** How much of observed output variance is attributable to stochastic sampling vs. systematic bias?
+- [x] **SRQ4:** Does chain-of-thought (CoT) prompting attenuate or amplify bias susceptibility?
+- [x] **SRQ5:** Are bias susceptibility profiles correlated across bias types within a model, or are they bias-specific?
+  - ✅ *Completed 2026-04-16:* Full operationalization of all 5 SRQs written at `docs/paper/hypotheses/d2-secondary-research-questions.md`. Each SRQ is anchored to: unit of observation, DV, IV(s), statistical test, expected pattern, null outcome pre-specification, data requirements, and identification gaps. **SRQ1** (bias type significance) uses BH-FDR-corrected one-sample t-tests + one-way ANOVA across the p2-01–p2-05 scenario battery; includes scenario mapping table and null framing. **SRQ2** (capability-bias tradeoff) uses Spearman rank correlation + OLS flagged as descriptive (N=10); documents the competing Hagendorff (2023) direction and the H6 non-monotone sunk cost interaction as a needed disaggregation. **SRQ3** (stochastic vs. systematic variance) operationalizes a variance decomposition via ICC and Levene tests, plus a temperature ablation protocol at T ∈ {0.0, 0.3, 0.7, 1.0}; links to H7 (variance-mean regression as mechanism test). **SRQ4** (CoT moderation) requires new CoT prompt variants and a 2×2 factorial design (anchoring × decoy × prompt type); identifies CoT as harness engineering requirement. **SRQ5** (model-specific bias profiles) uses a 5×5 Spearman correlation matrix, Cronbach's alpha, and Ward-linkage clustering; uses only data already required by SRQ1. MVP path identified: SRQ1 + SRQ2 + SRQ5 share a single 3,000-run dataset; SRQ3 and SRQ4 are flagship additions.
 
 ### D.3 Testable Hypotheses (6–12 required)
 
