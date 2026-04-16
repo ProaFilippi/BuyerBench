@@ -655,7 +655,7 @@ class TestAggregateBiasReportCrossModelRegressionScope:
         assert "10" in report["cross_model_analysis"]
 
     def test_schema_completeness_with_cross_model_field(self):
-        """Report schema includes all six limitation fields together."""
+        """Report schema includes all seven limitation fields together."""
         report = aggregate_bias_report([])
         for field in (
             "domain_scope",
@@ -663,6 +663,82 @@ class TestAggregateBiasReportCrossModelRegressionScope:
             "exploratory_only",
             "sample_size_warning",
             "cross_model_analysis",
+            "multiple_comparisons",
+        ):
+            assert field in report, f"Missing field: {field}"
+
+
+class TestAggregateBiasReportMultipleComparisons:
+    """Tests for the multiple_comparisons field (CRITIQUE 7 — multiple testing).
+
+    With 10 models × 5 bias types × 2 variants = 100 implicit test cells,
+    running all comparisons at α=0.05 yields ~5 false positives by chance.
+    Without pre-registration and BH correction, researchers may inadvertently
+    cherry-pick significant results.  The ``multiple_comparisons`` field is a
+    machine-readable anchor reminding downstream consumers that BH correction
+    and pre-registration are mandatory before any p-value is labeled inferential.
+    """
+
+    def test_empty_report_contains_multiple_comparisons(self):
+        """multiple_comparisons field is present even with no pair results."""
+        report = aggregate_bias_report([])
+        assert "multiple_comparisons" in report
+
+    def test_nonempty_report_contains_multiple_comparisons(self):
+        """multiple_comparisons field is present when BSI data is provided."""
+        pair_results = [
+            {"decision_changed": True, "bias_susceptibility_index": 0.5, "variant_type": "ANCHOR_HIGH"},
+        ]
+        report = aggregate_bias_report(pair_results)
+        assert "multiple_comparisons" in report
+
+    def test_multiple_comparisons_is_string(self):
+        """multiple_comparisons value must be a non-empty string."""
+        report = aggregate_bias_report([])
+        assert isinstance(report["multiple_comparisons"], str)
+        assert len(report["multiple_comparisons"]) > 0
+
+    def test_multiple_comparisons_mentions_bh_correction(self):
+        """Value must explicitly mention BH (Benjamini-Hochberg) correction."""
+        report = aggregate_bias_report([])
+        value = report["multiple_comparisons"].lower()
+        assert "bh" in value or "benjamini" in value or "correction" in value
+
+    def test_multiple_comparisons_mentions_preregistration(self):
+        """Value must reference pre-registration as a required step."""
+        report = aggregate_bias_report([])
+        value = report["multiple_comparisons"].lower()
+        assert "pre-registration" in value or "preregistration" in value or "pre-reg" in value or "registration" in value
+
+    def test_multiple_comparisons_consistent_across_empty_and_nonempty(self):
+        """The field value must be identical regardless of input size."""
+        empty_report = aggregate_bias_report([])
+        nonempty_report = aggregate_bias_report([
+            {"decision_changed": False, "bias_susceptibility_index": 0.0, "variant_type": "FRAMING"},
+        ])
+        assert empty_report["multiple_comparisons"] == nonempty_report["multiple_comparisons"]
+
+    def test_multiple_comparisons_constant_across_n_runs(self):
+        """The field value does not depend on n_runs_per_cell."""
+        r1 = aggregate_bias_report([], n_runs_per_cell=1)
+        r50 = aggregate_bias_report([], n_runs_per_cell=50)
+        assert r1["multiple_comparisons"] == r50["multiple_comparisons"]
+
+    def test_multiple_comparisons_mentions_100_cells(self):
+        """Value must reference ~100 cells to make the false-positive risk concrete."""
+        report = aggregate_bias_report([])
+        assert "100" in report["multiple_comparisons"]
+
+    def test_schema_completeness_all_seven_limitation_fields(self):
+        """Report schema includes all seven limitation fields after CRITIQUE 7."""
+        report = aggregate_bias_report([])
+        for field in (
+            "domain_scope",
+            "incentive_framing",
+            "exploratory_only",
+            "sample_size_warning",
+            "cross_model_analysis",
+            "multiple_comparisons",
         ):
             assert field in report, f"Missing field: {field}"
 

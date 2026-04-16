@@ -180,6 +180,54 @@ Claims MUST NOT be stated as:
 The ``cross_model_analysis`` field in ``aggregate_bias_report`` is a
 machine-readable anchor for this limitation so that all downstream JSON/CSV
 consumers carry the scope label alongside BSI values.
+
+MULTIPLE COMPARISONS WITHOUT PRE-REGISTRATION
+----------------------------------------------
+The full BuyerBench Pillar 2 experiment spans a large implicit test space:
+10 models × 5 bias types × 2 variants per bias type = 100 (model × cell)
+comparisons.  At a nominal significance level of α = 0.05, approximately
+5 false positives are expected *by chance alone*, even under the null
+hypothesis that no model exhibits any bias.  Without pre-registration,
+researchers can consciously or unconsciously select and emphasize
+statistically significant results from this space, inflating the apparent
+evidence for bias.
+
+This is a genuine threat that cannot be eliminated post hoc — it must be
+addressed through study design before data collection begins:
+
+  1. **Pre-registration (REV-2):** Post a pre-registration on OSF *before*
+     any data is collected.  The registration must specify:
+       - Which hypotheses are *confirmatory* (H1, H3, H5, H7) and which
+         are *exploratory* (H2, H4, H6, H8+).
+       - The exact regression specification for each confirmatory test.
+       - The multiple-comparison correction procedure (Benjamini-Hochberg).
+       - The α level (recommended: 0.05 BH-corrected across confirmatory
+         tests only).
+     Any analysis not listed in the pre-registration must be labeled
+     "unplanned / exploratory" and cannot be used to confirm hypotheses.
+
+  2. **Benjamini-Hochberg (BH) correction:** Apply BH correction across all
+     *confirmatory* hypothesis tests within a single experiment.  Do not
+     apply BH across exploratory and confirmatory tests together — that
+     dilutes power for the confirmatory tests.
+
+  3. **Labeling discipline:** Every result table and figure must clearly
+     label each reported p-value as: (a) confirmatory (pre-registered,
+     BH-corrected), (b) exploratory (unplanned, no correction implied), or
+     (c) descriptive (no test performed).
+
+Claims from confirmatory analyses MUST be stated as:
+  "Pre-registered confirmatory test, BH-corrected p < 0.05 across H1/H3/H5/H7."
+
+Claims MUST NOT be stated as:
+  "Model X shows significant anchoring bias (p = 0.03)" — without explicitly
+  stating whether this was pre-registered and whether BH correction was
+  applied.  An uncorrected p-value selected from 100 cells is meaningless.
+
+The ``multiple_comparisons`` field in ``aggregate_bias_report`` is a
+machine-readable anchor for this limitation so that all downstream JSON/CSV
+consumers carry a reminder that BH correction and pre-registration are
+required before any inferential p-value is reported.
 """
 from __future__ import annotations
 
@@ -429,6 +477,11 @@ def aggregate_bias_report(
     never be labeled as inferential.  Within-model analyses (N=50+ runs per
     cell) remain inferential.
 
+    The ``multiple_comparisons`` field is a machine-readable anchor for the
+    multiple-testing limitation (CRITIQUE 7): 100 implicit cells (10 models ×
+    5 bias types × 2 variants) require BH correction and pre-registration
+    before any inferential p-value can be reported.
+
     Args:
         pair_results: list of dicts from ``compute_bias_susceptibility``.
         n_runs_per_cell: number of independent runs per (model × scenario)
@@ -445,6 +498,10 @@ def aggregate_bias_report(
     _CROSS_MODEL_ANALYSIS = (
         "descriptive only (N=10 models); no cross-model regression inference valid"
     )
+    _MULTIPLE_COMPARISONS = (
+        "pre-registration + BH correction required before any p-value claim; "
+        "100 cells (10 models × 5 bias types × 2 variants) → ~5 false positives at α=0.05"
+    )
 
     exploratory_only = n_runs_per_cell is None or n_runs_per_cell <= 1
 
@@ -460,6 +517,7 @@ def aggregate_bias_report(
             "exploratory_only": exploratory_only,
             "sample_size_warning": _SAMPLE_SIZE_WARNING,
             "cross_model_analysis": _CROSS_MODEL_ANALYSIS,
+            "multiple_comparisons": _MULTIPLE_COMPARISONS,
         }
 
     by_type: dict[str, list[float]] = {}
@@ -492,6 +550,7 @@ def aggregate_bias_report(
         "exploratory_only": exploratory_only,
         "sample_size_warning": _SAMPLE_SIZE_WARNING,
         "cross_model_analysis": _CROSS_MODEL_ANALYSIS,
+        "multiple_comparisons": _MULTIPLE_COMPARISONS,
     }
 
 
