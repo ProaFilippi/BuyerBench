@@ -389,6 +389,36 @@ def run(
         _shutil.copy2(from_session, Path(output_dir) / Path(from_session).name)
 
     started_at = datetime.now(timezone.utc)
+    from results.session_export import generate_session_id
+    session_id = generate_session_id()
+    pillar_ints = [int(pillar)] if pillar else [1, 2, 3]
+
+    # ── UPGRADE-11: Write frozen experiment manifest before execution ─────────
+    _manifest = None
+    if not dry_run:
+        try:
+            from results.experiment_manifest import create_manifest, write_manifest as _write_manifest
+            Path(output_dir).mkdir(parents=True, exist_ok=True)
+            _manifest = create_manifest(
+                session_id=session_id,
+                agents=[aid for aid, _ in agents_to_run],
+                scenarios=all_scenarios,
+                n_runs=n_runs,
+                temperature=temperature,
+                prompt_version=prompt_version,
+                pillars=pillar_ints,
+                research_mode=research_mode,
+                output_dir=output_dir,
+                started_at=started_at,
+            )
+            _write_manifest(_manifest, output_dir)
+            console.print(
+                f"[dim]Experiment manifest → "
+                f"[bold]{output_dir}/experiment_manifest.json[/bold][/dim]"
+            )
+        except Exception as _e:
+            console.print(f"[dim yellow]Manifest creation failed: {_e}[/dim yellow]")
+
     all_results: list = []
 
     # ── Run each agent ────────────────────────────────────────────────────────
@@ -590,13 +620,22 @@ def run(
             SessionMetadata,
             export_session_csv,
             export_session_markdown,
-            generate_session_id,
         )
 
         completed_at = datetime.now(timezone.utc)
-        session_id = generate_session_id()
-        pillar_ints = [int(pillar)] if pillar else [1, 2, 3]
         agent_ids = [aid for aid, _ in agents_to_run]
+
+        # ── UPGRADE-11: Finalize experiment manifest with completion data ─────
+        if _manifest is not None:
+            try:
+                from results.experiment_manifest import (
+                    finalize_manifest,
+                    write_manifest as _write_manifest_final,
+                )
+                _manifest = finalize_manifest(_manifest, all_results, completed_at)
+                _write_manifest_final(_manifest, output_dir)
+            except Exception as _e:
+                console.print(f"[dim yellow]Manifest finalization failed: {_e}[/dim yellow]")
 
         md_path = str(Path(output_dir) / f"{session_id}.md")
         csv_path = str(Path(output_dir) / f"{session_id}.csv")
