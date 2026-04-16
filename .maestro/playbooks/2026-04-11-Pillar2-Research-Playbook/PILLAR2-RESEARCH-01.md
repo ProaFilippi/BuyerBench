@@ -21,10 +21,11 @@
   - Rejection triggers: "Only descriptive statistics"; "no power justification"; "one-shot runs treated as evidence"; "no correction for multiple comparisons".
   - ✅ *Completed 2026-04-15:* Full journal-by-journal analysis written at `docs/paper/journal-strategy/tier2-field-behavioral-journals.md`. Per-journal fit rationale, evidence thresholds, rejection triggers, and strategic timeline documented for JEBO, Experimental Economics, JBDM, and GEB. Decision gate and minimum viable paper specification included. **Primary recommendation: JEBO** (1,500 runs, $225 API cost, achievable in one weekend). Fast-path option: JBDM. GEB is a follow-on target for the WARP battery study only.
 
-- [ ] **[TIER 3 — Adjacent Credible]** Document fit for Journal of Artificial Intelligence Research (JAIR), AI & Society, Decision Support Systems, Management Science (IS track)
+- [x] **[TIER 3 — Adjacent Credible]** Document fit for Journal of Artificial Intelligence Research (JAIR), AI & Society, Decision Support Systems, Management Science (IS track)
   - Fit rationale: Methodological contribution (BuyerBench as evaluation framework) is sufficient if paired with substantive empirical findings. Management Science IS track values applied rigor.
   - Required evidence level: Reproducible benchmark; clear protocol; 2+ models; systematic results. Human comparison optional.
   - Rejection triggers: "Pure benchmarking paper without economic contribution"; "no comparison to prior work"; framework not publicly released.
+  - ✅ *Completed 2026-04-15:* Full journal-by-journal analysis written at `docs/paper/journal-strategy/tier3-adjacent-journals.md`. Per-journal fit rationale, evidence thresholds, rejection triggers, and strategic timeline documented for JAIR, AI & Society, DSS, and Management Science IS. **Primary Tier 3 recommendation: DSS** (highest IF at 7.5; direct procurement domain fit) with JAIR as a recommended first publication to establish the framework in the AI literature. Management Science IS is a long-horizon (18–24 month) follow-on target requiring economic consequence quantification. Recommended publication sequence: JAIR (3–6 mo) → JEBO/DSS (6–12 mo) → Management Science IS (18–24 mo).
 
 - [ ] **[TIER 4 — Realistic Primary Target]** JEBO or Experimental Economics as primary submission
   - Strategy: Submit flagship version here first. If rejected for scope, revise down to field-journal working paper tier.
