@@ -129,7 +129,8 @@
 
 ### L.3 Run Orchestration
 
-- [ ] Create `research/experiments/run_experiment.py`:
+- [x] Create `research/experiments/run_experiment.py`:
+  <!-- Implemented: generate_run_plan, load_completed_run_ids, append_run_record, build_run_record, estimate_cost, run_experiment (--dry-run, --resume), CLI entry point. Tests: tests/test_run_experiment.py (45 tests, all pass). -->
   - Accept `ExperimentManifest` as input
   - Generate full run plan as list of (model, scenario, variant, run_index, temperature, prompt_version, seed)
   - Support `--dry-run` mode: print plan + cost estimate, do not invoke models
