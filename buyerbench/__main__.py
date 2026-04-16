@@ -1531,5 +1531,131 @@ def session_report(results_dir: str, output_dir: str | None) -> None:
     console.print()
 
 
+@cli.command()
+@click.option(
+    "--experiment-dir",
+    required=True,
+    help="Directory with agent sub-directories containing per-scenario result JSON files.",
+)
+@click.option(
+    "--output-dir",
+    default=None,
+    help="Directory for stats_pipeline_report.json (default: --experiment-dir).",
+)
+@click.option(
+    "--p1-scores",
+    "p1_scores_str",
+    default=None,
+    help=(
+        'Optional JSON mapping of agent_id → P1 score for H2 capability regression. '
+        'Example: \'{"agent-A": 0.80, "agent-B": 0.65}\''
+    ),
+)
+def stats(experiment_dir: str, output_dir: str | None, p1_scores_str: str | None) -> None:
+    """Run Section G statistical analysis pipeline on a Pillar 2 experiment directory.
+
+    Produces ``stats_pipeline_report.json`` containing:
+
+    \b
+    - Level 1 WLS: BSI ~ Treatment + BiasType + Model
+    - ANOVA-style variance decomposition (η² per source)
+    - Per-(bias_category × model) treatment-effect tests with BH-FDR correction
+    - H7 noise-bias correlation (std_bsi ~ mean_bsi)
+    - H2 capability regression (mean_BSI ~ P1Score; descriptive only)
+    """
+    import json as _json
+    from pathlib import Path
+
+    from results.aggregate_cells import aggregate_cells_from_dir
+    from results.stats_pipeline import run_stats_pipeline, write_stats_pipeline_report
+
+    exp_path = Path(experiment_dir)
+    if not exp_path.exists():
+        console.print(f"[red]Experiment directory not found: {exp_path}[/red]")
+        raise SystemExit(1)
+
+    out_path = Path(output_dir) if output_dir else exp_path
+
+    # Parse optional P1 scores
+    p1_scores: dict[str, float] | None = None
+    if p1_scores_str:
+        try:
+            p1_scores = _json.loads(p1_scores_str)
+        except Exception as exc:
+            console.print(f"[red]--p1-scores is not valid JSON: {exc}[/red]")
+            raise SystemExit(1)
+
+    console.print(f"\n[bold cyan]Loading cell aggregates from:[/bold cyan] {exp_path}")
+    try:
+        cell_report = aggregate_cells_from_dir(exp_path)
+    except Exception as exc:
+        console.print(f"[red]Failed to load results: {exc}[/red]")
+        raise SystemExit(1)
+
+    console.print(
+        f"[dim]  {cell_report.n_agents} agents · "
+        f"{cell_report.n_cells} cells · "
+        f"{cell_report.n_total_runs} total runs[/dim]"
+    )
+
+    console.print("\n[bold cyan]Running statistical analysis pipeline…[/bold cyan]")
+    stats_report = run_stats_pipeline(cell_report, p1_scores=p1_scores)
+
+    out_file = write_stats_pipeline_report(stats_report, out_path)
+    console.print(f"\n[bold green]Stats report saved →[/bold green] [bold]{out_file}[/bold]")
+
+    # ── Summary display ────────────────────────────────────────────────────────
+    from rich.table import Table as RichTable
+    from rich import box as rich_box
+
+    if stats_report.variance_decomposition:
+        vd = stats_report.variance_decomposition
+        t = RichTable(
+            title="[bold]Variance Decomposition (η²)[/bold]",
+            box=rich_box.SIMPLE,
+        )
+        t.add_column("Source", style="bold cyan")
+        t.add_column("SS", justify="right")
+        t.add_column("η²", justify="right")
+        t.add_column("% Variance", justify="right")
+        for row in vd.rows:
+            t.add_row(
+                row.source,
+                f"{row.ss:.4f}",
+                f"{row.eta_squared:.4f}",
+                f"{row.pct_variance:.1f}%",
+            )
+        console.print()
+        console.print(t)
+
+    if stats_report.treatment_effects:
+        n_sig = sum(1 for te in stats_report.treatment_effects if te.significant_05)
+        console.print(
+            f"\n[bold]Treatment effects:[/bold] "
+            f"{len(stats_report.treatment_effects)} tests · "
+            f"{n_sig} significant at BH-FDR q=0.05"
+        )
+
+    if stats_report.level1_ols:
+        ols = stats_report.level1_ols
+        treat_coef = next(
+            (c for c in ols.coefficients if c.name == "Treatment"), None
+        )
+        if treat_coef:
+            sig_str = "[bold green]✓[/bold green]" if treat_coef.significant_05 else "[dim]ns[/dim]"
+            console.print(
+                f"[bold]Level 1 OLS Treatment β:[/bold] "
+                f"{treat_coef.estimate:+.4f} "
+                f"(SE={treat_coef.se:.4f}, p={treat_coef.p_value:.4f}) {sig_str}"
+            )
+
+    if stats_report.warnings:
+        console.print("\n[bold yellow]Warnings:[/bold yellow]")
+        for w in stats_report.warnings:
+            console.print(f"  [dim]·[/dim] {w}")
+
+    console.print()
+
+
 if __name__ == "__main__":
     cli()
