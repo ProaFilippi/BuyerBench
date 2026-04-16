@@ -620,10 +620,11 @@
 
 ### I.3 Medium Upgrade (Extended Realistic Paper — ~6 weeks)
 
-- [ ] **[UPGRADE-7] Prompt variant support:** Add `prompt_version` parameter (standard|cot|expert_role) to scenario runner. Define CoT and expert-role prompt templates in `harness/prompt.py`.
+- [x] **[UPGRADE-7] Prompt variant support:** Add `prompt_version` parameter (standard|cot|expert_role) to scenario runner. Define CoT and expert-role prompt templates in `harness/prompt.py`.
   - CoT template: prefix with "Think step by step through each option before making your final decision."
   - Expert-role template: prefix with "You are a senior procurement officer with 20 years of experience in industrial supply chain management."
   - Estimated effort: 2 days
+  - ✅ **Implemented (2026-04-16):** Added `_PROMPT_VERSIONS` dispatch dict to `harness/prompt.py` with `"standard"` (existing preamble), `"cot"` (CoT prefix + preamble), and `"expert_role"` (senior-procurement-officer prefix + preamble). `scenario_to_prompt()` now accepts `prompt_version: str = "standard"` and raises `ValueError` for unknown versions; `VALID_PROMPT_VERSIONS` tuple exported for CLI validation. Added `prompt_version: str = "standard"` to `AgentResponse` and `EvaluationResult` (`buyerbench/models.py`) and `EvaluationResultJSON` (`results/schemas.py`). `OpenRouterAgent.__init__()` (`agents/openrouter_agent.py`) accepts `prompt_version`, passes it to `scenario_to_prompt()` in `respond()`, and includes it in all `AgentResponse` objects (dry-run, success, and error paths). `agents/registry.py` forwards `prompt_version` from `config["prompt_version"]` or `config["openrouter"]["prompt_version"]`. `evaluators/aggregate.py:run_evaluation()` propagates `prompt_version` from `AgentResponse` to `EvaluationResult`. `buyerbench/__main__.py` adds `--prompt-version standard|cot|expert_role` CLI option; non-standard values are written to `config["prompt_version"]` before agent instantiation. `results/session_export.py` adds `prompt_version` CSV column. 21 new tests: 13 in `TestPromptVersions` (`tests/test_prompt.py`) and 8 in `TestPromptVersionSupport` (`tests/test_openrouter_agent.py`). Existing `test_export_session_csv_columns` updated to include `prompt_version`. All 815 tests pass.
 
 - [ ] **[UPGRADE-8] New scenario — Default/Status Quo Bias (p2-06):** Design and validate scenario pair. Baseline: choose between two suppliers with equal presentation. Treatment: one supplier pre-selected/highlighted as "current approved vendor."
   - Estimated effort: 2 days (scenario design + YAML + evaluator test)

@@ -122,12 +122,14 @@ def get_agent(
         model_id = OPENROUTER_MODEL_MAP[agent_id]
         or_cfg = config.get("openrouter", {})
         temperature = config.get("temperature", or_cfg.get("temperature", None))
+        prompt_version = config.get("prompt_version", or_cfg.get("prompt_version", "standard"))
         return OpenRouterAgent(
             model_id=model_id,
             timeout=config.get("timeout", or_cfg.get("timeout", 120)),
             dry_run=config.get("dry_run", False),
             system_prompt=skill_prompt,
             temperature=temperature,
+            prompt_version=prompt_version,
         )
 
     # Extract mode from the agent_id suffix

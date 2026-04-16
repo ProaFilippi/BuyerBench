@@ -7,7 +7,11 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from buyerbench.models import Difficulty, Pillar, Scenario, ScenarioVariant
-from harness.prompt import parse_agent_output, scenario_to_prompt
+from harness.prompt import (
+    VALID_PROMPT_VERSIONS,
+    parse_agent_output,
+    scenario_to_prompt,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -267,3 +271,83 @@ class TestSupplierOrderSeed:
         })
         prompt = scenario_to_prompt(scenario, supplier_order_seed=1)
         assert "5000" in prompt
+
+
+# ---------------------------------------------------------------------------
+# prompt_version tests (UPGRADE-7)
+# ---------------------------------------------------------------------------
+
+class TestPromptVersions:
+    COT_PREFIX = "Think step by step through each option before making your final decision."
+    EXPERT_PREFIX = "You are a senior procurement officer with 20 years of experience in industrial supply chain management."
+
+    def test_standard_is_default(self):
+        scenario = _make_scenario()
+        # Explicit standard == no argument
+        assert scenario_to_prompt(scenario, prompt_version="standard") == scenario_to_prompt(scenario)
+
+    def test_standard_does_not_include_cot_prefix(self):
+        scenario = _make_scenario()
+        prompt = scenario_to_prompt(scenario, prompt_version="standard")
+        assert self.COT_PREFIX not in prompt
+
+    def test_standard_does_not_include_expert_prefix(self):
+        scenario = _make_scenario()
+        prompt = scenario_to_prompt(scenario, prompt_version="standard")
+        assert self.EXPERT_PREFIX not in prompt
+
+    def test_cot_includes_cot_prefix(self):
+        scenario = _make_scenario()
+        prompt = scenario_to_prompt(scenario, prompt_version="cot")
+        assert self.COT_PREFIX in prompt
+
+    def test_cot_still_includes_system_preamble(self):
+        scenario = _make_scenario()
+        prompt = scenario_to_prompt(scenario, prompt_version="cot")
+        assert "BuyerBench" in prompt
+        assert "JSON" in prompt
+
+    def test_expert_role_includes_expert_prefix(self):
+        scenario = _make_scenario()
+        prompt = scenario_to_prompt(scenario, prompt_version="expert_role")
+        assert self.EXPERT_PREFIX in prompt
+
+    def test_expert_role_still_includes_system_preamble(self):
+        scenario = _make_scenario()
+        prompt = scenario_to_prompt(scenario, prompt_version="expert_role")
+        assert "BuyerBench" in prompt
+        assert "JSON" in prompt
+
+    def test_cot_and_expert_differ_from_standard(self):
+        scenario = _make_scenario()
+        std = scenario_to_prompt(scenario, prompt_version="standard")
+        cot = scenario_to_prompt(scenario, prompt_version="cot")
+        exp = scenario_to_prompt(scenario, prompt_version="expert_role")
+        assert cot != std
+        assert exp != std
+        assert cot != exp
+
+    def test_unknown_version_raises(self):
+        scenario = _make_scenario()
+        with pytest.raises(ValueError, match="Unknown prompt_version"):
+            scenario_to_prompt(scenario, prompt_version="nonexistent")
+
+    def test_valid_prompt_versions_tuple(self):
+        assert "standard" in VALID_PROMPT_VERSIONS
+        assert "cot" in VALID_PROMPT_VERSIONS
+        assert "expert_role" in VALID_PROMPT_VERSIONS
+
+    def test_prompt_version_compatible_with_supplier_seed(self):
+        scenario = _make_scenario_3_suppliers()
+        # Both parameters can be used simultaneously
+        prompt = scenario_to_prompt(scenario, supplier_order_seed=42, prompt_version="cot")
+        assert self.COT_PREFIX in prompt
+        assert "SupplierA" in prompt
+        assert "SupplierB" in prompt
+        assert "SupplierC" in prompt
+
+    def test_cot_prompt_deterministic_with_same_seed(self):
+        scenario = _make_scenario_3_suppliers()
+        p1 = scenario_to_prompt(scenario, supplier_order_seed=7, prompt_version="cot")
+        p2 = scenario_to_prompt(scenario, supplier_order_seed=7, prompt_version="cot")
+        assert p1 == p2

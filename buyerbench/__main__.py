@@ -217,6 +217,17 @@ def select(output: str, filter_tag: str | None, filter_provider: str | None) -> 
         "Flags if BSI collapses at T=0.0 (stochastic artifact warning, per G.6)."
     ),
 )
+@click.option(
+    "--prompt-version",
+    "prompt_version",
+    default="standard",
+    show_default=True,
+    type=click.Choice(["standard", "cot", "expert_role"]),
+    help=(
+        "Prompt framing variant: 'standard' (default), 'cot' (chain-of-thought prefix), "
+        "or 'expert_role' (senior-procurement-officer identity prefix)."
+    ),
+)
 def run(
     agent: str | None,
     from_selection: str | None,
@@ -231,6 +242,7 @@ def run(
     n_runs: int,
     temperature: float | None,
     research_mode: bool,
+    prompt_version: str,
 ) -> None:
     """Run the benchmark suite against a named CLI agent (or all agents)."""
     import json
@@ -367,6 +379,8 @@ def run(
     config["dry_run"] = dry_run
     if temperature is not None:
         config["temperature"] = temperature
+    if prompt_version != "standard":
+        config["prompt_version"] = prompt_version
 
     # Copy session config into output dir for provenance
     if from_session:

@@ -50,6 +50,7 @@ class OpenRouterAgent(BaseAgent):
         dry_run: bool = False,
         system_prompt: str = "",
         temperature: float | None = None,
+        prompt_version: str = "standard",
     ) -> None:
         self.model_id = model_id
         self.agent_id = f"openrouter-{model_id.replace('/', '-')}"
@@ -57,6 +58,7 @@ class OpenRouterAgent(BaseAgent):
         self.dry_run = dry_run
         self.system_prompt = system_prompt
         self.temperature = temperature
+        self.prompt_version = prompt_version
 
     # ------------------------------------------------------------------
     # BaseAgent interface
@@ -65,7 +67,7 @@ class OpenRouterAgent(BaseAgent):
     def respond(self, scenario: Scenario) -> AgentResponse:
         from harness.prompt import scenario_to_prompt, parse_agent_output
 
-        prompt = scenario_to_prompt(scenario)
+        prompt = scenario_to_prompt(scenario, prompt_version=self.prompt_version)
 
         if self.dry_run:
             print(f"\n[dry-run] OpenRouterAgent({self.model_id})\n")
@@ -78,6 +80,7 @@ class OpenRouterAgent(BaseAgent):
                 latency_ms=0.0,
                 temperature=self.temperature,
                 prompt_text=prompt,
+                prompt_version=self.prompt_version,
             )
 
         return self._call_openrouter(prompt, scenario)
@@ -133,6 +136,7 @@ class OpenRouterAgent(BaseAgent):
                 latency_ms=elapsed_ms,
                 temperature=self.temperature,
                 prompt_text=prompt,
+                prompt_version=self.prompt_version,
                 error_flag=True,
                 error_message=str(exc),
             )
@@ -149,6 +153,7 @@ class OpenRouterAgent(BaseAgent):
             latency_ms=elapsed_ms,
             temperature=self.temperature,
             prompt_text=prompt,
+            prompt_version=self.prompt_version,
             model_version=data.get("model"),
             token_count_input=usage.get("prompt_tokens", 0) or 0,
             token_count_output=usage.get("completion_tokens", 0) or 0,

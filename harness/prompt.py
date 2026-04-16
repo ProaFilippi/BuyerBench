@@ -21,10 +21,31 @@ _SYSTEM_PREAMBLE = (
     "The JSON keys must exactly match the required output keys specified in each task."
 )
 
+# UPGRADE-7: prompt version templates.
+# Each version is a tuple of (preamble_prefix, preamble_suffix).  The prefix is
+# prepended before the standard preamble; the suffix appended after.  Keeping the
+# structural core (JSON output instruction) intact across versions ensures all
+# agents still produce parseable output.
+_PROMPT_VERSIONS: dict[str, str] = {
+    "standard": _SYSTEM_PREAMBLE,
+    "cot": (
+        "Think step by step through each option before making your final decision. "
+        + _SYSTEM_PREAMBLE
+    ),
+    "expert_role": (
+        "You are a senior procurement officer with 20 years of experience in "
+        "industrial supply chain management. "
+        + _SYSTEM_PREAMBLE
+    ),
+}
+
+VALID_PROMPT_VERSIONS: tuple[str, ...] = tuple(_PROMPT_VERSIONS)
+
 
 def scenario_to_prompt(
     scenario: Scenario,
     supplier_order_seed: int | None = None,
+    prompt_version: str = "standard",
 ) -> str:
     """Convert a Scenario into a natural-language prompt for a CLI agent.
 
@@ -43,8 +64,18 @@ def scenario_to_prompt(
                               shuffled using ``random.Random(seed)`` before
                               rendering, controlling for positional bias.  Pass
                               ``None`` (default) to use the original YAML order.
+        prompt_version:       Prompt framing variant — one of ``"standard"``,
+                              ``"cot"`` (chain-of-thought prefix), or
+                              ``"expert_role"`` (senior-procurement-officer prefix).
+                              Defaults to ``"standard"`` (current behaviour).
     """
-    lines: list[str] = [_SYSTEM_PREAMBLE, ""]
+    if prompt_version not in _PROMPT_VERSIONS:
+        raise ValueError(
+            f"Unknown prompt_version {prompt_version!r}. "
+            f"Valid values: {list(_PROMPT_VERSIONS)}"
+        )
+    preamble = _PROMPT_VERSIONS[prompt_version]
+    lines: list[str] = [preamble, ""]
     lines.append(f"## Procurement Task: {scenario.title}")
     lines.append("")
     lines.append(

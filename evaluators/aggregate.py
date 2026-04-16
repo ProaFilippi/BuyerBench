@@ -53,6 +53,8 @@ def run_evaluation(scenario: Scenario, response: AgentResponse) -> EvaluationRes
         # derive variant label and bias category from scenario definition
         variant=scenario.variant.value,
         bias_category=_infer_bias_category(scenario.variant_pair_id),
+        # UPGRADE-7: propagate prompt version from agent response
+        prompt_version=response.prompt_version,
     )
 
 

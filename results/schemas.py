@@ -41,6 +41,8 @@ class EvaluationResultJSON(BaseModel):
     prompt_text: str = ""
     api_response_raw: str = ""
     run_id: str = ""
+    # UPGRADE-7: prompt variant used for this run
+    prompt_version: str = "standard"
 
 
 class PillarStats(BaseModel):

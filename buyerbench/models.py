@@ -66,6 +66,8 @@ class AgentResponse(BaseModel):
     model_version: str | None = None
     prompt_text: str = ""
     api_response_raw: str = ""
+    # UPGRADE-7: prompt variant used to generate this response
+    prompt_version: str = "standard"
 
 
 class PillarScore(BaseModel):
@@ -101,3 +103,5 @@ class EvaluationResult(BaseModel):
     prompt_text: str = ""
     api_response_raw: str = ""
     run_id: str = ""
+    # UPGRADE-7: prompt variant used for this run
+    prompt_version: str = "standard"

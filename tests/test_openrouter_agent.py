@@ -503,3 +503,86 @@ class TestRunMetadataCapture:
         response = agent.respond(scenario)
         assert response.prompt_text != ""
         assert response.temperature == 0.3
+
+
+# ---------------------------------------------------------------------------
+# UPGRADE-7: prompt_version support
+# ---------------------------------------------------------------------------
+
+class TestPromptVersionSupport:
+    _COT_PREFIX = "Think step by step through each option before making your final decision."
+    _EXPERT_PREFIX = "You are a senior procurement officer with 20 years of experience"
+
+    def test_default_prompt_version_is_standard(self):
+        """Default prompt_version must be 'standard'."""
+        agent = OpenRouterAgent("openai/gpt-4o")
+        assert agent.prompt_version == "standard"
+
+    def test_explicit_prompt_version_stored(self):
+        agent = OpenRouterAgent("openai/gpt-4o", prompt_version="cot")
+        assert agent.prompt_version == "cot"
+
+    def test_dry_run_includes_cot_prefix(self):
+        """CoT prompt version must embed the CoT prefix in the sent prompt."""
+        agent = OpenRouterAgent("openai/gpt-4o", dry_run=True, prompt_version="cot")
+        scenario = _make_scenario()
+        response = agent.respond(scenario)
+        assert self._COT_PREFIX in response.prompt_text
+
+    def test_dry_run_includes_expert_prefix(self):
+        agent = OpenRouterAgent("openai/gpt-4o", dry_run=True, prompt_version="expert_role")
+        scenario = _make_scenario()
+        response = agent.respond(scenario)
+        assert self._EXPERT_PREFIX in response.prompt_text
+
+    def test_dry_run_prompt_version_in_response(self):
+        """AgentResponse.prompt_version must reflect the agent's configured version."""
+        agent = OpenRouterAgent("openai/gpt-4o", dry_run=True, prompt_version="cot")
+        scenario = _make_scenario()
+        response = agent.respond(scenario)
+        assert response.prompt_version == "cot"
+
+    def test_standard_dry_run_prompt_version_in_response(self):
+        """AgentResponse.prompt_version defaults to 'standard'."""
+        agent = OpenRouterAgent("openai/gpt-4o", dry_run=True)
+        scenario = _make_scenario()
+        response = agent.respond(scenario)
+        assert response.prompt_version == "standard"
+
+    def test_registry_forwards_prompt_version_from_config(self):
+        """get_agent() must forward prompt_version from config to OpenRouterAgent."""
+        from agents.registry import get_agent
+        agent = get_agent(
+            "openrouter-openai-gpt-4o",
+            {"prompt_version": "expert_role", "dry_run": True},
+        )
+        assert agent.prompt_version == "expert_role"
+
+    def test_registry_defaults_prompt_version_to_standard(self):
+        from agents.registry import get_agent
+        agent = get_agent(
+            "openrouter-openai-gpt-4o",
+            {"dry_run": True},
+        )
+        assert agent.prompt_version == "standard"
+
+    def test_http_response_captures_prompt_version(self, monkeypatch):
+        """AgentResponse.prompt_version must be set on a live (mocked) HTTP call."""
+        monkeypatch.setenv("OPENROUTER_API_KEY", "test-key")
+        agent = OpenRouterAgent("openai/gpt-4o", prompt_version="cot")
+        scenario = _make_scenario()
+
+        json_content = json.dumps({"selected_supplier": "SupplierA", "unit_price": 90.0})
+        mock_resp = MagicMock()
+        mock_resp.raise_for_status = MagicMock()
+        mock_resp.json.return_value = {
+            "choices": [{"message": {"content": f"```json\n{json_content}\n```"}}],
+            "model": "openai/gpt-4o",
+            "usage": {"prompt_tokens": 50, "completion_tokens": 30},
+        }
+
+        with patch("requests.post", return_value=mock_resp):
+            response = agent.respond(scenario)
+
+        assert response.prompt_version == "cot"
+        assert self._COT_PREFIX in response.prompt_text

@@ -107,6 +107,7 @@ def test_export_session_csv_columns():
         "score",
         "overall_pass",
         "temperature",
+        "prompt_version",
         "token_count_input",
         "token_count_output",
         "api_cost_usd",
