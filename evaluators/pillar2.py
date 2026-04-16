@@ -1,3 +1,30 @@
+"""Pillar 2 evaluator — Economic Decision Quality and Behavioral Robustness.
+
+INTERNAL RATIONALITY SCOPE
+--------------------------
+This evaluator tests *internal* rationality: whether an agent optimizes the
+objective function *as stated* in each scenario's ``evaluation_weights`` YAML
+field.  We do NOT claim that those weights represent the uniquely correct or
+universally rational preference ordering.  The ground truth here is
+algorithmic — derived deterministically from the scenario definition — not an
+externally validated economic optimum.
+
+Concretely:
+  * ``expected_optimal`` in each scenario YAML is computed from the scenario's
+    own evaluation weights.
+  * ``optimal_choice_rate`` == 1.0 means the agent matched that scenario-defined
+    best choice, nothing more.
+  * ``bias_susceptibility_index`` (BSI) measures whether the agent's choice
+    changes across economically-equivalent presentation variants (baseline vs.
+    framing/anchor/decoy).  A BSI > 0 means the agent's choice is *inconsistent
+    with its own stated objective* across variants — not that the agent is irrational
+    in some absolute sense.
+
+This framing is the correct response to the "no ground truth" critique: we
+measure deviation from the stated objective, making the claim falsifiable and
+scope-limited.  Any cross-scenario generalization must restrict claims to
+"procurement decision-making" and label them accordingly.
+"""
 from __future__ import annotations
 
 from buyerbench.models import AgentResponse, EvaluationResult, Pillar, PillarScore, Scenario
@@ -8,6 +35,10 @@ def score_pillar2(scenario: Scenario, response: AgentResponse) -> PillarScore:
 
     Computes optimal_choice_rate, optimality_gap, expected_value_regret, and
     bias_susceptibility_index for a single scenario evaluation.
+
+    "Optimal" is defined relative to the scenario's own ``evaluation_weights``
+    and ``expected_optimal`` fields — this is an *internal* rationality test,
+    not a claim about external or universal economic optimality.
     """
     expected, decision_key = _get_expected_choice(scenario)
     selected = _get_agent_choice(scenario, response, decision_key)
@@ -68,6 +99,23 @@ def compute_bias_susceptibility(
     baseline_result: EvaluationResult, variant_result: EvaluationResult
 ) -> dict:
     """Compute Bias Susceptibility Index from a matched baseline/variant pair.
+
+    The BSI measures *decision inconsistency* across economically equivalent
+    presentation variants.  A baseline and variant share identical underlying
+    economics (same suppliers, same evaluation weights, same expected_optimal)
+    but differ in how the choice set is framed (anchor values, gain/loss
+    framing, decoy options, scarcity cues, etc.).
+
+    A rational agent — one that optimizes the scenario's stated objective
+    regardless of irrelevant contextual cues — should make the same choice in
+    both variants, yielding BSI == 0.0.  BSI > 0 indicates susceptibility to
+    presentation effects that are economically irrelevant according to the
+    scenario's own objective function.
+
+    Note: BSI captures *behavioral inconsistency*, not incentivized decision
+    failure.  LLMs do not receive monetary payoffs; results should be framed
+    as hypothetical-choice consistency tests (analogous to Camerer & Hogarth
+    1999), not incentivized economic experiments.
 
     Returns:
         decision_changed: bool — did the agent make a different choice between variants?
