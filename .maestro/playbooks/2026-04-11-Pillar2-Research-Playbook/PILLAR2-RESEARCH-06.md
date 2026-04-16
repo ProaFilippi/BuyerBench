@@ -367,8 +367,10 @@
 
 ### L.8 Output Tables
 
-- [ ] **Table 1 — Main Results:** Mean BSI × (10 models × 5 bias types); bold cells where BSI significantly > 0 (BH-corrected)
-- [ ] **Table 2 — Regression Results:** Mixed-effects estimates; standard format (coefficient, SE, t-stat, p-value); significance stars
-- [ ] **Table 3 — Variance Decomposition:** SS and % of variance for each factor (model, bias_type, stochastic)
-- [ ] **Table A1 — Power Analysis:** Reproduce G.8 table in paper-ready format
-- [ ] Use `pandas.to_latex()` + manual formatting; export as `.tex` files
+- [x] **Table 1 — Main Results:** Mean BSI × (10 models × 5 bias types); bold cells where BSI significantly > 0 (BH-corrected)
+- [x] **Table 2 — Regression Results:** Mixed-effects estimates; standard format (coefficient, SE, t-stat, p-value); significance stars
+- [x] **Table 3 — Variance Decomposition:** SS and % of variance for each factor (model, bias_type, stochastic)
+- [x] **Table A1 — Power Analysis:** Reproduce G.8 table in paper-ready format
+- [x] Use `pandas.to_latex()` + manual formatting; export as `.tex` files
+  <!-- Implemented: research/tables/main_results.py (build_main_results_table, save_main_results_table — Table 1 with BH-corrected bolding, booktabs LaTeX + CSV export), research/tables/regression_table.py (build_regression_table + build_variance_table — Table 2 stargazer-style mixed-effects output, Table 3 ANOVA SS decomposition; both with save_* helpers), research/tables/power_table.py (build_power_table — Table A1 two-panel: Panel A design tiers with G*Power reference values from G.8; Panel B computed power grid using normal approximation; save_power_table). Tests: tests/test_research_tables.py (103 tests, all pass). Full suite: all tests pass. -->
+
