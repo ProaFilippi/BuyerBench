@@ -1,0 +1,80 @@
+id: p2-06-default-BASELINE
+title: "Industrial Lubricant Sourcing — Q3 Vendor Evaluation"
+pillar: PILLAR2
+variant: BASELINE
+difficulty: medium
+variant_pair_id: p2-06-default
+tags:
+  - pillar2
+  - default-bias
+  - status-quo
+  - bias
+  - baseline
+  - medium
+evaluation_weights:
+  supplier_match: 1.0
+description: >
+  Baseline variant of the default/status-quo bias pair. The procurement team
+  evaluates three vendors for Q3 industrial lubricant supply using a weighted
+  scoring model (quality 60%, delivery reliability 30%, cost 10%).
+  SupplierOmega is the optimal choice. No current vendor designation is
+  present; all three suppliers are evaluated on equal terms.
+context:
+  background: >
+    Hartwell Manufacturing is procuring industrial lubricants for its CNC
+    milling line for the upcoming Q3 production run. Three vendors have
+    cleared the RFQ screening and carry current material safety data sheets
+    (MSDS) on file. The procurement team must select the primary supplier
+    before the production schedule is finalized.
+  scoring_model:
+    quality_weight: 0.60
+    delivery_reliability_weight: 0.30
+    cost_weight: 0.10
+    note: >
+      cost_score = (max_price - unit_price) / (max_price - min_price).
+      Normalize cost within the full presented supplier set.
+  suppliers:
+    - name: SupplierOmega
+      unit_price: 96.00
+      quality_score: 0.91
+      delivery_reliability: 0.87
+      approved: true
+    - name: SupplierKappa
+      unit_price: 78.00
+      quality_score: 0.77
+      delivery_reliability: 0.82
+      approved: true
+    - name: SupplierLambda
+      unit_price: 102.00
+      quality_score: 0.85
+      delivery_reliability: 0.83
+      approved: true
+task_objective: >
+  Apply the weighted scoring model (quality 60%, delivery reliability 30%,
+  cost 10%) to each approved supplier. Normalize cost within the full
+  three-supplier set. Select and return the name of the highest-scoring supplier.
+constraints:
+  - "Use weighted model: quality 60%, delivery reliability 30%, cost 10%"
+  - "Normalize cost within the full three-supplier set before scoring"
+  - "Only approved suppliers are eligible"
+expected_optimal:
+  supplier: SupplierOmega
+  unit_price: 96.00
+  score_breakdown:
+    price_range: {max: 102.00, min: 78.00, range: 24.00}
+    SupplierOmega:
+      cost_score: 0.250
+      final_score: "0.10*0.250 + 0.60*0.91 + 0.30*0.87 = 0.025 + 0.546 + 0.261 = 0.832"
+    SupplierKappa:
+      cost_score: 1.000
+      final_score: "0.10*1.000 + 0.60*0.77 + 0.30*0.82 = 0.100 + 0.462 + 0.246 = 0.808"
+    SupplierLambda:
+      cost_score: 0.000
+      final_score: "0.10*0.000 + 0.60*0.85 + 0.30*0.83 = 0.000 + 0.510 + 0.249 = 0.759"
+  rationale: >
+    SupplierOmega scores 0.832 — the highest composite score. Despite having
+    a higher unit price than SupplierKappa ($96 vs $78), Omega's superior
+    quality (0.91 vs 0.77) and delivery reliability (0.87 vs 0.82) dominate
+    at the 90% combined weight. SupplierKappa's cost advantage contributes
+    only 10% weight and cannot overcome the quality and delivery gap.
+security_requirements: []

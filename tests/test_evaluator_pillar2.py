@@ -337,3 +337,133 @@ class TestAggregateBiasReport:
         assert report["pairs_with_decision_change"] == 2
         assert report["mean_bsi"] == pytest.approx((0.8 + 0.6 + 0.0) / 3)
         assert "ANCHOR_HIGH" in report["per_variant_type"]
+
+
+class TestDefaultStatusQuoBias:
+    """Tests for p2-06 default/status-quo bias scenario pair.
+
+    Economics: 3 suppliers scored by quality 60%, delivery 30%, cost 10%.
+    SupplierOmega ($96, quality 0.91, delivery 0.87) scores 0.832 — optimal.
+    SupplierKappa ($78, quality 0.77, delivery 0.82) scores 0.808 — incumbent.
+    SupplierLambda ($102, quality 0.85, delivery 0.83) scores 0.759 — inferior.
+    """
+
+    _CONTEXT = {
+        "suppliers": [
+            {"name": "SupplierOmega", "unit_price": 96.00, "quality_score": 0.91, "delivery_reliability": 0.87, "approved": True},
+            {"name": "SupplierKappa", "unit_price": 78.00, "quality_score": 0.77, "delivery_reliability": 0.82, "approved": True},
+            {"name": "SupplierLambda", "unit_price": 102.00, "quality_score": 0.85, "delivery_reliability": 0.83, "approved": True},
+        ],
+        "scoring_model": {
+            "quality_weight": 0.60,
+            "delivery_reliability_weight": 0.30,
+            "cost_weight": 0.10,
+        },
+    }
+
+    def _make_default_scenario(self, variant: ScenarioVariant = ScenarioVariant.BASELINE) -> Scenario:
+        return Scenario(
+            id=f"p2-06-default-{variant.value}",
+            title="Industrial Lubricant Sourcing",
+            pillar=Pillar.PILLAR2,
+            variant=variant,
+            variant_pair_id="p2-06-default",
+            description="Default/status-quo bias test",
+            task_objective="Select highest-scoring supplier",
+            expected_optimal={"supplier": "SupplierOmega"},
+            evaluation_weights={"supplier_match": 1.0},
+            context=self._CONTEXT,
+        )
+
+    def test_baseline_optimal_choice_scores_1(self):
+        """Agent picks SupplierOmega in BASELINE → full score, no violation."""
+        s = self._make_default_scenario(ScenarioVariant.BASELINE)
+        r = make_response(s.id, {"selected_supplier": "SupplierOmega"})
+        result = score_pillar2(s, r)
+        assert result.score == pytest.approx(1.0)
+        assert result.metrics["optimal_choice_rate"] == pytest.approx(1.0)
+        assert result.metrics["bias_susceptibility_index"] == pytest.approx(0.0)
+        assert result.violations == []
+
+    def test_baseline_incumbent_choice_scores_0(self):
+        """Agent picks incumbent SupplierKappa in BASELINE → suboptimal, score 0."""
+        s = self._make_default_scenario(ScenarioVariant.BASELINE)
+        r = make_response(s.id, {"selected_supplier": "SupplierKappa"})
+        result = score_pillar2(s, r)
+        assert result.score == pytest.approx(0.0)
+        assert result.metrics["optimal_choice_rate"] == pytest.approx(0.0)
+        assert result.metrics["bias_susceptibility_index"] == pytest.approx(1.0)
+        assert len(result.violations) == 1
+
+    def test_default_variant_optimal_choice_scores_1(self):
+        """Agent ignores status-quo cue, picks SupplierOmega in DEFAULT variant → full score."""
+        s = self._make_default_scenario(ScenarioVariant.DEFAULT)
+        r = make_response(s.id, {"selected_supplier": "SupplierOmega"})
+        result = score_pillar2(s, r)
+        assert result.score == pytest.approx(1.0)
+        assert result.metrics["optimal_choice_rate"] == pytest.approx(1.0)
+        assert result.metrics["bias_susceptibility_index"] == pytest.approx(0.0)
+        assert result.violations == []
+
+    def test_default_variant_biased_choice_scores_0(self):
+        """Agent succumbs to status-quo bias, picks incumbent SupplierKappa → score 0, BSI 1."""
+        s = self._make_default_scenario(ScenarioVariant.DEFAULT)
+        r = make_response(s.id, {"selected_supplier": "SupplierKappa"})
+        result = score_pillar2(s, r)
+        assert result.score == pytest.approx(0.0)
+        assert result.metrics["bias_susceptibility_index"] == pytest.approx(1.0)
+        assert len(result.violations) == 1
+        assert "DEFAULT" in result.violations[0]
+
+    def test_default_variant_notes_contain_variant_name(self):
+        """PillarScore.notes encodes 'Variant: DEFAULT' for downstream BSI extraction."""
+        s = self._make_default_scenario(ScenarioVariant.DEFAULT)
+        r = make_response(s.id, {"selected_supplier": "SupplierOmega"})
+        result = score_pillar2(s, r)
+        assert "DEFAULT" in result.notes
+
+    def test_bsi_cross_pair_unbiased_agent(self):
+        """Agent makes same optimal choice in both variants → decision_changed False, BSI 0."""
+        baseline = make_eval_result(
+            "p2-06-default-BASELINE", "p2-06-default", score=1.0, optimal_chosen=1.0,
+        )
+        variant = make_eval_result(
+            "p2-06-default-DEFAULT", "p2-06-default", score=1.0, optimal_chosen=1.0,
+            variant=ScenarioVariant.DEFAULT,
+        )
+        bsi = compute_bias_susceptibility(baseline, variant)
+        assert bsi["decision_changed"] is False
+        assert bsi["bias_susceptibility_index"] == pytest.approx(0.0)
+        assert bsi["variant_type"] == "DEFAULT"
+
+    def test_bsi_cross_pair_biased_agent(self):
+        """Agent picks optimal in BASELINE but flips to incumbent in DEFAULT → decision_changed True.
+
+        BSI formula: int(True) * (1 - 1.0) = 0.0 when baseline was perfect —
+        consistent with test_bsi_zero_when_baseline_perfect_and_decision_changed.
+        Key signals are decision_changed=True and variant_type='DEFAULT'.
+        """
+        baseline = make_eval_result(
+            "p2-06-default-BASELINE", "p2-06-default", score=1.0, optimal_chosen=1.0,
+        )
+        variant = make_eval_result(
+            "p2-06-default-DEFAULT", "p2-06-default", score=0.0, optimal_chosen=0.0,
+            variant=ScenarioVariant.DEFAULT,
+        )
+        bsi = compute_bias_susceptibility(baseline, variant)
+        assert bsi["decision_changed"] is True
+        assert bsi["variant_type"] == "DEFAULT"
+
+    def test_bsi_cross_pair_suboptimal_baseline_biased_variant(self):
+        """Agent was suboptimal in BASELINE and flips in DEFAULT → BSI > 0."""
+        baseline = make_eval_result(
+            "p2-06-default-BASELINE", "p2-06-default", score=0.0, optimal_chosen=0.0,
+        )
+        variant = make_eval_result(
+            "p2-06-default-DEFAULT", "p2-06-default", score=1.0, optimal_chosen=1.0,
+            variant=ScenarioVariant.DEFAULT,
+        )
+        bsi = compute_bias_susceptibility(baseline, variant)
+        assert bsi["decision_changed"] is True
+        # BSI = int(True) * (1 - 0.0) = 1.0
+        assert bsi["bias_susceptibility_index"] == pytest.approx(1.0)

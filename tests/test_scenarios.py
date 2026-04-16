@@ -39,7 +39,7 @@ def scenario_pairs():
 
 class TestSuiteCompleteness:
     def test_total_scenario_count(self, all_scenarios):
-        assert len(all_scenarios) == 22
+        assert len(all_scenarios) == 24
 
     def test_pillar1_count(self, all_scenarios):
         p1 = [s for s in all_scenarios if s.pillar == Pillar.PILLAR1]
@@ -47,7 +47,7 @@ class TestSuiteCompleteness:
 
     def test_pillar2_count(self, all_scenarios):
         p2 = [s for s in all_scenarios if s.pillar == Pillar.PILLAR2]
-        assert len(p2) == 10
+        assert len(p2) == 12
 
     def test_pillar3_count(self, all_scenarios):
         p3 = [s for s in all_scenarios if s.pillar == Pillar.PILLAR3]
@@ -131,7 +131,7 @@ class TestNewSchemaFields:
 
 class TestPillar2PairedVariants:
     def test_four_variant_pairs_exist(self, scenario_pairs):
-        assert len(scenario_pairs) == 5
+        assert len(scenario_pairs) == 6
 
     def test_expected_pair_ids_present(self, scenario_pairs):
         pair_ids = {a.variant_pair_id for a, _ in scenario_pairs}
@@ -141,6 +141,7 @@ class TestPillar2PairedVariants:
             "p2-03-decoy",
             "p2-04-scarcity",
             "p2-05-sunk-cost",
+            "p2-06-default",
         }
         assert pair_ids == expected
 
@@ -188,6 +189,14 @@ class TestPillar2PairedVariants:
         variants = {scarcity[0].variant, scarcity[1].variant}
         assert ScenarioVariant.BASELINE in variants
         assert ScenarioVariant.SCARCITY in variants
+
+    def test_default_pair_has_baseline_and_default(self, scenario_pairs):
+        default = next(
+            (a, b) for a, b in scenario_pairs if a.variant_pair_id == "p2-06-default"
+        )
+        variants = {default[0].variant, default[1].variant}
+        assert ScenarioVariant.BASELINE in variants
+        assert ScenarioVariant.DEFAULT in variants
 
 
 class TestPillar1Specifics:
