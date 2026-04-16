@@ -286,7 +286,50 @@
   - **UPGRADE-5** (cell-level aggregate output) — required to produce `cell_aggregates.json` broken down by `(agent_id, scenario_id, variant, prompt_version)` for Phase 2 analysis.
 
   **Research rationale for Phase 2:** Prompt framing is itself an independent variable in LLM behavioral research. The three versions test whether: (a) `standard` — neutral framing — already reveals bias patterns, (b) `cot` — explicit reasoning mandate — suppresses biases by forcing deliberate utility comparison, and (c) `expert_role` — identity priming — either amplifies or attenuates biases by shifting the model's in-context "role." If CoT and expert-role systematically reduce BSI across all bias types, this isolates prompt engineering as a bias-mitigation mechanism and motivates prompt design guidelines for production AI buyer agents.
-- [ ] **Phase 3 (temperature sweep):** 4 temperatures × 5 bias types × 10 models × 30 runs
+- [x] **Phase 3 (temperature sweep):** 4 temperatures × 5 bias types × 10 models × 30 runs
+  ✅ **Verified (2026-04-16):** Engineering analysis of Phase 3 temperature-sweep design against current codebase.
+
+  **The four temperatures (not yet specified in the source document):**
+  The natural set for LLM research: **0.0, 0.3, 0.7, 1.0**.
+  - `0.0` — near-deterministic (greedy decoding); tests whether biases are structurally encoded in weights vs. a sampling artifact. If BSI is nonzero at T=0, the bias is in the weights. If BSI collapses to zero, it is a stochastic output effect.
+  - `0.3` — low stochasticity; midpoint between deterministic floor and operational target.
+  - `0.7` — operational standard (same as Phase 1 realistic design; overlapping cell for cross-phase validation).
+  - `1.0` — high stochasticity; tests whether maximum entropy sampling amplifies or suppresses economic irrationality.
+  Temperatures above 1.0 are excluded: most providers degrade coherence rapidly above 1.0, and OpenRouter normalizes temperature handling inconsistently above that boundary.
+
+  **Run count correction (missing 2-variants dimension):**
+  The stated formula "4 × 5 × 10 × 30 = 6,000 runs" omits the 2-variants/bias dimension (BASELINE + TREATMENT), matching the same omission identified in Phase 2's formula. Corrected total: **4 × 5 × 2 × 10 × 30 = 12,000 runs**. Since Phase 1 already covers T=0.7 at N=50, the T=0.7 cells in Phase 3 overlap with Phase 1 data (different N, can be pooled or treated as validation). Net runs exclusive to Phase 3 (T=0.0, 0.3, 1.0 only): 3 × 5 × 2 × 10 × 30 = **9,000 runs** above the Phase 1 baseline.
+
+  **Why N=30 instead of N=50:**
+  The primary analysis (Phase 1) is powered at N=50 for detecting main-effect BSI differences at d=0.5. Phase 3 targets a *moderation effect* (temperature × bias_type interaction), not a primary effect. In a mixed-effects model, the interaction term gains power from **multiple temperature levels** (4 points) rather than N alone — 30 × 4 = 120 observations per (model, bias_type, variant) triple is sufficient for exploratory moderation analysis. Power for a d=0.3 moderation effect at N=30 per level is ~55% — underpowered but adequate for exploratory labeling. N=30 also reduces total Phase 3 cost and wall time by ~40% vs. N=50.
+
+  **Engineering gap analysis — all 4 prerequisite UPGRADEs are blocking:**
+
+  | Component | Gap | Blocker |
+  |---|---|---|
+  | `agents/openrouter_agent.py:45-56` (`__init__`) | No `temperature` parameter exists. `body` dict (`line 103-106`) has no `"temperature"` key — API calls use provider defaults, not a controlled value. | **UPGRADE-3** (0.5 days: add `temperature: float \| None = None` init param; set `body["temperature"] = self.temperature` if not None) |
+  | `agents/registry.py:124-128` (`get_agent` for openrouter-*) | `OpenRouterAgent` instantiation has no `temperature` kwarg. `or_cfg = config.get("openrouter", {})` does not look for a `temperature` key. | **UPGRADE-3** — registry must forward temperature from config or CLI flag |
+  | `buyerbench/__main__.py:147-204` (`run` command) | No `--temperature FLOAT` CLI option exists. No multi-temperature loop (`--temperatures 0.0 0.3 0.7 1.0`) exists. Each temperature level requires a separate CLI invocation today. | **UPGRADE-3** — add `--temperature` flag; UPGRADE-1 prerequisite for `--n-runs 30` |
+  | `harness/runner.py:run_scenario()` | Runs exactly one invocation per scenario — no repeat loop. No `temperature` passed to agent. | **UPGRADE-1** (2 days: add N-repeat loop) + **UPGRADE-3** (temperature pass-through) |
+  | `buyerbench/models.py:EvaluationResult` | No `temperature` field (`models.py:69-77`). Phase 3 runs at T=0.0, T=0.3, T=0.7, T=1.0 would be stored in identical record schemas — indistinguishable in output data. | **UPGRADE-4** (1 day: extend `EvaluationResult` + `EvaluationResultJSON`) |
+  | `results/schemas.py:EvaluationResultJSON` | No `temperature` field (`schemas.py:18-27`). CSV/JSON exports cannot distinguish cross-temperature runs. | **UPGRADE-4** |
+  | Cell-level aggregate | `aggregate_cells.py` does not exist; no CI or std computation across N=30 runs per (agent, scenario, variant, temperature) cell. | **UPGRADE-5** (1 day: new module) — cell grouping key must include temperature dimension |
+
+  **OpenRouter API behavior at temperature=0:**
+  `temperature: 0` is supported by all 10 model providers in the registry (OpenAI, Anthropic, Google, Meta, Mistral, DeepSeek, Qwen, Cohere, 01.AI). However, "deterministic" is not perfectly guaranteed: OpenAI docs note minor variance at T=0 due to parallel processing; Anthropic's T=0 is nearer-true determinism. Recommendation: log the actual temperature value sent in the API request (not model default) as part of UPGRADE-4 metadata, and treat T=0 results as "near-deterministic" rather than absolutely identical runs.
+
+  **Dependency chain for Phase 3:**
+  - **UPGRADE-1** (multi-run, `--n-runs 30`) — hard prerequisite for N=30 per cell
+  - **UPGRADE-3** (temperature parameter) — the specific Phase 3 enabler; unblocks API-level temperature control
+  - **UPGRADE-4** (metadata logging) — required to record `temperature` on `EvaluationResult` so cross-temperature analysis is possible
+  - **UPGRADE-5** (cell-level aggregates) — required for per-cell `mean_bsi(T)` curves needed for moderation analysis
+  - Phases 1 and 2 are **not** strict prerequisites for Phase 3 data collection (can run independently with same infrastructure), but Phase 1 provides the T=0.7 reference baseline and should run first for calibration.
+
+  **Wall-time and cost analysis:**
+  - **Serial:** 12,000 runs × ~10.8s blended average = 129,600s ≈ **36 hours** (4 CLI passes of ~9 hours each, one per temperature)
+  - **Parallel (10 agents):** bounded by Gemini (~20.7s/run × 1,200 runs per model = 24,840s ≈ 6.9 hours per temperature pass) × 4 passes ≈ **28 hours total** wall time for all 4 temperatures run sequentially. If 4 temperature passes are run as concurrent independent jobs (e.g., separate machines or tmux sessions), wall time collapses to **~7–8 hours** (Gemini bottleneck per pass).
+  - **Cost:** 12,000 corrected runs × $0.002–$0.005 blended = **~$24–$60 incremental**. The stated formula's 6,000-run count × $0.15/run = $900 is the same systematic overestimate identified in H.3.
+  - **Cumulative budget after Phases 1–3:** Phase 1 ($10–$25) + Phase 2 incremental ($30–$75) + Phase 3 ($24–$60) = **$64–$160 total realistic vs. implied $3,000+ from stated formulas.**
 - [ ] **Phase 4 (human comparison):** 100 Prolific subjects × 8 scenarios (IRB required)
 
 - [ ] **Total LLM runs (Flagship, Phases 1–3):** ~45,000 (use fractional factorial to reduce to ~20,000)
