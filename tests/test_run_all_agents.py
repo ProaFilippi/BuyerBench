@@ -296,3 +296,85 @@ class TestMultiRunSupport:
         agent_dir = tmp_path / "mock-agent-v1"
         result_files = list(agent_dir.glob("*.json"))
         assert len(result_files) == 6  # 6 pillar-1 scenarios × 1 run
+
+
+# ---------------------------------------------------------------------------
+# Supplier order randomisation (UPGRADE-2)
+# ---------------------------------------------------------------------------
+
+class TestSupplierOrderRandomisation:
+    """run_scenario() must generate and persist a supplier_order_seed per run."""
+
+    def _scenario_with_suppliers(self):
+        from harness.loader import load_all_scenarios
+        scenarios_root = Path(__file__).parent.parent / "scenarios"
+        scenarios = load_all_scenarios(str(scenarios_root))
+        # Any scenario with a list-of-dicts in context is fine; use first Pillar 2
+        p2 = [s for s in scenarios if "p2" in s.id]
+        return p2[0] if p2 else scenarios[0]
+
+    def test_seed_stored_on_result(self, tmp_path):
+        """run_scenario() must store a non-None supplier_order_seed on result."""
+        from agents.mock import MockAgent
+        from harness.runner import run_scenario
+
+        scenario = self._scenario_with_suppliers()
+        agent = MockAgent()
+        result = run_scenario(scenario, agent, output_dir=str(tmp_path))
+        assert result.supplier_order_seed is not None
+        assert isinstance(result.supplier_order_seed, int)
+
+    def test_seed_persisted_in_json(self, tmp_path):
+        """supplier_order_seed must be serialised into the JSON result file."""
+        from agents.mock import MockAgent
+        from harness.runner import run_scenario
+
+        scenario = self._scenario_with_suppliers()
+        agent = MockAgent()
+        run_scenario(scenario, agent, output_dir=str(tmp_path), run_index=0)
+
+        json_file = tmp_path / agent.agent_id / f"{scenario.id}-run000.json"
+        data = json.loads(json_file.read_text())
+        assert "supplier_order_seed" in data
+        assert data["supplier_order_seed"] is not None
+
+    def test_explicit_seed_used_when_provided(self, tmp_path):
+        """When supplier_order_seed is passed, that exact value must be stored."""
+        from agents.mock import MockAgent
+        from harness.runner import run_scenario
+
+        scenario = self._scenario_with_suppliers()
+        agent = MockAgent()
+        result = run_scenario(scenario, agent, output_dir=str(tmp_path),
+                              supplier_order_seed=12345)
+        assert result.supplier_order_seed == 12345
+
+    def test_different_seeds_generated_per_run(self, tmp_path):
+        """Sequential runs without an explicit seed must produce different seeds."""
+        from agents.mock import MockAgent
+        from harness.runner import run_scenario
+
+        scenario = self._scenario_with_suppliers()
+        agent = MockAgent()
+        seeds = set()
+        for run_idx in range(5):
+            result = run_scenario(scenario, agent, output_dir=str(tmp_path),
+                                  run_index=run_idx)
+            seeds.add(result.supplier_order_seed)
+        # With 5 runs across a 2^31 space, collisions are astronomically unlikely
+        assert len(seeds) > 1, "Expected distinct seeds across independent runs"
+
+    def test_original_scenario_context_not_mutated(self, tmp_path):
+        """run_scenario() must not mutate the original scenario's context."""
+        from agents.mock import MockAgent
+        from harness.runner import run_scenario
+
+        scenario = self._scenario_with_suppliers()
+        # Capture original context by value
+        import copy
+        original_context = copy.deepcopy(scenario.context)
+
+        agent = MockAgent()
+        run_scenario(scenario, agent, output_dir=str(tmp_path))
+
+        assert scenario.context == original_context

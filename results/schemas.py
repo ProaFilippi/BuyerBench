@@ -26,6 +26,7 @@ class EvaluationResultJSON(BaseModel):
     raw_output: str = ""
     decisions: dict[str, Any] = Field(default_factory=dict)
     run_index: int = 0
+    supplier_order_seed: int | None = None
 
 
 class PillarStats(BaseModel):

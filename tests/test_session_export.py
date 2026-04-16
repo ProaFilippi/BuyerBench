@@ -98,6 +98,7 @@ def test_export_session_csv_columns():
         "agent_id",
         "scenario_id",
         "run_index",
+        "supplier_order_seed",
         "pillar",
         "variant",
         "score",

@@ -6,6 +6,7 @@ invocation, and parses agent output back into structured decision dicts.
 from __future__ import annotations
 
 import json
+import random
 import re
 from typing import Any
 
@@ -21,7 +22,10 @@ _SYSTEM_PREAMBLE = (
 )
 
 
-def scenario_to_prompt(scenario: Scenario) -> str:
+def scenario_to_prompt(
+    scenario: Scenario,
+    supplier_order_seed: int | None = None,
+) -> str:
     """Convert a Scenario into a natural-language prompt for a CLI agent.
 
     The prompt includes:
@@ -30,6 +34,15 @@ def scenario_to_prompt(scenario: Scenario) -> str:
     - Context rendered as markdown tables (for lists of dicts) or bullet lists
     - Constraints and security requirements
     - Required output format with JSON key names
+
+    Args:
+        scenario:             The scenario to render.
+        supplier_order_seed:  Optional integer seed for per-run supplier list
+                              shuffling.  When provided, each list-of-dicts entry
+                              in ``scenario.context`` (e.g. the supplier table) is
+                              shuffled using ``random.Random(seed)`` before
+                              rendering, controlling for positional bias.  Pass
+                              ``None`` (default) to use the original YAML order.
     """
     lines: list[str] = [_SYSTEM_PREAMBLE, ""]
     lines.append(f"## Procurement Task: {scenario.title}")
@@ -51,7 +64,7 @@ def scenario_to_prompt(scenario: Scenario) -> str:
 
     if scenario.context:
         lines.append("### Context")
-        lines.extend(_format_context(scenario.context))
+        lines.extend(_format_context(scenario.context, seed=supplier_order_seed))
         lines.append("")
 
     if scenario.constraints:
@@ -83,12 +96,25 @@ def scenario_to_prompt(scenario: Scenario) -> str:
     return "\n".join(lines)
 
 
-def _format_context(context: dict[str, Any]) -> list[str]:
-    """Render context dict as markdown — tables for tabular data, lists otherwise."""
+def _format_context(context: dict[str, Any], seed: int | None = None) -> list[str]:
+    """Render context dict as markdown — tables for tabular data, lists otherwise.
+
+    Args:
+        context:  The scenario context dict.
+        seed:     When provided, each list-of-dicts entry (e.g. supplier tables)
+                  is shuffled using ``random.Random(seed)`` before rendering.
+                  A single ``Random`` instance is used across all list-of-dicts
+                  keys in the context so that the seed deterministically controls
+                  the full context rendering.
+    """
     lines: list[str] = []
+    rng = random.Random(seed) if seed is not None else None
     for key, value in context.items():
         heading = key.replace("_", " ").title()
         if isinstance(value, list) and value and isinstance(value[0], dict):
+            if rng is not None:
+                value = list(value)  # shallow copy — dicts are not mutated
+                rng.shuffle(value)
             lines.append(f"**{heading}:**")
             cols = list(value[0].keys())
             lines.append("| " + " | ".join(cols) + " |")
@@ -117,15 +143,47 @@ _FENCE_PATTERNS = [
     re.compile(r"```(.*?)```", re.DOTALL),
 ]
 
-_BARE_JSON_PATTERN = re.compile(r"\{[^{}]*(?:\{[^{}]*\}[^{}]*)?\}", re.DOTALL)
+def _extract_balanced_json(text: str) -> str | None:
+    """Find the first balanced ``{...}`` block in *text* using brace counting.
+
+    Regex cannot match arbitrarily-nested braces, so we scan character by
+    character.  Returns the matched substring or ``None``.
+    """
+    start = text.find("{")
+    if start == -1:
+        return None
+    depth = 0
+    in_string = False
+    escape = False
+    for i in range(start, len(text)):
+        ch = text[i]
+        if escape:
+            escape = False
+            continue
+        if ch == "\\":
+            escape = True
+            continue
+        if ch == '"':
+            in_string = not in_string
+            continue
+        if in_string:
+            continue
+        if ch == "{":
+            depth += 1
+        elif ch == "}":
+            depth -= 1
+            if depth == 0:
+                return text[start : i + 1]
+    return None
 
 
 def parse_agent_output(raw_output: str, scenario: Scenario) -> dict:
     """Extract a JSON decision dict from raw CLI output.
 
-    Tries regex-based extraction first (fenced code blocks, then bare JSON).
-    Falls back to LLM-assisted extraction via the Anthropic SDK if nothing
-    parseable is found; returns an empty dict if all strategies fail.
+    Tries regex-based extraction first (fenced code blocks, then bare JSON
+    via balanced-brace scanning).  Falls back to LLM-assisted extraction via
+    the Anthropic SDK if nothing parseable is found; returns an empty dict if
+    all strategies fail.
     """
     for pattern in _FENCE_PATTERNS:
         match = pattern.search(raw_output)
@@ -138,10 +196,10 @@ def parse_agent_output(raw_output: str, scenario: Scenario) -> dict:
             except json.JSONDecodeError:
                 continue
 
-    match = _BARE_JSON_PATTERN.search(raw_output)
-    if match:
+    candidate = _extract_balanced_json(raw_output)
+    if candidate:
         try:
-            result = json.loads(match.group())
+            result = json.loads(candidate)
             if isinstance(result, dict):
                 return result
         except json.JSONDecodeError:

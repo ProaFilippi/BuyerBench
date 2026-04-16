@@ -188,3 +188,82 @@ class TestParseAgentOutput:
         with patch.dict("sys.modules", {"anthropic": None}):
             result = _llm_extract("some unstructured text", scenario)
         assert result == {}
+
+
+# ---------------------------------------------------------------------------
+# supplier_order_seed tests (UPGRADE-2)
+# ---------------------------------------------------------------------------
+
+def _make_scenario_3_suppliers(**overrides) -> Scenario:
+    """Scenario with 3 suppliers so seed-controlled shuffles are observable."""
+    defaults = dict(
+        id="test-p1-seed",
+        title="Seed Shuffle Test",
+        pillar=Pillar.PILLAR1,
+        variant=ScenarioVariant.BASELINE,
+        description="Shuffle test scenario.",
+        task_objective="Choose the best supplier.",
+        constraints=[],
+        expected_optimal={"selected_supplier": "SupplierA"},
+        security_requirements=[],
+        tags=[],
+        difficulty=Difficulty.EASY,
+        context={
+            "suppliers": [
+                {"name": "SupplierA", "price": 10},
+                {"name": "SupplierB", "price": 20},
+                {"name": "SupplierC", "price": 30},
+            ]
+        },
+        evaluation_weights={},
+    )
+    defaults.update(overrides)
+    return Scenario(**defaults)
+
+
+class TestSupplierOrderSeed:
+    def test_no_seed_uses_original_order(self):
+        scenario = _make_scenario_3_suppliers()
+        prompt = scenario_to_prompt(scenario)
+        # Without a seed, suppliers appear in YAML order: A, B, C
+        pos_a = prompt.index("SupplierA")
+        pos_b = prompt.index("SupplierB")
+        pos_c = prompt.index("SupplierC")
+        assert pos_a < pos_b < pos_c
+
+    def test_same_seed_same_order(self):
+        scenario = _make_scenario_3_suppliers()
+        prompt1 = scenario_to_prompt(scenario, supplier_order_seed=42)
+        prompt2 = scenario_to_prompt(scenario, supplier_order_seed=42)
+        assert prompt1 == prompt2
+
+    def test_different_seeds_can_differ(self):
+        scenario = _make_scenario_3_suppliers()
+        # With 3 suppliers there are 6 possible orderings; try many seeds until
+        # we find two that differ (statistically guaranteed within a handful of tries).
+        prompts = {scenario_to_prompt(scenario, supplier_order_seed=s) for s in range(20)}
+        assert len(prompts) > 1, "Expected at least two distinct orderings across 20 seeds"
+
+    def test_seed_does_not_mutate_original_context(self):
+        scenario = _make_scenario_3_suppliers()
+        original_names = [s["name"] for s in scenario.context["suppliers"]]
+        scenario_to_prompt(scenario, supplier_order_seed=99)
+        names_after = [s["name"] for s in scenario.context["suppliers"]]
+        assert names_after == original_names
+
+    def test_all_suppliers_present_with_seed(self):
+        scenario = _make_scenario_3_suppliers()
+        prompt = scenario_to_prompt(scenario, supplier_order_seed=7)
+        for name in ("SupplierA", "SupplierB", "SupplierC"):
+            assert name in prompt
+
+    def test_non_supplier_context_values_unaffected_by_seed(self):
+        scenario = _make_scenario(context={
+            "suppliers": [
+                {"name": "SupplierA", "unit_price": 45.0, "lead_days": 3},
+                {"name": "SupplierB", "unit_price": 38.5, "lead_days": 4},
+            ],
+            "budget_limit": 5000,
+        })
+        prompt = scenario_to_prompt(scenario, supplier_order_seed=1)
+        assert "5000" in prompt
