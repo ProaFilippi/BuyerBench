@@ -84,7 +84,7 @@
 
   **Summary:** 7 fields fully present (agent_id, scenario_id, timestamp_utc, agent_output_raw, and 3 indirect), 5 fields partially present (session_id, model_family, bias_category, error_flag, error_message), 12 fields missing (run_id, model_version, variant on result, run_index, temperature, prompt_version, supplier_order_seed, token_count_input, token_count_output, api_cost_usd, extracted_choice as normalized string, optimal_choice on result). All 12 missing fields are addressed by UPGRADE-1 through UPGRADE-4 (Section I.2).
 
-- [ ] **Cell Aggregate Record (derived):**
+- [x] **Cell Aggregate Record (derived):**
   ```json
   {
     "cell_id": "string ({agent_id}__{scenario_id}__{variant}__{prompt_version}__{temperature})",
@@ -104,6 +104,27 @@
     "treatment_effect_vs_baseline": "float or null (BSI_treatment - BSI_baseline; null if this IS baseline)"
   }
   ```
+  ✅ **Verified (2026-04-16):** Field-by-field gap analysis for the Cell Aggregate Record. **Critical prerequisite gap:** The Cell Aggregate Record presupposes N ≥ 2 runs per cell. The current system produces exactly 1 run per cell (one scenario execution per agent per scenario), making mean, std, and CI computations meaningless. UPGRADE-1 (multi-run support) must land before this record is populatable. No `results/aggregate_cells.py` module exists (confirmed by search); UPGRADE-5 proposes creating it.
+
+  | Field | Status | Implementation Notes |
+  |---|---|---|
+  | `cell_id` | **MISSING** | No cell abstraction exists anywhere in the codebase. The closest is `variant_pair_id` on `EvaluationResult` (`models.py:75`), which identifies a 2-scenario pair but is not a multi-run cell ID. Cell ID construction requires `variant` and `temperature` fields which are themselves missing from `EvaluationResult`. Planned as **UPGRADE-4** + **UPGRADE-5**. |
+  | `agent_id` | **PRESENT** | `EvaluationResult.agent_id` (`models.py:71`). Directly available. |
+  | `scenario_id` | **PRESENT** | `EvaluationResult.scenario_id` (`models.py:70`). Directly available. |
+  | `bias_category` | **MISSING** | Same gap as H.2 Run Record. Inferred from scenario_id naming convention (e.g., "p2-01-anchoring" → "anchoring") but not stored as a structured field on `EvaluationResult` or any aggregate schema. Requires **UPGRADE-4**. |
+  | `variant` | **MISSING (on result)** | `Scenario.variant: ScenarioVariant` (`models.py:38`) — present on the scenario definition but never propagated to `EvaluationResult`. `variant_pair_id` is the current proxy but is only a pair grouping key, not a variant label. Cell-level grouping by `(agent_id, scenario_id, variant)` is impossible from result records alone. Requires **UPGRADE-4**. |
+  | `n_runs` | **MISSING** | No multi-run support exists. Each scenario is executed exactly once per agent. `run_index` does not exist on `EvaluationResult`. Requires **UPGRADE-1** before this field has meaning. |
+  | `n_valid_runs` | **MISSING** | No `error_flag` boolean field on `EvaluationResult`. Errors are embedded in `raw_output` as string patterns (e.g., "Client Error:"), detected heuristically in `generate_full_report()` (`report.py:127-129`). No structured error count per cell. Requires **UPGRADE-4**. |
+  | `mean_bsi` | **PARTIAL** | `aggregate_bias_report()` in `evaluators/pillar2.py:113-151` computes `mean_bsi` across variant pairs per bias type — but this is **pair-level aggregation** (N=1 observation per pair), not **cell-level aggregation** (N ≥ 2 runs per cell arm). The current mean is a mean across bias types, not a mean across repeated runs of the same cell. Requires UPGRADE-1 to become meaningful. |
+  | `std_bsi` | **MISSING** | `aggregate_bias_report()` does not compute standard deviation — only mean and count per variant type. No std computed anywhere in the codebase for BSI. Requires UPGRADE-1 (need N runs) + UPGRADE-5 (new aggregate module). |
+  | `ci_lower_95` | **MISSING** | No confidence interval logic anywhere in the codebase. Requires UPGRADE-1 + UPGRADE-5. For N=50 runs, a normal approximation CI is straightforward; bootstrap CI would be appropriate for non-normal BSI distributions. |
+  | `ci_upper_95` | **MISSING** | Same as `ci_lower_95`. |
+  | `choice_rate_correct` | **PARTIAL** | `PillarScore.metrics["optimal_choice_rate"]` (`pillar2.py:18`) is 0.0 or 1.0 per run. `per_metric_breakdown` in `generate_full_report()` (`report.py:186-202`) computes mean per agent×pillar, but **not per cell** (agent × scenario × variant). Across N=1 run, this is identical to `choice_is_correct`. Requires UPGRADE-1 + UPGRADE-5 for meaningful cell-level rate. |
+  | `choice_rate_distribution` | **MISSING** | No supplier choice frequency tracking exists. `EvaluationResult.decisions` (`models.py:77`) stores the chosen supplier per run, but there is no accumulation of counts across runs. Requires UPGRADE-1 + UPGRADE-5. |
+  | `mean_optimality_gap` | **PARTIAL** | `PillarScore.metrics["optimality_gap"]` (`pillar2.py:55`) is computed per run by `_compute_optimality_gap()` (`pillar2.py:177-217`). `per_metric_breakdown` in `generate_full_report()` computes mean across scenarios per agent — but this is **agent-level**, not **cell-level** (single scenario × single variant). Requires UPGRADE-1 + UPGRADE-5 for proper per-cell mean. |
+  | `treatment_effect_vs_baseline` | **MISSING** | `compute_bias_susceptibility()` (`pillar2.py:67-110`) computes a pair-level proxy: `int(decision_changed) * (1 - baseline_score)`. This is a single-observation treatment indicator, **not** a proper treatment effect estimate (i.e., not `E[BSI | treatment] - E[BSI | baseline]` across N runs). The BSI formula penalizes decision changes proportional to baseline suboptimality rather than computing a mean difference estimator. The H.2 schema field definition (`BSI_treatment - BSI_baseline`) requires N runs per arm. Requires UPGRADE-1 + UPGRADE-5 plus reformulation of the treatment effect estimator. |
+
+  **Summary:** 2 fields fully present (agent_id, scenario_id), 3 fields partially present (mean_bsi as pair-level proxy, choice_rate_correct as single-run value, mean_optimality_gap as agent-level mean), 10 fields missing (cell_id, bias_category, variant on result, n_runs, n_valid_runs, std_bsi, ci_lower_95, ci_upper_95, choice_rate_distribution, treatment_effect_vs_baseline as proper mean-difference estimator). **Root cause of all gaps: UPGRADE-1 (multi-run support) is the hard prerequisite — no cell aggregate record is meaningful without N ≥ 2 runs per cell. UPGRADE-4 and UPGRADE-5 unlock the remaining fields.**
 
 - [ ] **Experiment Manifest (one per experiment run):**
   ```json
