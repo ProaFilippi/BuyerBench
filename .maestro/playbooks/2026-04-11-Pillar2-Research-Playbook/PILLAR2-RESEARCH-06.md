@@ -52,7 +52,7 @@
 
 ### L.2 Dataset Schema (Python Classes)
 
-- [ ] Create `research/experiments/schemas.py`:
+- [x] Create `research/experiments/schemas.py`:
   ```python
   from dataclasses import dataclass, field
   from typing import Optional
