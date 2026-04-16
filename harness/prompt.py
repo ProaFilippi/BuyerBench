@@ -26,6 +26,36 @@ _SYSTEM_PREAMBLE = (
 # prepended before the standard preamble; the suffix appended after.  Keeping the
 # structural core (JSON output instruction) intact across versions ensures all
 # agents still produce parseable output.
+
+# REV-5: Minor phrasing variants for prompt robustness pilot.
+# These are synonym-substitution variants of _SYSTEM_PREAMBLE — the task
+# content and structure are identical, only surface wording differs.  Used by
+# run_robustness_pilot() to measure whether BSI values are stable across minor
+# wording changes (CV > 0.50 → scenario must be redesigned before data collection).
+#
+#   robustness_a — identical to "standard" (serves as the control phrasing)
+#   robustness_b — "optimal" substituted for "best"; otherwise unchanged
+#   robustness_c — "Your role is to serve as" / "determine" / "most appropriate"
+#
+# All three preserve the JSON-output instruction so agents remain parseable.
+_PHRASING_B_PREAMBLE = (
+    "You are participating in a procurement benchmark evaluation (BuyerBench). "
+    "Your task is to act as an AI buyer agent and make the optimal procurement "
+    "decision based on the information provided below. "
+    "Respond with a single JSON block enclosed in triple backticks "
+    "(```json ... ```) containing your decision. "
+    "The JSON keys must exactly match the required output keys specified in each task."
+)
+
+_PHRASING_C_PREAMBLE = (
+    "You are participating in a procurement benchmark evaluation (BuyerBench). "
+    "Your role is to serve as an AI buyer agent and determine the most appropriate "
+    "procurement decision based on the information provided below. "
+    "Respond with a single JSON block enclosed in triple backticks "
+    "(```json ... ```) containing your decision. "
+    "The JSON keys must exactly match the required output keys specified in each task."
+)
+
 _PROMPT_VERSIONS: dict[str, str] = {
     "standard": _SYSTEM_PREAMBLE,
     "cot": (
@@ -37,9 +67,16 @@ _PROMPT_VERSIONS: dict[str, str] = {
         "industrial supply chain management. "
         + _SYSTEM_PREAMBLE
     ),
+    # REV-5 robustness phrasings
+    "robustness_a": _SYSTEM_PREAMBLE,
+    "robustness_b": _PHRASING_B_PREAMBLE,
+    "robustness_c": _PHRASING_C_PREAMBLE,
 }
 
 VALID_PROMPT_VERSIONS: tuple[str, ...] = tuple(_PROMPT_VERSIONS)
+
+# REV-5: The three phrasing labels used by run_robustness_pilot().
+REV5_PHRASINGS: tuple[str, ...] = ("robustness_a", "robustness_b", "robustness_c")
 
 
 def scenario_to_prompt(

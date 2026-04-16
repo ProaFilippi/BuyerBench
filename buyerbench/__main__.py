@@ -1839,5 +1839,185 @@ def prereg(
     console.print()
 
 
+@cli.command("robustness-pilot")
+@click.option(
+    "--agent",
+    "agent_id",
+    required=True,
+    help="Agent ID to use for the robustness pilot (e.g. openrouter-openai-gpt-4o).",
+)
+@click.option(
+    "--pair-id",
+    "pair_ids",
+    multiple=True,
+    help=(
+        "Scenario pair ID(s) to test (e.g. p2-01-anchoring).  "
+        "Repeat for multiple pairs.  Omits all other Pillar 2 pairs if unset."
+    ),
+)
+@click.option(
+    "--n-runs",
+    "n_runs",
+    default=5,
+    show_default=True,
+    type=int,
+    help="Independent runs per (phrasing × scenario_pair) cell.",
+)
+@click.option(
+    "--cv-threshold",
+    "cv_threshold",
+    default=0.50,
+    show_default=True,
+    type=float,
+    help="CV above which a scenario is flagged wording-sensitive (REV-5 gate: 0.50).",
+)
+@click.option(
+    "--output-dir",
+    "output_dir",
+    default="results/robustness-pilot",
+    show_default=True,
+    help="Directory to write robustness_pilot.json output.",
+)
+def robustness_pilot_cmd(
+    agent_id: str,
+    pair_ids: tuple[str, ...],
+    n_runs: int,
+    cv_threshold: float,
+    output_dir: str,
+) -> None:
+    """Run the REV-5 prompt robustness pilot (3 phrasings × N runs per scenario pair).
+
+    Evaluates whether BSI values are stable across 3 minor prompt-phrasing
+    variants of the same scenario.  If the coefficient of variation (CV) of
+    mean-BSI across phrasings exceeds --cv-threshold, the scenario is flagged
+    as wording-sensitive and must be redesigned before the main experiment.
+
+    \b
+    Outputs:
+      results/robustness-pilot/robustness_pilot.json
+        Per-scenario CV, per-phrasing mean-BSI, and overall PROCEED/REDESIGN.
+
+    \b
+    Example:
+      buyerbench robustness-pilot \\
+        --agent openrouter-openai-gpt-4o \\
+        --pair-id p2-01-anchoring --pair-id p2-02-framing \\
+        --n-runs 5
+    """
+    from pathlib import Path as _Path
+
+    from agents.registry import get_agent
+    from harness.config import load_config
+    from harness.loader import load_all_scenarios
+    from harness.prompt import REV5_PHRASINGS
+    from harness.robustness_pilot import run_robustness_pilot
+
+    config = load_config()
+
+    # Build 3 agents — one per robustness phrasing.
+    phrasings: list = []
+    for label in REV5_PHRASINGS:
+        phrasing_config = dict(config)
+        phrasing_config["prompt_version"] = label
+        agent = get_agent(agent_id, phrasing_config)
+        phrasings.append((label, agent))
+
+    # Load Pillar 2 scenario pairs.
+    scenarios_root = _Path(__file__).parent.parent / "scenarios"
+    all_scenarios = load_all_scenarios(str(scenarios_root))
+    p2_scenarios = [s for s in all_scenarios if s.pillar.value == "PILLAR2"]
+
+    # Group into (baseline, variant) pairs by variant_pair_id.
+    from collections import defaultdict
+    by_pair: dict = defaultdict(list)
+    for s in p2_scenarios:
+        if s.variant_pair_id:
+            by_pair[s.variant_pair_id].append(s)
+
+    # Filter to requested pair_ids (or all Pillar 2 pairs).
+    selected_pairs: list = []
+    for pid, scenarios in by_pair.items():
+        if pair_ids and pid not in pair_ids:
+            continue
+        # Separate baseline from variant(s); use first non-baseline as the variant.
+        baselines = [s for s in scenarios if s.variant.value == "BASELINE"]
+        variants = [s for s in scenarios if s.variant.value != "BASELINE"]
+        if baselines and variants:
+            selected_pairs.append((baselines[0], variants[0]))
+
+    if not selected_pairs:
+        console.print(
+            "[red]No matching Pillar 2 scenario pairs found.  "
+            "Check --pair-id values or ensure scenarios/ is populated.[/red]"
+        )
+        raise SystemExit(1)
+
+    console.print(
+        f"\n[bold cyan]REV-5 Prompt Robustness Pilot[/bold cyan]\n"
+        f"  [dim]Agent:[/dim]       {agent_id}\n"
+        f"  [dim]Phrasings:[/dim]   {', '.join(REV5_PHRASINGS)}\n"
+        f"  [dim]Pairs:[/dim]       {len(selected_pairs)}\n"
+        f"  [dim]Runs/cell:[/dim]   {n_runs}\n"
+        f"  [dim]CV gate:[/dim]     {cv_threshold}\n"
+        f"  [dim]Output:[/dim]      {output_dir}\n"
+    )
+
+    result = run_robustness_pilot(
+        scenario_pairs=selected_pairs,
+        phrasings=phrasings,
+        n_runs=n_runs,
+        cv_threshold=cv_threshold,
+        output_dir=output_dir,
+    )
+
+    # ── Rich summary table ─────────────────────────────────────────────────────
+    from rich.table import Table as RichTable
+    from rich import box as rich_box
+
+    t = RichTable(
+        title="[bold]Prompt Robustness Pilot Results (REV-5)[/bold]",
+        box=rich_box.SIMPLE,
+    )
+    t.add_column("Scenario Pair", style="bold cyan")
+    t.add_column("CV", justify="right")
+    t.add_column("Mean BSI", justify="right")
+    t.add_column("Recommendation", justify="center")
+
+    for pair_id, report in result["per_scenario"].items():
+        cv_str = f"{report['cv']:.3f}"
+        mean_bsi_str = f"{report['mean_of_means']:.3f}"
+        rec = report["recommendation"]
+        rec_markup = (
+            "[green]PROCEED[/green]" if rec == "PROCEED" else "[red]REDESIGN[/red]"
+        )
+        t.add_row(pair_id, cv_str, mean_bsi_str, rec_markup)
+
+    console.print()
+    console.print(t)
+    console.print()
+
+    overall = result["overall_recommendation"]
+    if overall == "PROCEED":
+        console.print(
+            f"[bold green]Overall: PROCEED[/bold green] — "
+            f"all {result['scenarios_passing']} scenario pair(s) are wording-stable "
+            f"(CV ≤ {cv_threshold})."
+        )
+    else:
+        console.print(
+            f"[bold red]Overall: REDESIGN[/bold red] — "
+            f"{result['scenarios_failing']} scenario pair(s) are wording-sensitive "
+            f"(CV > {cv_threshold}).  Redesign before main experiment:"
+        )
+        for pid in result["scenarios_to_redesign"]:
+            console.print(f"  [red]•[/red] {pid}")
+
+    console.print(
+        f"\n[bold]Results written →[/bold] {_Path(output_dir) / 'robustness_pilot.json'}\n"
+    )
+
+    raise SystemExit(0 if overall == "PROCEED" else 2)
+
+
 if __name__ == "__main__":
     cli()

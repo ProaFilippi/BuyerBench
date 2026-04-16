@@ -40,10 +40,12 @@ class CLIAgent(BaseAgent):
         timeout: int = 120,
         dry_run: bool = False,
         system_prompt: str = "",
+        prompt_version: str = "standard",
     ) -> None:
         self.timeout = timeout
         self.dry_run = dry_run
         self.system_prompt = system_prompt
+        self.prompt_version = prompt_version
 
     @abstractmethod
     def run_cli(self, prompt: str) -> str:
@@ -52,7 +54,7 @@ class CLIAgent(BaseAgent):
 
     def respond(self, scenario: Scenario) -> AgentResponse:
         """Serialize *scenario* to a prompt, invoke the CLI, parse the output."""
-        prompt = scenario_to_prompt(scenario)
+        prompt = scenario_to_prompt(scenario, prompt_version=self.prompt_version)
         if self.system_prompt:
             prompt = f"[SYSTEM]\n{self.system_prompt}\n[/SYSTEM]\n\n{prompt}"
 
