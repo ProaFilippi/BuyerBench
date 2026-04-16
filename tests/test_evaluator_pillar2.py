@@ -903,6 +903,84 @@ class TestAggregateBiasReportAnchorInstructionFollowing:
             assert field in report, f"Missing field: {field}"
 
 
+class TestAggregateBiasReportCeilingEffect:
+    """Tests for the ceiling_effect field (CRITIQUE 10 — Pillar 2 ceiling effect).
+
+    With N=1 run per cell, BSI=0 is expected even for genuinely biased models.
+    A model with true bias probability p=0.4 produces BSI=0 in 60% of single
+    runs.  The ``ceiling_effect`` field is a machine-readable anchor that
+    downstream consumers can use to flag that single-run BSI=0 values cannot
+    distinguish genuine rationality from artifactually easy scenarios.
+    """
+
+    def test_empty_report_contains_ceiling_effect(self):
+        """Field is present even with no pair results."""
+        report = aggregate_bias_report([])
+        assert "ceiling_effect" in report
+
+    def test_nonempty_report_contains_ceiling_effect(self):
+        """Field is present when BSI data is provided."""
+        pair_results = [
+            {"decision_changed": False, "bias_susceptibility_index": 0.0, "variant_type": "ANCHOR_HIGH"},
+        ]
+        report = aggregate_bias_report(pair_results)
+        assert "ceiling_effect" in report
+
+    def test_ceiling_effect_is_nonempty_string(self):
+        """Field value must be a non-empty string."""
+        report = aggregate_bias_report([])
+        assert isinstance(report["ceiling_effect"], str)
+        assert len(report["ceiling_effect"]) > 0
+
+    def test_ceiling_effect_mentions_n1(self):
+        """Value must reference the N=1 single-run limitation."""
+        report = aggregate_bias_report([])
+        value = report["ceiling_effect"].lower()
+        assert "n=1" in value
+
+    def test_ceiling_effect_mentions_rationality_or_robust(self):
+        """Value must reference the robust-rationality pivot framing."""
+        report = aggregate_bias_report([])
+        value = report["ceiling_effect"].lower()
+        assert "rational" in value or "robust" in value
+
+    def test_ceiling_effect_mentions_n50(self):
+        """Value must reference N=50 as the resolution threshold."""
+        report = aggregate_bias_report([])
+        value = report["ceiling_effect"]
+        assert "50" in value
+
+    def test_ceiling_effect_consistent_across_empty_and_nonempty(self):
+        """The field value must be identical regardless of input size."""
+        empty_report = aggregate_bias_report([])
+        nonempty_report = aggregate_bias_report([
+            {"decision_changed": True, "bias_susceptibility_index": 1.0, "variant_type": "FRAMING"},
+        ])
+        assert empty_report["ceiling_effect"] == nonempty_report["ceiling_effect"]
+
+    def test_ceiling_effect_constant_across_n_runs(self):
+        """The field value does not depend on n_runs_per_cell."""
+        r1 = aggregate_bias_report([], n_runs_per_cell=1)
+        r50 = aggregate_bias_report([], n_runs_per_cell=50)
+        assert r1["ceiling_effect"] == r50["ceiling_effect"]
+
+    def test_schema_completeness_all_ten_limitation_fields(self):
+        """Report schema includes all ten limitation fields after CRITIQUE 10."""
+        report = aggregate_bias_report([])
+        for field in (
+            "domain_scope",
+            "incentive_framing",
+            "exploratory_only",
+            "sample_size_warning",
+            "cross_model_analysis",
+            "multiple_comparisons",
+            "training_data_confound",
+            "anchor_instruction_following_confound",
+            "ceiling_effect",
+        ):
+            assert field in report, f"Missing field: {field}"
+
+
 class TestDefaultStatusQuoBias:
     """Tests for p2-06 default/status-quo bias scenario pair.
 

@@ -324,6 +324,49 @@ The ``anchor_instruction_following_confound`` field in ``aggregate_bias_report``
 is a machine-readable anchor for this limitation so that all downstream
 JSON/CSV consumers carry a reminder that instruction-following ability and
 bias resistance are confounded in anchor scenarios.
+
+CEILING EFFECT
+--------------
+With N=1 run per (model × scenario) cell, perfect BSI=0 scores are expected
+even for models that are genuinely biased.  Consider a model that exhibits an
+anchoring bias with probability p=0.4: in a single run, P(BSI=0) = 0.6
+regardless of the true bias rate.  When 8 out of 10 models score BSI=0 at
+N=1, this is entirely consistent with models that are biased 40% of the time —
+the single-run data simply cannot distinguish the two.
+
+At N=50 independent runs per cell, the binomial sampling distribution tightens
+and stochastic bias rates become estimable.  A model biased at p=0.4 will show
+mean BSI ≈ 0.4 (±95%-CI ~0.26–0.54) at N=50, compared to mean BSI=0 or 1
+at N=1.
+
+If ceiling effects *persist* at N=50 (≥7/10 models show mean BSI < 0.05 on
+all bias types), the correct interpretation is:
+
+  "LLM-based buyer agents show surprising robustness to standard behavioral
+   bias manipulations in procurement decision-making.  This is itself a
+   practically significant finding: AI procurement systems may be more
+   economically rational than human buyers in structured selection tasks."
+
+This "robust rationality" pivot is a publishable finding with different (but
+equally valid) practical implications — it requires only reframing, not
+redesign.  However, it must be accompanied by scenario difficulty analysis:
+if scenarios are trivially easy (e.g., utility gap between optimal and
+suboptimal is δ > 0.3), ceiling effects are artifactual and require harder
+variants (REV-4: 5–8 suppliers, δ < 0.05, compound manipulations).
+
+Claims from this evaluator when ceiling effects are observed MUST distinguish:
+  "Frontier models show low BSI under current scenario difficulty [δ=X].
+   Whether this reflects bias resistance or task triviality requires
+   harder-variant replication (REV-4)."
+
+Claims MUST NOT be stated as:
+  "LLMs are not susceptible to [bias type]" — without ruling out that the
+  scenarios are too easy for frontier models to show the effect.
+
+The ``ceiling_effect`` field in ``aggregate_bias_report`` is a machine-readable
+anchor for this limitation so that all downstream JSON/CSV consumers carry a
+reminder that N=1 ceiling effects cannot distinguish genuine rationality from
+artifactually easy scenarios.
 """
 from __future__ import annotations
 
@@ -592,6 +635,12 @@ def aggregate_bias_report(
     equivalent in this design.  Effect sizes may be attenuated in high-capability
     models that are stronger instruction followers.
 
+    The ``ceiling_effect`` field is a machine-readable anchor for the N=1
+    ceiling-effect limitation (CRITIQUE 10): BSI=0 at N=1 is statistically
+    indistinguishable from a biased model that happened to choose correctly.
+    N=50 is required to estimate true bias rates.  If ceiling effects persist
+    at N=50, the paper must pivot to the "robust rationality" framing (REV-4).
+
     Args:
         pair_results: list of dicts from ``compute_bias_susceptibility``.
         n_runs_per_cell: number of independent runs per (model × scenario)
@@ -621,6 +670,11 @@ def aggregate_bias_report(
         "a model ignoring an irrelevant anchor may be unbiased or a capable instruction follower; "
         "the two mechanisms are observationally equivalent in this design"
     )
+    _CEILING_EFFECT = (
+        "N=1 ceiling effect: BSI=0 at N=1 cannot distinguish genuine rationality from "
+        "artifactually easy scenarios; N=50 required to estimate true bias rates — "
+        "if ceiling persists at N=50, pivot to 'robust rationality' framing (REV-4 harder variants)"
+    )
 
     exploratory_only = n_runs_per_cell is None or n_runs_per_cell <= 1
 
@@ -639,6 +693,7 @@ def aggregate_bias_report(
             "multiple_comparisons": _MULTIPLE_COMPARISONS,
             "training_data_confound": _TRAINING_DATA_CONFOUND,
             "anchor_instruction_following_confound": _ANCHOR_INSTRUCTION_FOLLOWING_CONFOUND,
+            "ceiling_effect": _CEILING_EFFECT,
         }
 
     by_type: dict[str, list[float]] = {}
@@ -674,6 +729,7 @@ def aggregate_bias_report(
         "multiple_comparisons": _MULTIPLE_COMPARISONS,
         "training_data_confound": _TRAINING_DATA_CONFOUND,
         "anchor_instruction_following_confound": _ANCHOR_INSTRUCTION_FOLLOWING_CONFOUND,
+        "ceiling_effect": _CEILING_EFFECT,
     }
 
 
