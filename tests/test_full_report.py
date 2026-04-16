@@ -496,3 +496,70 @@ class TestExploratoryOnlyLabel:
         sr = SummaryReport(agent_id="test-agent", total_scenarios=5, overall_pass_rate=0.8)
         data = sr.model_dump()
         assert self._N50_FRAGMENT in data["exploratory_only_label"]
+
+
+# ---------------------------------------------------------------------------
+# REV-6: cross_model_regression_scope — cross-model analyses are descriptive only
+# ---------------------------------------------------------------------------
+
+
+class TestRev6CrossModelRegressionScope:
+    """REV-6: Cross-model comparisons are DESCRIPTIVE ONLY (N=10 models).
+    No p-values or inferential claims are valid for cross-model analyses.
+    """
+
+    _DESCRIPTIVE_FRAGMENT = "DESCRIPTIVE ONLY"
+    _NO_PVALUE_FRAGMENT = "p-values"
+
+    def test_cross_model_regression_scope_in_methodology_notes(self, experiment_dir):
+        """generate_full_report must include cross_model_regression_scope."""
+        report = generate_full_report(str(experiment_dir))
+        assert "cross_model_regression_scope" in report["methodology_notes"]
+
+    def test_cross_model_regression_scope_content_mentions_descriptive(self, experiment_dir):
+        """cross_model_regression_scope must say DESCRIPTIVE ONLY."""
+        report = generate_full_report(str(experiment_dir))
+        scope = report["methodology_notes"]["cross_model_regression_scope"]
+        assert self._DESCRIPTIVE_FRAGMENT in scope
+
+    def test_cross_model_regression_scope_mentions_no_pvalue(self, experiment_dir):
+        """cross_model_regression_scope must mention p-values are not valid."""
+        report = generate_full_report(str(experiment_dir))
+        scope = report["methodology_notes"]["cross_model_regression_scope"]
+        assert self._NO_PVALUE_FRAGMENT in scope
+
+    def test_cross_model_regression_scope_mentions_n10(self, experiment_dir):
+        """cross_model_regression_scope must mention N=10."""
+        report = generate_full_report(str(experiment_dir))
+        scope = report["methodology_notes"]["cross_model_regression_scope"]
+        assert "10" in scope
+
+    def test_cross_model_regression_scope_present_for_empty_dir(self, tmp_path):
+        """cross_model_regression_scope must be present even with no result files."""
+        (tmp_path / "pillar1").mkdir()
+        report = generate_full_report(str(tmp_path))
+        assert "cross_model_regression_scope" in report["methodology_notes"]
+        assert self._DESCRIPTIVE_FRAGMENT in report["methodology_notes"]["cross_model_regression_scope"]
+
+    def test_markdown_section1_contains_rev6_note(self, experiment_dir):
+        """Section 1 (Per-Pillar Aggregate) must include the REV-6 cross-model warning."""
+        report = generate_full_report(str(experiment_dir))
+        md = render_full_report_markdown(report)
+        sec1_idx = md.index("## 1. Per-Pillar Aggregate Scores")
+        sec2_idx = md.index("## 2. Per-Metric Breakdown")
+        sec1_body = md[sec1_idx:sec2_idx]
+        assert "REV-6" in sec1_body
+
+    def test_markdown_rev6_note_mentions_descriptive(self, experiment_dir):
+        """The REV-6 warning in Markdown must say 'descriptive only'."""
+        report = generate_full_report(str(experiment_dir))
+        md = render_full_report_markdown(report)
+        assert "descriptive only" in md.lower()
+
+    def test_methodology_notes_has_three_keys(self, experiment_dir):
+        """methodology_notes must contain all three REV keys."""
+        report = generate_full_report(str(experiment_dir))
+        notes = report["methodology_notes"]
+        assert "pillar2_rationality_scope" in notes
+        assert "exploratory_only_label" in notes
+        assert "cross_model_regression_scope" in notes

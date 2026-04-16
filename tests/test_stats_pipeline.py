@@ -925,3 +925,107 @@ class TestWriteStatsPipelineReport:
         stats = run_stats_pipeline(_make_report(cells))
         out = write_stats_pipeline_report(stats, new_dir)
         assert out.exists()
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# §12  REV-6 — CROSS-MODEL REGRESSION SCOPE
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+class TestRev6CrossModelRegressionScope:
+    """REV-6: H2 capability scatter is descriptive only (N=10 models).
+    No p-values or inferential claims valid for cross-model analyses.
+    """
+
+    def _cells_for_h2(self) -> list[CellAggregate]:
+        """Five agents with monotonically declining BSI (higher P1 → lower BSI)."""
+        return [
+            _make_cell(
+                agent_id=f"agent-{chr(65 + i)}",
+                scenario_id=f"p2-01-anchoring-BASELINE",
+                bias_category="anchoring",
+                mean_bsi=0.5 - 0.1 * i,
+                n_valid_runs=30,
+            )
+            for i in range(5)
+        ]
+
+    def _p1_scores(self) -> dict[str, float]:
+        return {f"agent-{chr(65 + i)}": 0.5 + 0.1 * i for i in range(5)}
+
+    def test_h2_capability_cross_model_flag_is_true(self):
+        """compute_h2_capability must set cross_model_descriptive_only=True."""
+        result = compute_h2_capability(self._cells_for_h2(), self._p1_scores())
+        assert result is not None
+        assert result.cross_model_descriptive_only is True
+
+    def test_h2_capability_significant_05_suppressed_for_all_coefficients(self):
+        """All coefficients in H2 result must have significant_05=False (REV-6)."""
+        result = compute_h2_capability(self._cells_for_h2(), self._p1_scores())
+        assert result is not None
+        for coef in result.coefficients:
+            assert coef.significant_05 is False, (
+                f"REV-6 violation: coefficient '{coef.name}' has significant_05=True "
+                "in H2 cross-model analysis; no inferential claim is valid at N=10."
+            )
+
+    def test_h2_capability_p_values_still_computed(self):
+        """p_value field is retained for internal use even when significance is suppressed."""
+        result = compute_h2_capability(self._cells_for_h2(), self._p1_scores())
+        assert result is not None
+        for coef in result.coefficients:
+            assert isinstance(coef.p_value, float)
+            assert 0.0 <= coef.p_value <= 1.0
+
+    def test_level1_ols_not_cross_model_descriptive_only(self):
+        """Level 1 WLS is a within-cell analysis — must NOT be marked descriptive-only."""
+        cells = _two_agent_two_bias_cells()
+        result = run_level1_ols(cells)
+        assert result is not None
+        assert result.cross_model_descriptive_only is False
+
+    def test_h7_not_cross_model_descriptive_only(self):
+        """H7 noise-bias OLS is a within-cell analysis — must NOT be marked descriptive-only."""
+        cells = [
+            _make_cell(agent_id="A", mean_bsi=0.2, std_bsi=0.15, n_valid_runs=30),
+            _make_cell(agent_id="A", scenario_id="p2-02-framing-BASELINE",
+                       variant="BASELINE", mean_bsi=0.4, std_bsi=0.30, n_valid_runs=30),
+            _make_cell(agent_id="A", scenario_id="p2-02-framing-FRAMING_LOSS",
+                       variant="FRAMING_LOSS", mean_bsi=0.6, std_bsi=0.45, n_valid_runs=30),
+        ]
+        result = compute_h7_noise_bias(cells)
+        assert result is not None
+        assert result.cross_model_descriptive_only is False
+
+    def test_session_order_not_cross_model_descriptive_only(self):
+        """Session order OLS is a robustness check, not cross-model — must NOT be marked."""
+        eval_results = [_make_eval_result(run_index=i, bsi=0.2) for i in range(10)]
+        result = compute_session_order_effects(eval_results)
+        assert result is not None
+        assert result.cross_model_descriptive_only is False
+
+    def test_ols_result_default_cross_model_flag_is_false(self):
+        """OLSResult default must have cross_model_descriptive_only=False."""
+        result = OLSResult(
+            spec_name="test",
+            n_obs=10,
+            df_residual=8,
+            r_squared=0.5,
+            se_type="OLS",
+        )
+        assert result.cross_model_descriptive_only is False
+
+    def test_pipeline_report_h2_carries_cross_model_flag(self):
+        """run_stats_pipeline h2_capability field must carry the cross_model flag."""
+        cells = self._cells_for_h2()
+        stats = run_stats_pipeline(_make_report(cells), p1_scores=self._p1_scores())
+        assert stats.h2_capability is not None
+        assert stats.h2_capability.cross_model_descriptive_only is True
+
+    def test_h2_flag_serialises_to_json(self):
+        """cross_model_descriptive_only must survive JSON round-trip."""
+        result = compute_h2_capability(self._cells_for_h2(), self._p1_scores())
+        assert result is not None
+        data = result.model_dump()
+        assert "cross_model_descriptive_only" in data
+        assert data["cross_model_descriptive_only"] is True

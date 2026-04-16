@@ -314,6 +314,15 @@ def generate_full_report(experiment_dir: str) -> dict:
                 "This data is EXPLORATORY ONLY and must not be used as evidence in published work. "
                 "N\u226550 runs per cell are required before any statistical claims can be made."
             ),
+            # REV-6: cross-model regression must never be used for inference.
+            "cross_model_regression_scope": (
+                "Cross-model comparisons (H2 capability scatter, inter-model BSI) are "
+                "DESCRIPTIVE ONLY (N=10 models). "
+                "No p-values, regression coefficients, or inferential claims are valid "
+                "for cross-model analyses at N=10. "
+                "Present capability scatter as a descriptive figure only; "
+                "all within-model analyses (H1, H3, H5, H7) remain inferential at N\u226550 runs per cell."
+            ),
         },
         "per_pillar_aggregate": per_pillar_aggregate,
         "per_metric_breakdown": dict(per_metric_breakdown),
@@ -346,6 +355,14 @@ def render_full_report_markdown(report: dict) -> str:
         "N≥50 runs per cell are required before any statistical claims can be made."
     )
 
+    _REV6_CROSS_MODEL_WARN = (
+        "> **REV-6 — CROSS-MODEL ANALYSIS SCOPE:** "
+        "All cross-model comparisons (capability scatter, inter-model BSI) are "
+        "**descriptive only** (N=10 models). "
+        "No p-values or inferential claims are valid for cross-model analyses. "
+        "Within-model analyses (H1, H3, H5, H7) remain inferential at N≥50 runs per cell."
+    )
+
     lines = [
         "# BuyerBench Full Experiment Report",
         "",
@@ -359,6 +376,8 @@ def render_full_report_markdown(report: dict) -> str:
     # ── 1. Per-pillar aggregate ───────────────────────────────────────────────
     lines += [
         "## 1. Per-Pillar Aggregate Scores",
+        "",
+        _REV6_CROSS_MODEL_WARN,
         "",
         "| Agent | Pillar | Mean Score | Std | Min | Max | N Scenarios |",
         "|-------|--------|-----------|-----|-----|-----|-------------|",

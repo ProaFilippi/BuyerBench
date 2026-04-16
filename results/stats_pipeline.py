@@ -6,6 +6,40 @@ produced by UPGRADE-5 (``results/aggregate_cells.py``).
 
 No external dependencies — pure Python stdlib only.
 
+CROSS-MODEL REGRESSION (REV-6)
+-------------------------------
+BuyerBench evaluates N=10 models.  OLS regression with N=10 observational
+units (models) produces standard errors that span the full coefficient
+magnitude — reported p-values are unreliable, confidence intervals are
+enormous, and no inferential claim is supportable.  This is a fundamental
+statistical constraint, not a software limitation.
+
+Accordingly:
+
+  * **H2 capability regression** (``compute_h2_capability``) is the only
+    cross-model OLS analysis in this pipeline.  Its results carry
+    ``cross_model_descriptive_only=True`` on the :class:`OLSResult` object.
+    All coefficients have ``significant_05`` forced to ``False`` — the
+    p-value field is retained for internal computation only and must never
+    be used to claim statistical significance across models.
+
+  * **All other analyses** (Level 1 WLS, H7, session order) operate
+    *within* or *across cells* — they are inferential analyses with
+    adequate N and do not set ``cross_model_descriptive_only``.
+
+  * **Report renderers** must check ``OLSResult.cross_model_descriptive_only``
+    and suppress p-value columns / significance stars when displaying H2.
+    Display the scatter as a descriptive figure only; no asterisks, no
+    inferential language.
+
+Claims about the H2 capability scatter MUST be stated as:
+  "Descriptive pattern across N=10 models; no inferential claim."
+
+Claims MUST NOT be stated as:
+  "Higher Pillar 1 capability is significantly associated with lower BSI
+   (β = ..., p < 0.05)" — that framing requires far larger N at the model
+   level and is not valid here.
+
 Typical usage::
 
     from results.aggregate_cells import aggregate_cells_from_dir
@@ -251,6 +285,11 @@ class OLSResult(BaseModel):
     n_clusters: int | None = None
     coefficients: list[RegressionCoefficient] = Field(default_factory=list)
     notes: str = ""
+    cross_model_descriptive_only: bool = False
+    """REV-6: True for cross-model analyses (N=10 models).
+    When True, ``significant_05`` is forced False on all coefficients —
+    p-values must NOT be used to claim statistical significance across models.
+    Report as a descriptive scatter only; no p-value columns, no asterisks."""
 
 
 class VarianceDecompositionRow(BaseModel):
@@ -857,6 +896,12 @@ def compute_h2_capability(
             "with N = 10, do not interpret p-values as inferential evidence.  "
             "Report as 'suggestive pattern' with wide CIs."
         )
+        # REV-6: mark as cross-model descriptive and suppress significance flags.
+        # p_value fields are retained for internal computation but must never
+        # be reported as evidence of a statistically significant cross-model effect.
+        result.cross_model_descriptive_only = True
+        for coef in result.coefficients:
+            coef.significant_05 = False
         return result
     except ValueError:
         return None
