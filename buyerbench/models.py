@@ -21,6 +21,8 @@ class ScenarioVariant(str, Enum):
     WARP_AB = "WARP_AB"
     WARP_BC = "WARP_BC"
     WARP_AC = "WARP_AC"
+    # REV-4: compound manipulation variant (anchor + scarcity simultaneously)
+    COMPOUND = "COMPOUND"
 
 
 class Pillar(str, Enum):

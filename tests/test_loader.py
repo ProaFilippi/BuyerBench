@@ -44,8 +44,9 @@ class TestLoadScenario:
 
 class TestLoadAllScenarios:
     def test_loads_exactly_eighteen_scenarios(self):
+        # REV-4 added 6 hard scenarios: 29 + 6 = 35
         scenarios = load_all_scenarios(str(SCENARIOS_ROOT))
-        assert len(scenarios) == 29
+        assert len(scenarios) == 35
 
     def test_all_pillars_represented(self):
         scenarios = load_all_scenarios(str(SCENARIOS_ROOT))
@@ -57,8 +58,9 @@ class TestLoadAllScenarios:
 
 class TestLoadScenarioPairs:
     def test_returns_four_pairs(self):
+        # REV-4 added 3 new hard pairs (p2-09, p2-10, p2-11): 7 + 3 = 10
         pairs = load_scenario_pairs(str(SCENARIOS_ROOT))
-        assert len(pairs) == 7
+        assert len(pairs) == 10
 
     def test_each_pair_is_two_scenarios(self):
         pairs = load_scenario_pairs(str(SCENARIOS_ROOT))

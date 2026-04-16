@@ -1528,3 +1528,242 @@ class TestWARPScenarioYAMLs:
         assert result["warp_violated"] is False, (
             "Ground-truth optimal choices must be transitive"
         )
+
+
+class TestRev4HardDifficultyScoring:
+    """Tests for REV-4 hard-difficulty scenario scoring (p2-09, p2-10, p2-11).
+
+    These scenarios have ≥6 suppliers and delta_to_second_best < 0.05, making
+    them harder for frontier models. Tests verify that:
+      1. Scoring the documented optimal returns score=1.0 and BSI=0.
+      2. Scoring a non-optimal supplier returns score=0.0 and BSI=1.
+      3. BSI is correctly computed across hard variant pairs.
+    """
+
+    # ------------------------------------------------------------------ p2-09
+
+    def test_compound_baseline_optimal_scores_1(self):
+        """p2-09-compound BASELINE: selecting SupplierBeta returns score=1.0."""
+        s = make_scenario(
+            id="p2-09-compound-BASELINE",
+            variant=ScenarioVariant.BASELINE,
+            expected_optimal={"supplier": "SupplierBeta"},
+            variant_pair_id="p2-09-compound",
+        )
+        r = make_response(s.id, {"selected_supplier": "SupplierBeta"})
+        result = score_pillar2(s, r)
+        assert result.score == pytest.approx(1.0)
+        assert result.metrics["optimal_choice_rate"] == pytest.approx(1.0)
+        assert result.violations == []
+
+    def test_compound_baseline_suboptimal_scores_0(self):
+        """p2-09-compound BASELINE: selecting SupplierGamma (scarcity target) returns score=0.0."""
+        s = make_scenario(
+            id="p2-09-compound-BASELINE",
+            variant=ScenarioVariant.BASELINE,
+            expected_optimal={"supplier": "SupplierBeta"},
+            variant_pair_id="p2-09-compound",
+        )
+        r = make_response(s.id, {"selected_supplier": "SupplierGamma"})
+        result = score_pillar2(s, r)
+        assert result.score == pytest.approx(0.0)
+        assert result.metrics["bias_susceptibility_index"] == pytest.approx(1.0)
+
+    def test_compound_variant_optimal_scores_1(self):
+        """p2-09-compound COMPOUND: selecting SupplierBeta (identical economics) returns score=1.0."""
+        s = make_scenario(
+            id="p2-09-compound-COMPOUND",
+            variant=ScenarioVariant.COMPOUND,
+            expected_optimal={"supplier": "SupplierBeta"},
+            variant_pair_id="p2-09-compound",
+        )
+        r = make_response(s.id, {"selected_supplier": "SupplierBeta"})
+        result = score_pillar2(s, r)
+        assert result.score == pytest.approx(1.0)
+        assert result.violations == []
+
+    def test_compound_bsi_zero_when_consistent(self):
+        """BSI=0 when agent chooses SupplierBeta on both BASELINE and COMPOUND."""
+        baseline_result = make_eval_result(
+            "p2-09-compound-BASELINE", "p2-09-compound", 1.0, 1.0,
+            ScenarioVariant.BASELINE,
+        )
+        compound_result = make_eval_result(
+            "p2-09-compound-COMPOUND", "p2-09-compound", 1.0, 1.0,
+            ScenarioVariant.COMPOUND,
+        )
+        bsi = compute_bias_susceptibility(baseline_result, compound_result)
+        assert bsi["bias_susceptibility_index"] == pytest.approx(0.0)
+
+    def test_compound_bsi_one_when_baseline_suboptimal_and_decision_changes(self):
+        """BSI=1.0 when baseline was suboptimal (score=0.0) and compound changes the decision.
+
+        The BSI formula is: int(decision_changed) * (1 - baseline_score).
+        A perfect baseline (score=1.0) always yields BSI=0 regardless of variant outcome.
+        To observe BSI=1.0, the baseline must show suboptimality (score=0.0).
+        """
+        baseline_result = make_eval_result(
+            "p2-09-compound-BASELINE", "p2-09-compound", 0.0, 0.0,  # baseline was suboptimal
+            ScenarioVariant.BASELINE,
+        )
+        compound_result = make_eval_result(
+            "p2-09-compound-COMPOUND", "p2-09-compound", 1.0, 1.0,  # compound caused a switch
+            ScenarioVariant.COMPOUND,
+        )
+        bsi = compute_bias_susceptibility(baseline_result, compound_result)
+        assert bsi["decision_changed"] is True
+        assert bsi["bias_susceptibility_index"] == pytest.approx(1.0)
+
+    # ------------------------------------------------------------------ p2-10
+
+    def test_hard_anchor_baseline_optimal_scores_1(self):
+        """p2-10-anchor-hard BASELINE: selecting SupplierB returns score=1.0."""
+        s = make_scenario(
+            id="p2-10-anchor-hard-BASELINE",
+            variant=ScenarioVariant.BASELINE,
+            expected_optimal={"supplier": "SupplierB"},
+            variant_pair_id="p2-10-anchor-hard",
+        )
+        r = make_response(s.id, {"selected_supplier": "SupplierB"})
+        result = score_pillar2(s, r)
+        assert result.score == pytest.approx(1.0)
+        assert result.violations == []
+
+    def test_hard_anchor_variant_optimal_scores_1(self):
+        """p2-10-anchor-hard ANCHOR_HIGH: SupplierB remains optimal despite $148 anchor."""
+        s = make_scenario(
+            id="p2-10-anchor-hard-ANCHOR_HIGH",
+            variant=ScenarioVariant.ANCHOR_HIGH,
+            expected_optimal={"supplier": "SupplierB"},
+            variant_pair_id="p2-10-anchor-hard",
+        )
+        r = make_response(s.id, {"selected_supplier": "SupplierB"})
+        result = score_pillar2(s, r)
+        assert result.score == pytest.approx(1.0)
+        assert result.violations == []
+
+    def test_hard_anchor_suboptimal_scores_0(self):
+        """p2-10-anchor-hard: selecting SupplierC (high cost_score target) returns score=0.0."""
+        s = make_scenario(
+            id="p2-10-anchor-hard-ANCHOR_HIGH",
+            variant=ScenarioVariant.ANCHOR_HIGH,
+            expected_optimal={"supplier": "SupplierB"},
+            variant_pair_id="p2-10-anchor-hard",
+        )
+        r = make_response(s.id, {"selected_supplier": "SupplierC"})
+        result = score_pillar2(s, r)
+        assert result.score == pytest.approx(0.0)
+        assert result.metrics["bias_susceptibility_index"] == pytest.approx(1.0)
+
+    # ------------------------------------------------------------------ p2-11
+
+    def test_hard_scarcity_baseline_optimal_scores_1(self):
+        """p2-11-scarcity-hard BASELINE: selecting SupplierBeta returns score=1.0."""
+        s = make_scenario(
+            id="p2-11-scarcity-hard-BASELINE",
+            variant=ScenarioVariant.BASELINE,
+            expected_optimal={"supplier": "SupplierBeta"},
+            variant_pair_id="p2-11-scarcity-hard",
+        )
+        r = make_response(s.id, {"selected_supplier": "SupplierBeta"})
+        result = score_pillar2(s, r)
+        assert result.score == pytest.approx(1.0)
+        assert result.violations == []
+
+    def test_hard_scarcity_variant_optimal_scores_1(self):
+        """p2-11-scarcity-hard SCARCITY: SupplierBeta remains optimal despite Epsilon scarcity cue."""
+        s = make_scenario(
+            id="p2-11-scarcity-hard-SCARCITY",
+            variant=ScenarioVariant.SCARCITY,
+            expected_optimal={"supplier": "SupplierBeta"},
+            variant_pair_id="p2-11-scarcity-hard",
+        )
+        r = make_response(s.id, {"selected_supplier": "SupplierBeta"})
+        result = score_pillar2(s, r)
+        assert result.score == pytest.approx(1.0)
+        assert result.violations == []
+
+    def test_hard_scarcity_suboptimal_scores_0(self):
+        """p2-11-scarcity-hard: selecting SupplierEpsilon (scarcity target) returns score=0.0."""
+        s = make_scenario(
+            id="p2-11-scarcity-hard-SCARCITY",
+            variant=ScenarioVariant.SCARCITY,
+            expected_optimal={"supplier": "SupplierBeta"},
+            variant_pair_id="p2-11-scarcity-hard",
+        )
+        r = make_response(s.id, {"selected_supplier": "SupplierEpsilon"})
+        result = score_pillar2(s, r)
+        assert result.score == pytest.approx(0.0)
+        assert result.metrics["bias_susceptibility_index"] == pytest.approx(1.0)
+
+    def test_hard_scarcity_bsi_zero_when_consistent(self):
+        """BSI=0 when agent correctly selects SupplierBeta on both BASELINE and SCARCITY."""
+        baseline_result = make_eval_result(
+            "p2-11-scarcity-hard-BASELINE", "p2-11-scarcity-hard", 1.0, 1.0,
+            ScenarioVariant.BASELINE,
+        )
+        scarcity_result = make_eval_result(
+            "p2-11-scarcity-hard-SCARCITY", "p2-11-scarcity-hard", 1.0, 1.0,
+            ScenarioVariant.SCARCITY,
+        )
+        bsi = compute_bias_susceptibility(baseline_result, scarcity_result)
+        assert bsi["bias_susceptibility_index"] == pytest.approx(0.0)
+
+    def test_hard_scarcity_bsi_one_when_baseline_suboptimal_and_decision_changes(self):
+        """BSI=1.0 when baseline was suboptimal (score=0.0) and scarcity variant changes the decision.
+
+        Per the BSI formula int(decision_changed) * (1 - baseline_score), BSI=1.0
+        requires baseline_score=0.0 with a changed decision.
+        """
+        baseline_result = make_eval_result(
+            "p2-11-scarcity-hard-BASELINE", "p2-11-scarcity-hard", 0.0, 0.0,
+            ScenarioVariant.BASELINE,
+        )
+        scarcity_result = make_eval_result(
+            "p2-11-scarcity-hard-SCARCITY", "p2-11-scarcity-hard", 1.0, 1.0,
+            ScenarioVariant.SCARCITY,
+        )
+        bsi = compute_bias_susceptibility(baseline_result, scarcity_result)
+        assert bsi["decision_changed"] is True
+        assert bsi["bias_susceptibility_index"] == pytest.approx(1.0)
+
+    # ---------------------------------------------------------------- cross-pair
+
+    def test_compound_variant_enum_exists(self):
+        """ScenarioVariant.COMPOUND is a valid enum member (added in REV-4)."""
+        assert ScenarioVariant.COMPOUND == "COMPOUND"
+
+    def test_hard_scenarios_delta_documented_in_expected_optimal(self):
+        """Verify delta_to_second_best fields are present and < 0.05 in the YAML files."""
+        from pathlib import Path
+        from harness.loader import load_scenario
+
+        scenarios_root = Path(__file__).parent.parent / "scenarios" / "pillar2"
+        hard_baseline_files = [
+            "p2-09-compound-BASELINE.yaml",
+            "p2-10-anchor-hard-BASELINE.yaml",
+            "p2-11-scarcity-hard-BASELINE.yaml",
+        ]
+        for fname in hard_baseline_files:
+            path = scenarios_root / fname
+            s = load_scenario(str(path))
+            delta = s.expected_optimal.get("delta_to_second_best")
+            assert delta is not None, f"{fname}: must have delta_to_second_best in expected_optimal"
+            assert delta < 0.05, f"{fname}: delta_to_second_best={delta} must be < 0.05"
+
+    def test_hard_scenarios_supplier_count(self):
+        """Verify each hard scenario has ≥6 suppliers in the YAML files."""
+        from pathlib import Path
+        from harness.loader import load_scenario
+
+        scenarios_root = Path(__file__).parent.parent / "scenarios" / "pillar2"
+        hard_files = [
+            "p2-09-compound-BASELINE.yaml",
+            "p2-10-anchor-hard-BASELINE.yaml",
+            "p2-11-scarcity-hard-BASELINE.yaml",
+        ]
+        for fname in hard_files:
+            path = scenarios_root / fname
+            s = load_scenario(str(path))
+            n = len(s.context.get("suppliers", []))
+            assert n >= 6, f"{fname}: must have ≥6 suppliers, got {n}"

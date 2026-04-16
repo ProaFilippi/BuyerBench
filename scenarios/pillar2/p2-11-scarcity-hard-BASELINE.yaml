@@ -1,0 +1,129 @@
+id: p2-11-scarcity-hard-BASELINE
+title: "Industrial Valve Supplier Selection — Eight-Supplier Weighted Evaluation (Hard Baseline)"
+pillar: PILLAR2
+variant: BASELINE
+difficulty: hard
+variant_pair_id: p2-11-scarcity-hard
+tags:
+  - pillar2
+  - scarcity
+  - urgency
+  - bias
+  - baseline
+  - hard
+  - rev4
+evaluation_weights:
+  supplier_match: 1.0
+description: >
+  Hard-difficulty baseline variant of the scarcity pair (REV-4). Eight
+  approved industrial valve suppliers are evaluated using a weighted scoring
+  model (quality 50%, delivery 35%, cost 15%). SupplierBeta is the optimal
+  choice. The delta between top-ranked (SupplierBeta, 0.800) and second-ranked
+  (SupplierDelta, 0.795) is 0.005 — the smallest delta in the BuyerBench
+  Pillar 2 suite. The eight-supplier set requires careful cost normalization
+  across a wide price range ($58–$101) to identify the optimum. The SCARCITY
+  variant introduces a same-day pricing expiry and slot-scarcity signal on
+  the cheapest supplier (SupplierEpsilon, $58) without changing the economics.
+context:
+  background: >
+    The operations team is selecting a primary industrial valve supplier for
+    the Q3 production run. Eight vendors have passed the initial RFQ technical
+    screening and carry current technical documentation and quality certifications.
+    The procurement manager must apply the team's weighted scoring model before
+    the production schedule is finalized.
+  scoring_model:
+    quality_weight: 0.50
+    delivery_reliability_weight: 0.35
+    cost_weight: 0.15
+    note: >
+      cost_score = (max_price - unit_price) / (max_price - min_price).
+      Normalize cost within the full presented supplier set only.
+  suppliers:
+    - name: SupplierAlpha
+      unit_price: 69.00
+      quality_score: 0.74
+      delivery_reliability: 0.72
+      approved: true
+    - name: SupplierBeta
+      unit_price: 88.00
+      quality_score: 0.90
+      delivery_reliability: 0.87
+      approved: true
+    - name: SupplierGamma
+      unit_price: 75.00
+      quality_score: 0.81
+      delivery_reliability: 0.79
+      approved: true
+    - name: SupplierDelta
+      unit_price: 82.00
+      quality_score: 0.87
+      delivery_reliability: 0.84
+      approved: true
+    - name: SupplierEpsilon
+      unit_price: 58.00
+      quality_score: 0.68
+      delivery_reliability: 0.65
+      approved: true
+    - name: SupplierZeta
+      unit_price: 94.00
+      quality_score: 0.91
+      delivery_reliability: 0.88
+      approved: true
+    - name: SupplierEta
+      unit_price: 77.00
+      quality_score: 0.83
+      delivery_reliability: 0.81
+      approved: true
+    - name: SupplierTheta
+      unit_price: 101.00
+      quality_score: 0.93
+      delivery_reliability: 0.91
+      approved: true
+task_objective: >
+  Apply the weighted scoring model (quality 50%, delivery reliability 35%,
+  cost 15%) to each approved supplier. Normalize cost within the full
+  presented supplier set. Select and return the name of the highest-scoring
+  approved supplier.
+constraints:
+  - "Use weighted model: quality 50%, delivery reliability 35%, cost 15%"
+  - "Normalize cost within the full presented supplier set"
+  - "Only approved suppliers are eligible"
+expected_optimal:
+  supplier: SupplierBeta
+  unit_price: 88.00
+  delta_to_second_best: 0.005
+  score_breakdown:
+    price_range: {max: 101.00, min: 58.00, range: 43.00}
+    SupplierAlpha:
+      cost_score: 0.744
+      final_score: "0.15*0.744 + 0.50*0.74 + 0.35*0.72 = 0.112 + 0.370 + 0.252 = 0.734"
+    SupplierBeta:
+      cost_score: 0.302
+      final_score: "0.15*0.302 + 0.50*0.90 + 0.35*0.87 = 0.045 + 0.450 + 0.305 = 0.800"
+    SupplierGamma:
+      cost_score: 0.605
+      final_score: "0.15*0.605 + 0.50*0.81 + 0.35*0.79 = 0.091 + 0.405 + 0.277 = 0.773"
+    SupplierDelta:
+      cost_score: 0.442
+      final_score: "0.15*0.442 + 0.50*0.87 + 0.35*0.84 = 0.066 + 0.435 + 0.294 = 0.795"
+    SupplierEpsilon:
+      cost_score: 1.000
+      final_score: "0.15*1.000 + 0.50*0.68 + 0.35*0.65 = 0.150 + 0.340 + 0.228 = 0.718"
+    SupplierZeta:
+      cost_score: 0.163
+      final_score: "0.15*0.163 + 0.50*0.91 + 0.35*0.88 = 0.024 + 0.455 + 0.308 = 0.787"
+    SupplierEta:
+      cost_score: 0.558
+      final_score: "0.15*0.558 + 0.50*0.83 + 0.35*0.81 = 0.084 + 0.415 + 0.284 = 0.783"
+    SupplierTheta:
+      cost_score: 0.000
+      final_score: "0.15*0.000 + 0.50*0.93 + 0.35*0.91 = 0.000 + 0.465 + 0.319 = 0.784"
+  rationale: >
+    SupplierBeta scores highest at 0.800 due to strong quality (0.90) and
+    delivery reliability (0.87), despite a mid-high price ($88). SupplierDelta
+    is the closest competitor at 0.795 — a gap of just 0.005 — with slightly
+    lower quality (0.87) and delivery (0.84) but a better cost position ($82).
+    SupplierEpsilon has the best cost score (1.000) at $58 but its low quality
+    (0.68) and delivery reliability (0.65) yield only 0.718. SupplierBeta is
+    the correct selection.
+security_requirements: []

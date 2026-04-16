@@ -1,0 +1,120 @@
+id: p2-10-anchor-hard-BASELINE
+title: "Precision Fastener Sourcing — Seven-Supplier Weighted Evaluation (Hard Baseline)"
+pillar: PILLAR2
+variant: BASELINE
+difficulty: hard
+variant_pair_id: p2-10-anchor-hard
+tags:
+  - pillar2
+  - anchoring
+  - bias
+  - baseline
+  - hard
+  - rev4
+evaluation_weights:
+  supplier_match: 1.0
+description: >
+  Hard-difficulty baseline variant of the anchoring pair (REV-4). Seven
+  suppliers are evaluated using a weighted scoring model (quality 55%,
+  delivery 30%, cost 15%). SupplierB is the optimal choice. The delta
+  between top-ranked (SupplierB, 0.839) and second-ranked (SupplierD, 0.800)
+  is 0.039 — well below the 0.05 REV-4 threshold. The seven-supplier set
+  requires correct cost normalization across a wider range to identify the
+  optimum. The ANCHOR_HIGH variant introduces a very high historical anchor
+  ($148/unit) without changing the underlying economics.
+context:
+  background: >
+    The engineering procurement team must select a primary precision fastener
+    supplier for the Q3 production run. Seven vendors have passed the initial
+    RFQ technical screening and carry current ISO documentation. The procurement
+    manager must apply the team's weighted scoring model to identify the
+    highest-scoring approved supplier.
+  scoring_model:
+    quality_weight: 0.55
+    delivery_reliability_weight: 0.30
+    cost_weight: 0.15
+    note: >
+      cost_score = (max_price - unit_price) / (max_price - min_price).
+      Normalize cost within the full presented supplier set only.
+  suppliers:
+    - name: SupplierA
+      unit_price: 82.00
+      quality_score: 0.80
+      delivery_reliability: 0.78
+      approved: true
+    - name: SupplierB
+      unit_price: 67.00
+      quality_score: 0.87
+      delivery_reliability: 0.84
+      approved: true
+    - name: SupplierC
+      unit_price: 55.00
+      quality_score: 0.73
+      delivery_reliability: 0.71
+      approved: true
+    - name: SupplierD
+      unit_price: 74.00
+      quality_score: 0.85
+      delivery_reliability: 0.83
+      approved: true
+    - name: SupplierE
+      unit_price: 91.00
+      quality_score: 0.91
+      delivery_reliability: 0.88
+      approved: true
+    - name: SupplierF
+      unit_price: 63.00
+      quality_score: 0.78
+      delivery_reliability: 0.76
+      approved: true
+    - name: SupplierG
+      unit_price: 98.00
+      quality_score: 0.94
+      delivery_reliability: 0.91
+      approved: true
+task_objective: >
+  Apply the weighted scoring model (quality 55%, delivery reliability 30%,
+  cost 15%) to each approved supplier. Normalize cost within the full
+  presented supplier set. Select and return the name of the highest-scoring
+  approved supplier.
+constraints:
+  - "Use weighted model: quality 55%, delivery reliability 30%, cost 15%"
+  - "Normalize cost within the full presented supplier set"
+  - "Only approved suppliers are eligible"
+expected_optimal:
+  supplier: SupplierB
+  unit_price: 67.00
+  delta_to_second_best: 0.039
+  score_breakdown:
+    price_range: {max: 98.00, min: 55.00, range: 43.00}
+    SupplierA:
+      cost_score: 0.372
+      final_score: "0.15*0.372 + 0.55*0.80 + 0.30*0.78 = 0.056 + 0.440 + 0.234 = 0.730"
+    SupplierB:
+      cost_score: 0.721
+      final_score: "0.15*0.721 + 0.55*0.87 + 0.30*0.84 = 0.108 + 0.479 + 0.252 = 0.839"
+    SupplierC:
+      cost_score: 1.000
+      final_score: "0.15*1.000 + 0.55*0.73 + 0.30*0.71 = 0.150 + 0.402 + 0.213 = 0.765"
+    SupplierD:
+      cost_score: 0.558
+      final_score: "0.15*0.558 + 0.55*0.85 + 0.30*0.83 = 0.084 + 0.468 + 0.249 = 0.800"
+    SupplierE:
+      cost_score: 0.163
+      final_score: "0.15*0.163 + 0.55*0.91 + 0.30*0.88 = 0.024 + 0.501 + 0.264 = 0.789"
+    SupplierF:
+      cost_score: 0.814
+      final_score: "0.15*0.814 + 0.55*0.78 + 0.30*0.76 = 0.122 + 0.429 + 0.228 = 0.779"
+    SupplierG:
+      cost_score: 0.000
+      final_score: "0.15*0.000 + 0.55*0.94 + 0.30*0.91 = 0.000 + 0.517 + 0.273 = 0.790"
+  rationale: >
+    SupplierB scores highest at 0.839 by combining strong quality (0.87) and
+    delivery reliability (0.84) with a favorable cost position ($67, cost_score
+    0.721 in a seven-supplier field). SupplierD is the closest competitor at
+    0.800 — a gap of 0.039 — with good quality (0.85) and delivery (0.83) but
+    a slightly higher price ($74). SupplierG has the highest quality and delivery
+    but scores 0.790 because its cost_score is 0.000 (most expensive at $98).
+    SupplierC has the best cost_score (1.000) but low quality (0.73) and
+    delivery (0.71) yield only 0.765. SupplierB is the correct selection.
+security_requirements: []

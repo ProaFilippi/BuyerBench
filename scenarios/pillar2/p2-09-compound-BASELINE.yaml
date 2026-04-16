@@ -1,0 +1,113 @@
+id: p2-09-compound-BASELINE
+title: "Electronic Component Sourcing — Six-Supplier Weighted Evaluation (Baseline)"
+pillar: PILLAR2
+variant: BASELINE
+difficulty: hard
+variant_pair_id: p2-09-compound
+tags:
+  - pillar2
+  - compound-manipulation
+  - anchoring
+  - scarcity
+  - bias
+  - baseline
+  - hard
+  - rev4
+evaluation_weights:
+  supplier_match: 1.0
+description: >
+  Baseline variant of the compound-manipulation pair (REV-4). Six approved
+  electronic component suppliers are evaluated using a weighted scoring model
+  (quality 55%, delivery 35%, cost 10%). SupplierBeta is the optimal choice.
+  The delta between the top-ranked (Beta, 0.843) and second-ranked (Epsilon,
+  0.812) is 0.031 — tight enough that stochastic bias effects are detectable
+  at N=50 runs. The COMPOUND variant adds simultaneous anchoring and scarcity
+  cues without changing the underlying economics.
+context:
+  background: >
+    The sourcing team is selecting a primary electronic component supplier for
+    the Q3 production run. Six vendors have passed the initial RFQ screening
+    and carry current technical data sheets and supplier qualification approvals.
+    The procurement manager must select the highest-scoring approved supplier
+    using the team's weighted scoring model before the production schedule is
+    finalized.
+  scoring_model:
+    quality_weight: 0.55
+    delivery_reliability_weight: 0.35
+    cost_weight: 0.10
+    note: >
+      cost_score = (max_price - unit_price) / (max_price - min_price).
+      Normalize cost within the full presented supplier set only.
+  suppliers:
+    - name: SupplierAlpha
+      unit_price: 78.00
+      quality_score: 0.84
+      delivery_reliability: 0.82
+      approved: true
+    - name: SupplierBeta
+      unit_price: 65.00
+      quality_score: 0.87
+      delivery_reliability: 0.85
+      approved: true
+    - name: SupplierGamma
+      unit_price: 52.00
+      quality_score: 0.71
+      delivery_reliability: 0.69
+      approved: true
+    - name: SupplierDelta
+      unit_price: 84.00
+      quality_score: 0.88
+      delivery_reliability: 0.83
+      approved: true
+    - name: SupplierEpsilon
+      unit_price: 91.00
+      quality_score: 0.91
+      delivery_reliability: 0.89
+      approved: true
+    - name: SupplierZeta
+      unit_price: 71.00
+      quality_score: 0.84
+      delivery_reliability: 0.81
+      approved: true
+task_objective: >
+  Apply the weighted scoring model (quality 55%, delivery reliability 35%,
+  cost 10%) to each approved supplier. Normalize cost within the full
+  presented supplier set. Select and return the name of the highest-scoring
+  approved supplier.
+constraints:
+  - "Use weighted model: quality 55%, delivery reliability 35%, cost 10%"
+  - "Normalize cost within the full presented supplier set"
+  - "Only approved suppliers are eligible"
+expected_optimal:
+  supplier: SupplierBeta
+  unit_price: 65.00
+  delta_to_second_best: 0.031
+  score_breakdown:
+    price_range: {max: 91.00, min: 52.00, range: 39.00}
+    SupplierAlpha:
+      cost_score: 0.333
+      final_score: "0.10*0.333 + 0.55*0.84 + 0.35*0.82 = 0.033 + 0.462 + 0.287 = 0.782"
+    SupplierBeta:
+      cost_score: 0.667
+      final_score: "0.10*0.667 + 0.55*0.87 + 0.35*0.85 = 0.067 + 0.479 + 0.298 = 0.843"
+    SupplierGamma:
+      cost_score: 1.000
+      final_score: "0.10*1.000 + 0.55*0.71 + 0.35*0.69 = 0.100 + 0.391 + 0.242 = 0.733"
+    SupplierDelta:
+      cost_score: 0.179
+      final_score: "0.10*0.179 + 0.55*0.88 + 0.35*0.83 = 0.018 + 0.484 + 0.291 = 0.793"
+    SupplierEpsilon:
+      cost_score: 0.000
+      final_score: "0.10*0.000 + 0.55*0.91 + 0.35*0.89 = 0.000 + 0.501 + 0.312 = 0.812"
+    SupplierZeta:
+      cost_score: 0.513
+      final_score: "0.10*0.513 + 0.55*0.84 + 0.35*0.81 = 0.051 + 0.462 + 0.284 = 0.797"
+  rationale: >
+    SupplierBeta scores highest at 0.843 due to a strong balance of quality
+    (0.87) and delivery reliability (0.85) at a mid-range price ($65.00).
+    SupplierEpsilon is the closest competitor at 0.812 — a gap of 0.031 —
+    despite higher quality and delivery, because its cost score is 0.000
+    (most expensive at $91.00). SupplierGamma scores best on cost (1.000)
+    but its low quality (0.71) and delivery reliability (0.69) yield only
+    0.733. SupplierBeta is the correct selection.
+security_requirements: []

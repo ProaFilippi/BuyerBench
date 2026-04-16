@@ -39,7 +39,8 @@ def scenario_pairs():
 
 class TestSuiteCompleteness:
     def test_total_scenario_count(self, all_scenarios):
-        assert len(all_scenarios) == 29
+        # REV-4 added 6 hard-difficulty scenarios (p2-09, p2-10, p2-11): 29 + 6 = 35
+        assert len(all_scenarios) == 35
 
     def test_pillar1_count(self, all_scenarios):
         p1 = [s for s in all_scenarios if s.pillar == Pillar.PILLAR1]
@@ -47,7 +48,8 @@ class TestSuiteCompleteness:
 
     def test_pillar2_count(self, all_scenarios):
         p2 = [s for s in all_scenarios if s.pillar == Pillar.PILLAR2]
-        assert len(p2) == 17
+        # REV-4 added 6 hard scenarios: 17 + 6 = 23
+        assert len(p2) == 23
 
     def test_pillar3_count(self, all_scenarios):
         p3 = [s for s in all_scenarios if s.pillar == Pillar.PILLAR3]
@@ -131,7 +133,8 @@ class TestNewSchemaFields:
 
 class TestPillar2PairedVariants:
     def test_four_variant_pairs_exist(self, scenario_pairs):
-        assert len(scenario_pairs) == 7
+        # REV-4 added 3 new hard pairs (p2-09, p2-10, p2-11): 7 + 3 = 10
+        assert len(scenario_pairs) == 10
 
     def test_expected_pair_ids_present(self, scenario_pairs):
         pair_ids = {a.variant_pair_id for a, _ in scenario_pairs}
@@ -143,6 +146,10 @@ class TestPillar2PairedVariants:
             "p2-05-sunk-cost",
             "p2-06-default",
             "p2-07-loss-aversion",
+            # REV-4 hard-difficulty pairs
+            "p2-09-compound",
+            "p2-10-anchor-hard",
+            "p2-11-scarcity-hard",
         }
         assert pair_ids == expected
 
@@ -198,6 +205,150 @@ class TestPillar2PairedVariants:
         variants = {default[0].variant, default[1].variant}
         assert ScenarioVariant.BASELINE in variants
         assert ScenarioVariant.DEFAULT in variants
+
+    def test_compound_pair_has_baseline_and_compound(self, scenario_pairs):
+        compound = next(
+            (a, b) for a, b in scenario_pairs if a.variant_pair_id == "p2-09-compound"
+        )
+        variants = {compound[0].variant, compound[1].variant}
+        assert ScenarioVariant.BASELINE in variants
+        assert ScenarioVariant.COMPOUND in variants
+
+    def test_hard_anchor_pair_has_baseline_and_anchor_high(self, scenario_pairs):
+        hard_anchor = next(
+            (a, b) for a, b in scenario_pairs if a.variant_pair_id == "p2-10-anchor-hard"
+        )
+        variants = {hard_anchor[0].variant, hard_anchor[1].variant}
+        assert ScenarioVariant.BASELINE in variants
+        assert ScenarioVariant.ANCHOR_HIGH in variants
+
+    def test_hard_scarcity_pair_has_baseline_and_scarcity(self, scenario_pairs):
+        hard_scarcity = next(
+            (a, b) for a, b in scenario_pairs if a.variant_pair_id == "p2-11-scarcity-hard"
+        )
+        variants = {hard_scarcity[0].variant, hard_scarcity[1].variant}
+        assert ScenarioVariant.BASELINE in variants
+        assert ScenarioVariant.SCARCITY in variants
+
+
+class TestRev4HardDifficultyScenarios:
+    """Validate REV-4 hard-difficulty scenario properties."""
+
+    REV4_IDS = {
+        "p2-09-compound-BASELINE",
+        "p2-09-compound-COMPOUND",
+        "p2-10-anchor-hard-BASELINE",
+        "p2-10-anchor-hard-ANCHOR_HIGH",
+        "p2-11-scarcity-hard-BASELINE",
+        "p2-11-scarcity-hard-SCARCITY",
+    }
+
+    def _rev4_scenarios(self, all_scenarios):
+        return [s for s in all_scenarios if s.id in self.REV4_IDS]
+
+    def test_all_six_rev4_scenarios_are_present(self, all_scenarios):
+        found = {s.id for s in all_scenarios if s.id in self.REV4_IDS}
+        assert found == self.REV4_IDS
+
+    def test_all_rev4_scenarios_are_difficulty_hard(self, all_scenarios):
+        for s in self._rev4_scenarios(all_scenarios):
+            assert s.difficulty == Difficulty.HARD, (
+                f"{s.id}: REV-4 scenario must have difficulty=hard"
+            )
+
+    def test_all_rev4_scenarios_tagged_rev4(self, all_scenarios):
+        for s in self._rev4_scenarios(all_scenarios):
+            assert "rev4" in s.tags, (
+                f"{s.id}: REV-4 scenario must include 'rev4' tag"
+            )
+
+    def test_hard_scenarios_have_six_or_more_suppliers(self, all_scenarios):
+        for s in self._rev4_scenarios(all_scenarios):
+            suppliers = s.context.get("suppliers", [])
+            assert len(suppliers) >= 6, (
+                f"{s.id}: REV-4 scenario must have ≥6 suppliers, got {len(suppliers)}"
+            )
+
+    def test_compound_scenario_has_compound_variant(self, all_scenarios):
+        compound = next(
+            s for s in all_scenarios if s.id == "p2-09-compound-COMPOUND"
+        )
+        assert compound.variant == ScenarioVariant.COMPOUND
+
+    def test_hard_anchor_variant_has_category_background(self, all_scenarios):
+        anchor = next(
+            s for s in all_scenarios if s.id == "p2-10-anchor-hard-ANCHOR_HIGH"
+        )
+        assert "category_background" in anchor.context, (
+            "Hard anchor ANCHOR_HIGH must have category_background anchor context"
+        )
+
+    def test_compound_variant_has_category_background_and_vendor_note(self, all_scenarios):
+        compound = next(
+            s for s in all_scenarios if s.id == "p2-09-compound-COMPOUND"
+        )
+        assert "category_background" in compound.context
+        suppliers = compound.context.get("suppliers", [])
+        has_vendor_note = any("vendor_note" in sup for sup in suppliers)
+        assert has_vendor_note, "Compound scenario must have a scarcity vendor_note on at least one supplier"
+
+    def test_hard_scarcity_variant_has_vendor_note(self, all_scenarios):
+        scarcity = next(
+            s for s in all_scenarios if s.id == "p2-11-scarcity-hard-SCARCITY"
+        )
+        suppliers = scarcity.context.get("suppliers", [])
+        has_vendor_note = any("vendor_note" in sup for sup in suppliers)
+        assert has_vendor_note, "Hard scarcity SCARCITY must have a scarcity vendor_note"
+
+    def test_hard_scenarios_delta_to_second_best_is_small(self, all_scenarios):
+        """All REV-4 hard scenarios document delta_to_second_best < 0.05."""
+        hard_baselines = [
+            s for s in all_scenarios
+            if s.id in {
+                "p2-09-compound-BASELINE",
+                "p2-10-anchor-hard-BASELINE",
+                "p2-11-scarcity-hard-BASELINE",
+            }
+        ]
+        assert len(hard_baselines) == 3
+        for s in hard_baselines:
+            delta = s.expected_optimal.get("delta_to_second_best")
+            assert delta is not None, f"{s.id}: must document delta_to_second_best"
+            assert delta < 0.05, (
+                f"{s.id}: delta_to_second_best={delta} must be < 0.05 (REV-4 requirement)"
+            )
+
+    def test_baseline_and_compound_share_supplier_economics(self, all_scenarios):
+        """p2-09 BASELINE and COMPOUND have identical supplier lists."""
+        base = next(s for s in all_scenarios if s.id == "p2-09-compound-BASELINE")
+        comp = next(s for s in all_scenarios if s.id == "p2-09-compound-COMPOUND")
+        base_suppliers = {
+            s["name"]: (s["unit_price"], s["quality_score"], s["delivery_reliability"])
+            for s in base.context["suppliers"]
+        }
+        comp_suppliers = {
+            s["name"]: (s["unit_price"], s["quality_score"], s["delivery_reliability"])
+            for s in comp.context["suppliers"]
+        }
+        assert base_suppliers == comp_suppliers, (
+            "BASELINE and COMPOUND must have identical supplier economics"
+        )
+
+    def test_baseline_and_hard_anchor_share_supplier_economics(self, all_scenarios):
+        """p2-10 BASELINE and ANCHOR_HIGH have identical supplier economics."""
+        base = next(s for s in all_scenarios if s.id == "p2-10-anchor-hard-BASELINE")
+        anch = next(s for s in all_scenarios if s.id == "p2-10-anchor-hard-ANCHOR_HIGH")
+        base_prices = {s["name"]: s["unit_price"] for s in base.context["suppliers"]}
+        anch_prices = {s["name"]: s["unit_price"] for s in anch.context["suppliers"]}
+        assert base_prices == anch_prices
+
+    def test_baseline_and_hard_scarcity_share_supplier_economics(self, all_scenarios):
+        """p2-11 BASELINE and SCARCITY have identical supplier economics."""
+        base = next(s for s in all_scenarios if s.id == "p2-11-scarcity-hard-BASELINE")
+        scar = next(s for s in all_scenarios if s.id == "p2-11-scarcity-hard-SCARCITY")
+        base_prices = {s["name"]: s["unit_price"] for s in base.context["suppliers"]}
+        scar_prices = {s["name"]: s["unit_price"] for s in scar.context["suppliers"]}
+        assert base_prices == scar_prices
 
 
 class TestPillar1Specifics:

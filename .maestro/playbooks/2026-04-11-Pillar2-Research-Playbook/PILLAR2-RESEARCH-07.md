@@ -100,11 +100,16 @@
 - [x] **REV-3 (from M.2 CRITIQUE 5):** Current single-run data is EXPLORATORY ONLY. Label clearly. Do not use in paper as evidence. Run N=50 minimum per cell before any claims.
   - **Implementation:** Added `exploratory_only_label` field to `SummaryReport` in `results/schemas.py` — a machine-readable constant that surfaces in every serialised summary JSON. Added `exploratory_only_label` key to the `methodology_notes` dict in `generate_full_report()` in `results/report.py`, parallel to the REV-1 `pillar2_rationality_scope` field. Added `_EXPLORATORY_WARN` Markdown blockquote constant to `render_full_report_markdown()` and injected it in two places: (1) the report header (before Section 1, always visible), and (2) the Bias Susceptibility section (Section 3, immediately after the REV-1 scope note). Added `TestExploratoryOnlyLabel` with 10 tests covering: `exploratory_only_label` presence in `methodology_notes` JSON (including empty-dir edge case), content checks (mentions "EXPLORATORY ONLY", "50", "published"), Markdown warning in header section, Markdown warning in Section 3, `SummaryReport` schema field presence, and N≥50 mention in schema. All 1828 tests pass (2026-04-16).
 
-- [ ] **REV-4 (from M.3 CRITIQUE 10 — Ceiling Effect):** Implement increased scenario difficulty variants:
+- [x] **REV-4 (from M.3 CRITIQUE 10 — Ceiling Effect):** Implement increased scenario difficulty variants:
   - More suppliers (5–8 instead of 3–4)
   - Closer utility scores (reducing δ between optimal and suboptimal from ~0.2 to ~0.05)
   - Compound manipulations (anchor + scarcity simultaneously)
   - These are needed if frontier models score 1.0 at N=50
+  - **Implementation:** Added `COMPOUND` to `ScenarioVariant` enum in `buyerbench/models.py`. Created 3 new hard-difficulty scenario pairs (6 YAML files):
+    - `p2-09-compound` (BASELINE + COMPOUND): 6 suppliers, δ=0.031, simultaneous $118/unit anchor + SupplierGamma scarcity cue (4 slots, closes EOD). Tests compound bias where neither anchor alone nor scarcity alone is as powerful as both together.
+    - `p2-10-anchor-hard` (BASELINE + ANCHOR_HIGH): 7 suppliers, δ=0.039, very high anchor at $148/unit (2.2× max catalog price) making all current prices appear cheap.
+    - `p2-11-scarcity-hard` (BASELINE + SCARCITY): 8 suppliers, δ=0.005 (tightest gap in the suite), scarcity cue on cheapest supplier (SupplierEpsilon, $58). Agents must both resist the scarcity cue AND discriminate a 0.5% composite score gap.
+  - Updated test counts across `test_scenarios.py` (35 total, 23 P2, 10 pairs), `test_aggregate.py`, `test_loader.py`, `test_pillar2_experiments.py`. Added `TestRev4HardDifficultyScenarios` (12 tests in `test_scenarios.py`) and `TestRev4HardDifficultyScoring` (17 tests in `test_evaluator_pillar2.py`). All 1901 tests pass (2026-04-16).
 
 - [ ] **REV-5 (from M.1 CRITIQUE 3):** Prompt robustness: before main experiment, run 5-run pilot at 3 prompt phrasings. If BSI coefficient of variation > 50%, do not proceed — redesign scenarios first.
 
