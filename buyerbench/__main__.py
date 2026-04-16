@@ -199,6 +199,13 @@ def select(output: str, filter_tag: str | None, filter_provider: str | None) -> 
     type=click.IntRange(min=1),
     help="Number of independent runs per (agent, scenario) cell for statistical analysis.",
 )
+@click.option(
+    "--temperature",
+    "temperature",
+    default=None,
+    type=float,
+    help="Sampling temperature passed to the model (0.0–1.0). Omit to use provider default.",
+)
 def run(
     agent: str | None,
     from_selection: str | None,
@@ -211,6 +218,7 @@ def run(
     test_context: str | None,
     dashboard: bool,
     n_runs: int,
+    temperature: float | None,
 ) -> None:
     """Run the benchmark suite against a named CLI agent (or all agents)."""
     import json
@@ -345,6 +353,8 @@ def run(
 
     config = load_config()
     config["dry_run"] = dry_run
+    if temperature is not None:
+        config["temperature"] = temperature
 
     # Copy session config into output dir for provenance
     if from_session:

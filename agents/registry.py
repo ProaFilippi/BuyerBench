@@ -36,15 +36,15 @@ from agents.stripe_toolkit_agent import StripeToolkitAgent
 
 OPENROUTER_MODEL_MAP: dict[str, str] = {
     "openrouter-openai-gpt-4o": "openai/gpt-4o",
-    "openrouter-anthropic-claude-3.5-sonnet": "anthropic/claude-3.5-sonnet",
-    "openrouter-google-gemini-pro-1.5": "google/gemini-pro-1.5",
-    "openrouter-meta-llama-llama-3.1-405b-instruct": "meta-llama/llama-3.1-405b-instruct",
+    "openrouter-anthropic-claude-3.5-sonnet": "anthropic/claude-sonnet-4",
+    "openrouter-google-gemini-pro-1.5": "google/gemini-2.5-pro-preview",
+    "openrouter-meta-llama-llama-3.1-405b-instruct": "meta-llama/llama-3.3-70b-instruct",
     "openrouter-mistralai-mistral-large": "mistralai/mistral-large",
     "openrouter-deepseek-deepseek-chat": "deepseek/deepseek-chat",
     "openrouter-qwen-qwen-2.5-72b-instruct": "qwen/qwen-2.5-72b-instruct",
-    "openrouter-cohere-command-r-plus": "cohere/command-r-plus",
+    "openrouter-cohere-command-r-plus": "cohere/command-a-03-2025",
     "openrouter-mistralai-mixtral-8x22b-instruct": "mistralai/mixtral-8x22b-instruct",
-    "openrouter-01-ai-yi-large": "01-ai/yi-large",
+    "openrouter-01-ai-yi-large": "meta-llama/llama-4-scout",
 }
 
 # ------------------------------------------------------------------
@@ -121,11 +121,13 @@ def get_agent(
     if agent_id.startswith("openrouter-"):
         model_id = OPENROUTER_MODEL_MAP[agent_id]
         or_cfg = config.get("openrouter", {})
+        temperature = config.get("temperature", or_cfg.get("temperature", None))
         return OpenRouterAgent(
             model_id=model_id,
             timeout=config.get("timeout", or_cfg.get("timeout", 120)),
             dry_run=config.get("dry_run", False),
             system_prompt=skill_prompt,
+            temperature=temperature,
         )
 
     # Extract mode from the agent_id suffix

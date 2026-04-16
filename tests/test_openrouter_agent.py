@@ -137,7 +137,7 @@ class TestOpenRouterRegistry:
         """get_agent() must pass the correct model_id from OPENROUTER_MODEL_MAP."""
         agent = get_agent("openrouter-cohere-command-r-plus", {})
         assert isinstance(agent, OpenRouterAgent)
-        assert agent.model_id == "cohere/command-r-plus"
+        assert agent.model_id == "cohere/command-a-03-2025"
 
     def test_get_agent_unknown_raises(self):
         with pytest.raises(KeyError):
@@ -234,3 +234,101 @@ class TestOpenRouterHTTP:
         with patch("requests.post", return_value=mock_resp):
             response = agent.respond(scenario)
             assert response.latency_ms >= 0
+
+
+# ---------------------------------------------------------------------------
+# Temperature parameter tests (UPGRADE-3)
+# ---------------------------------------------------------------------------
+
+class TestTemperatureSupport:
+    def _make_mock_response(self, content: str) -> MagicMock:
+        mock_resp = MagicMock()
+        mock_resp.raise_for_status = MagicMock()
+        mock_resp.json.return_value = {"choices": [{"message": {"content": content}}]}
+        return mock_resp
+
+    def test_temperature_default_is_none(self):
+        """Default temperature must be None (use provider default)."""
+        agent = OpenRouterAgent("openai/gpt-4o")
+        assert agent.temperature is None
+
+    def test_temperature_stored_on_agent(self):
+        """Explicit temperature must be stored on the agent instance."""
+        agent = OpenRouterAgent("openai/gpt-4o", temperature=0.7)
+        assert agent.temperature == 0.7
+
+    def test_temperature_zero_stored(self):
+        """Temperature=0.0 must be stored (not treated as falsy None)."""
+        agent = OpenRouterAgent("openai/gpt-4o", temperature=0.0)
+        assert agent.temperature == 0.0
+
+    def test_temperature_included_in_post_body_when_set(self, monkeypatch):
+        """When temperature is set, it must appear in the POST body."""
+        monkeypatch.setenv("OPENROUTER_API_KEY", "test-key")
+        agent = OpenRouterAgent("openai/gpt-4o", temperature=0.7)
+        scenario = _make_scenario()
+
+        json_content = json.dumps({"selected_supplier": "SupplierA", "unit_price": 90.0})
+        mock_resp = self._make_mock_response(f"```json\n{json_content}\n```")
+
+        with patch("requests.post", return_value=mock_resp) as mock_post:
+            agent.respond(scenario)
+            _, kwargs = mock_post.call_args
+            body = kwargs["json"]
+            assert "temperature" in body
+            assert body["temperature"] == 0.7
+
+    def test_temperature_absent_from_body_when_none(self, monkeypatch):
+        """When temperature is None, the POST body must NOT include 'temperature'."""
+        monkeypatch.setenv("OPENROUTER_API_KEY", "test-key")
+        agent = OpenRouterAgent("openai/gpt-4o")
+        scenario = _make_scenario()
+
+        json_content = json.dumps({"selected_supplier": "SupplierA", "unit_price": 90.0})
+        mock_resp = self._make_mock_response(f"```json\n{json_content}\n```")
+
+        with patch("requests.post", return_value=mock_resp) as mock_post:
+            agent.respond(scenario)
+            _, kwargs = mock_post.call_args
+            body = kwargs["json"]
+            assert "temperature" not in body
+
+    def test_temperature_zero_included_in_body(self, monkeypatch):
+        """temperature=0.0 must appear in the POST body (not suppressed as falsy)."""
+        monkeypatch.setenv("OPENROUTER_API_KEY", "test-key")
+        agent = OpenRouterAgent("openai/gpt-4o", temperature=0.0)
+        scenario = _make_scenario()
+
+        json_content = json.dumps({"selected_supplier": "SupplierA", "unit_price": 90.0})
+        mock_resp = self._make_mock_response(f"```json\n{json_content}\n```")
+
+        with patch("requests.post", return_value=mock_resp) as mock_post:
+            agent.respond(scenario)
+            _, kwargs = mock_post.call_args
+            body = kwargs["json"]
+            assert "temperature" in body
+            assert body["temperature"] == 0.0
+
+    def test_get_agent_forwards_temperature_from_config(self):
+        """get_agent() must pass temperature from config dict to OpenRouterAgent."""
+        agent = get_agent(
+            "openrouter-openai-gpt-4o",
+            {"dry_run": True, "temperature": 0.3},
+        )
+        assert isinstance(agent, OpenRouterAgent)
+        assert agent.temperature == 0.3
+
+    def test_get_agent_no_temperature_defaults_to_none(self):
+        """get_agent() without temperature config must yield agent.temperature == None."""
+        agent = get_agent("openrouter-openai-gpt-4o", {"dry_run": True})
+        assert isinstance(agent, OpenRouterAgent)
+        assert agent.temperature is None
+
+    def test_get_agent_temperature_from_openrouter_subcfg(self):
+        """Temperature under config['openrouter']['temperature'] must be forwarded."""
+        agent = get_agent(
+            "openrouter-openai-gpt-4o",
+            {"dry_run": True, "openrouter": {"temperature": 1.0}},
+        )
+        assert isinstance(agent, OpenRouterAgent)
+        assert agent.temperature == 1.0

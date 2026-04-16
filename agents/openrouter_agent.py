@@ -48,12 +48,14 @@ class OpenRouterAgent(BaseAgent):
         timeout: int = 120,
         dry_run: bool = False,
         system_prompt: str = "",
+        temperature: float | None = None,
     ) -> None:
         self.model_id = model_id
         self.agent_id = f"openrouter-{model_id.replace('/', '-')}"
         self.timeout = timeout
         self.dry_run = dry_run
         self.system_prompt = system_prompt
+        self.temperature = temperature
 
     # ------------------------------------------------------------------
     # BaseAgent interface
@@ -104,6 +106,8 @@ class OpenRouterAgent(BaseAgent):
             "model": self.model_id,
             "messages": messages,
         }
+        if self.temperature is not None:
+            body["temperature"] = self.temperature
 
         start = time.monotonic()
         try:
