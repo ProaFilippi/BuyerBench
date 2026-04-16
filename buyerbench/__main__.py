@@ -826,6 +826,197 @@ def report(experiment_dir: str) -> None:
     _render_rich_dashboard(full_report, console)
 
 
+@cli.command()
+@click.option(
+    "--agent",
+    "agent_ids",
+    multiple=True,
+    default=None,
+    help=(
+        "Agent ID(s) to include (repeat for multiple). "
+        "Pass 'all' as the sole value to include every model in the catalog."
+    ),
+)
+@click.option(
+    "--pillar",
+    default=None,
+    type=click.Choice(["1", "2", "3"]),
+    help="Filter scenarios by pillar (1/2/3). When omitted, all scenarios are included.",
+)
+@click.option(
+    "--prompt-versions",
+    "prompt_versions",
+    multiple=True,
+    default=["standard", "cot", "expert_role"],
+    show_default=True,
+    type=click.Choice(["standard", "cot", "expert_role"]),
+    help="Prompt version(s) to include in the design space (repeat for multiple).",
+)
+@click.option(
+    "--temperatures",
+    "temperatures",
+    multiple=True,
+    default=[0.0, 0.3, 0.7, 1.0],
+    show_default=True,
+    type=float,
+    help="Temperature value(s) to include in the design space (repeat for multiple).",
+)
+@click.option(
+    "--n-runs",
+    "n_runs",
+    default=50,
+    show_default=True,
+    type=click.IntRange(min=1),
+    help="Number of independent repeat runs per cell.",
+)
+@click.option(
+    "--mode",
+    default="auto",
+    show_default=True,
+    type=click.Choice(["full", "preset", "auto"]),
+    help=(
+        "Design mode. "
+        "'auto' (default): greedy covering design — max(k, m) combinations. "
+        "'preset': hardcoded BuyerBench 4-cell L4-analogous design. "
+        "'full': all prompt × temperature combinations."
+    ),
+)
+@click.option(
+    "--output",
+    "output_path",
+    default="run-plan.csv",
+    show_default=True,
+    help="Destination path for the run plan CSV.",
+)
+def plan(
+    agent_ids: tuple[str, ...],
+    pillar: str | None,
+    prompt_versions: tuple[str, ...],
+    temperatures: tuple[float, ...],
+    n_runs: int,
+    mode: str,
+    output_path: str,
+) -> None:
+    """Generate a fractional factorial run plan CSV for a flagship experiment.
+
+    Auto-selects treatment combinations (prompt_version × temperature) to maximise
+    statistical coverage while minimising total API calls. Outputs a row-per-run CSV
+    with columns: run_plan_id, agent_id, scenario_id, prompt_version, temperature,
+    run_index, cell_id, treatment_combination, bias_category.
+
+    Examples:
+
+    \b
+      # Flagship 20K-run plan (auto fractional, all agents, Pillar 2):
+      buyerbench plan --pillar 2 --n-runs 50 --output flagship-plan.csv
+
+    \b
+      # Full factorial (12 treatment cells per scenario):
+      buyerbench plan --pillar 2 --n-runs 30 --mode full --output full-plan.csv
+
+    \b
+      # Preset BuyerBench 4-cell design:
+      buyerbench plan --pillar 2 --n-runs 50 --mode preset --output preset-plan.csv
+    """
+    from pathlib import Path as _Path
+
+    from buyerbench.model_catalog import MODEL_CATALOG
+    from harness.loader import load_all_scenarios
+    from results.fractional_design import CSV_FIELDNAMES, generate_run_plan, write_run_plan_csv
+
+    # ── Resolve agent IDs ─────────────────────────────────────────────────────
+    all_catalog_ids = [m.agent_id for m in MODEL_CATALOG]
+    if not agent_ids or (len(agent_ids) == 1 and agent_ids[0] == "all"):
+        resolved_agents = all_catalog_ids
+    else:
+        resolved_agents = list(agent_ids)
+
+    # ── Load & filter scenarios ───────────────────────────────────────────────
+    scenarios_root = _Path(__file__).parent.parent / "scenarios"
+    all_scenarios = load_all_scenarios(str(scenarios_root))
+    if pillar:
+        pillar_int = int(pillar)
+        from buyerbench.models import Pillar
+        pillar_map = {1: Pillar.PILLAR1, 2: Pillar.PILLAR2, 3: Pillar.PILLAR3}
+        target_pillar = pillar_map[pillar_int]
+        all_scenarios = [s for s in all_scenarios if s.pillar == target_pillar]
+
+    if not all_scenarios:
+        console.print("[red]No scenarios matched the filter. Aborting.[/red]")
+        raise SystemExit(1)
+
+    scenario_ids = [s.id for s in all_scenarios]
+
+    # ── Generate run plan ─────────────────────────────────────────────────────
+    prompt_ver_list = list(prompt_versions) or ["standard"]
+    temp_list: list[float | None] = list(temperatures) if temperatures else [None]
+
+    try:
+        rows, summary = generate_run_plan(
+            agent_ids=resolved_agents,
+            scenario_ids=scenario_ids,
+            prompt_versions=prompt_ver_list,
+            temperatures=temp_list,
+            n_runs=n_runs,
+            mode=mode,  # type: ignore[arg-type]
+        )
+    except ValueError as exc:
+        console.print(f"[red]Design generation failed: {exc}[/red]")
+        raise SystemExit(1)
+
+    # ── Write CSV ─────────────────────────────────────────────────────────────
+    out_path = write_run_plan_csv(rows, output_path)
+
+    # ── Print summary ─────────────────────────────────────────────────────────
+    console.print()
+    console.rule("[bold cyan]BuyerBench Run Plan[/bold cyan]")
+    console.print()
+
+    summary_table = Table(box=box.ROUNDED, show_header=False, padding=(0, 2))
+    summary_table.add_column("Field", style="bold cyan", no_wrap=True)
+    summary_table.add_column("Value", style="white")
+
+    summary_table.add_row("Design mode", summary.mode)
+    summary_table.add_row("Agents", str(summary.n_agents))
+    summary_table.add_row("Scenarios", str(summary.n_scenarios))
+    summary_table.add_row("Treatment combinations", str(summary.n_treatment_combinations))
+    summary_table.add_row("Runs per cell", str(summary.n_runs_per_cell))
+    summary_table.add_row(
+        "Total planned runs",
+        f"[bold green]{summary.total_planned_runs:,}[/bold green]",
+    )
+    summary_table.add_row(
+        "Full factorial runs",
+        f"{summary.full_factorial_runs:,}",
+    )
+    summary_table.add_row(
+        "Reduction vs full",
+        f"[bold yellow]{summary.reduction_pct:.1f}%[/bold yellow]",
+    )
+
+    console.print(summary_table)
+    console.print()
+
+    combo_table = Table(
+        title="[bold]Selected Treatment Combinations[/bold]",
+        box=box.SIMPLE_HEAVY,
+        show_lines=False,
+    )
+    combo_table.add_column("#", style="dim", justify="right")
+    combo_table.add_column("Prompt Version", style="cyan")
+    combo_table.add_column("Temperature", style="magenta", justify="right")
+    for i, (pv, temp) in enumerate(summary.treatment_combinations, 1):
+        temp_str = "default" if temp is None else str(temp)
+        combo_table.add_row(str(i), pv, temp_str)
+    console.print(combo_table)
+    console.print()
+    console.print(
+        f"[bold green]Run plan saved →[/bold green] [bold]{out_path}[/bold]"
+    )
+    console.print(f"[dim]{len(rows):,} rows × {len(CSV_FIELDNAMES)} columns[/dim]")
+    console.print()
+
+
 def _score_markup(score: float | None) -> str:
     """Return rich markup for a 0-1 score: green ≥ 0.8, yellow 0.5–0.8, red < 0.5."""
     if score is None:
