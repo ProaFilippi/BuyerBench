@@ -24,7 +24,7 @@
 
 ### H.2 Data Schema
 
-- [ ] **Run Record (per observation):**
+- [x] **Run Record (per observation):**
   ```json
   {
     "run_id": "string (UUID)",
@@ -53,6 +53,36 @@
     "error_message": "string or null"
   }
   ```
+  ✅ **Verified (2026-04-16):** Field-by-field gap analysis against current implementation:
+
+  | Field | Status | Implementation Notes |
+  |---|---|---|
+  | `run_id` | **MISSING** | No unique run identifier exists. Must be added as **UPGRADE-4** (Section I.2). UUID or content-addressable hash of (agent_id + scenario_id + variant + run_index + seed). |
+  | `session_id` | **PARTIAL** | `generate_session_id()` in `results/session_export.py:13-15` produces `session-YYYYMMDD-HHMMSS`. Not stored on `EvaluationResult` — tracked only in `SessionMetadata`. Needs to be propagated to run-level records. |
+  | `agent_id` | **PRESENT** | `EvaluationResult.agent_id` (`buyerbench/models.py:71`). Already in `EvaluationResultJSON` (`results/schemas.py:21`). |
+  | `model_family` | **PRESENT (indirect)** | `ModelEntry.provider` in `buyerbench/model_catalog.py:16` (e.g., "OpenAI", "Anthropic"). Not denormalized onto result records; must be joined via `agent_id` lookup. Normalization to the target enum (lowercase) needed. |
+  | `model_version` | **MISSING** | `model_id` in `ModelEntry` (e.g., `"openai/gpt-4o"`) is static config, not captured from API response. OpenRouter returns exact model version in responses but it is not parsed. |
+  | `scenario_id` | **PRESENT** | `EvaluationResult.scenario_id` (`models.py:70`). Also in CSV export (`session_export.py:147`). |
+  | `bias_category` | **PARTIAL** | `ScenarioVariant` enum (`models.py:10-19`) covers BASELINE, FRAMING_GAIN, FRAMING_LOSS, DECOY, ANCHOR_HIGH, ANCHOR_LOW, SCARCITY, SUNK_COST. The string bias_category (e.g. "anchoring") is inferred from scenario_id naming convention (e.g. "p2-01-anchoring"), not stored as a first-class field. Confirmed gap from H.1 verification — promoted to **UPGRADE-4**. |
+  | `variant` | **PRESENT (indirect)** | `Scenario.variant: ScenarioVariant` (`models.py:38`). Available during evaluation but not propagated to `EvaluationResult`. `variant_pair_id` is the current proxy (`models.py:75`). Explicit `variant` field needed on `EvaluationResult`. |
+  | `run_index` | **MISSING** | Not tracked anywhere. Only one run per cell currently. Planned as **UPGRADE-1** (Section I.2). |
+  | `temperature` | **MISSING** | Not configurable or logged. `OpenRouterAgent` (`agents/openrouter_agent.py:31-57`) does not expose temperature in its API call. Planned as **UPGRADE-3**. |
+  | `prompt_version` | **MISSING** | `scenario_to_prompt()` in `harness/prompt.py` has no versioning concept. Planned as **UPGRADE-7** (Section I.3). |
+  | `supplier_order_seed` | **MISSING** | `_format_context()` in `harness/prompt.py:86-109` renders supplier lists deterministically. No shuffling or seeding logic exists. Planned as **UPGRADE-2**. |
+  | `timestamp_utc` | **PRESENT** | `EvaluationResult.timestamp: datetime` (`models.py:74`) defaults to `datetime.now(timezone.utc)`. Also exported in CSV (`session_export.py:154`). |
+  | `agent_output_raw` | **PRESENT** | `EvaluationResult.raw_output: str` (`models.py:76`). Full agent response text captured. Also in `EvaluationResultJSON.raw_output` (`schemas.py:26`). |
+  | `extracted_choice` | **PRESENT (indirect)** | `EvaluationResult.decisions: dict[str, Any]` (`models.py:77`) holds parsed decisions from `parse_agent_output()` (`harness/prompt.py:154-182`). Key is scenario-specific (e.g., `"selected_supplier"`); no normalized `extracted_choice` string field. |
+  | `choice_is_correct` | **PRESENT (indirect)** | `PillarScore.metrics["optimal_chosen"]` in `evaluators/pillar2.py:54` (float 0.0/1.0, not a bool). Accessible via `EvaluationResult.pillar_scores[0].metrics`. |
+  | `optimal_choice` | **PRESENT (indirect)** | `Scenario.expected_optimal: dict[str, Any]` (`models.py:43`). Ground truth stored per scenario but not on result record — must be joined via scenario lookup. |
+  | `bsi` | **PRESENT (indirect)** | `PillarScore.metrics["bias_susceptibility_index"]` (`pillar2.py:57`). Per-run BSI is 0.0 (optimal) or scaled by `(1.0 - baseline_score)` for variant runs (`pillar2.py:95`). Accessible but nested. |
+  | `optimality_gap` | **PRESENT (indirect)** | `PillarScore.metrics["optimality_gap"]` (`pillar2.py:55`). Computed by `_compute_optimality_gap()` (`pillar2.py:177-217`). Accessible but nested. |
+  | `token_count_input` | **MISSING** | OpenRouter API response includes a `usage` object but it is not parsed. Only `content` is extracted (`agents/openrouter_agent.py:118`). |
+  | `token_count_output` | **MISSING** | Same as above — `usage.completion_tokens` not parsed. |
+  | `api_cost_usd` | **MISSING** | `ModelEntry.cost_tier` provides qualitative cost tier ("free"/"low"/"mid"/"high") but no per-run USD cost is computed. OpenRouter API returns cost in response metadata which is not captured. |
+  | `error_flag` | **PARTIAL** | Exceptions are caught in `agents/openrouter_agent.py:119` and stored as string in `raw_output` (`line 125`). No explicit `bool` error_flag field. |
+  | `error_message` | **PARTIAL** | Exception message captured in `raw_output` on error (`openrouter_agent.py:125`). No separate structured field; conflated with valid output. |
+
+  **Summary:** 7 fields fully present (agent_id, scenario_id, timestamp_utc, agent_output_raw, and 3 indirect), 5 fields partially present (session_id, model_family, bias_category, error_flag, error_message), 12 fields missing (run_id, model_version, variant on result, run_index, temperature, prompt_version, supplier_order_seed, token_count_input, token_count_output, api_cost_usd, extracted_choice as normalized string, optimal_choice on result). All 12 missing fields are addressed by UPGRADE-1 through UPGRADE-4 (Section I.2).
 
 - [ ] **Cell Aggregate Record (derived):**
   ```json
