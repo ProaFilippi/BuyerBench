@@ -37,8 +37,10 @@
 
 ### A.2 Strategy Decision Tree
 
-- [ ] Document the decision gate: "If we can run N=50 per cell across ≥6 bias types and ≥8 models → target JEBO. If N<30 or <5 bias types → target Journal of Economic Psychology."
-- [ ] Define the minimum viable paper: 5 bias types × 10 models × 30 runs = 1,500 observations. Feasible via OpenRouter API in one weekend.
+- [x] Document the decision gate: "If we can run N=50 per cell across ≥6 bias types and ≥8 models → target JEBO. If N<30 or <5 bias types → target Journal of Economic Psychology."
+  - ✅ *Completed 2026-04-15:* Full strategy decision tree written at `docs/paper/journal-strategy/strategy-decision-tree.md`. Three-gate decision flow (sample size → coverage → analysis completeness) formalizes the routing logic from the tier analyses into a standalone quick-reference. Fallback gate explicitly routes N<30 to JEP and null results to PLOS ONE.
+- [x] Define the minimum viable paper: 5 bias types × 10 models × 30 runs = 1,500 observations. Feasible via OpenRouter API in one weekend.
+  - ✅ *Completed 2026-04-15:* Minimum viable paper specification documented in `docs/paper/journal-strategy/strategy-decision-tree.md` with cost estimate (~$225 at $0.15/run), execution timeline (one weekend), and the preferred "strong" specification (N=50 per cell + temperature ablation + human comparison arm). Pre-submission checklist (Gate 3 expanded) also included.
 
 ---
 
