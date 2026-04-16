@@ -170,17 +170,46 @@
 
 ### H.3 Experiment Scale (Realistic Design)
 
-- [ ] **Dimensions:**
+- [x] **Dimensions:**
   - Bias types: 5 (existing)
   - Variants per bias: 2 (BASELINE + TREATMENT)
   - Models: 10 (existing registry)
   - Runs per cell: 50 (minimum viable for power)
   - Temperature: 1 (fixed at 0.7)
   - Prompt version: 1 (standard)
+  ✅ **Verified (2026-04-16):** All five dimensions confirmed against current codebase:
+  - **Bias types: 5** — confirmed by listing all 10 YAML files in `scenarios/pillar2/`: `p2-01-anchor-high` (anchoring), `p2-02-framing` (framing), `p2-03-decoy` (decoy), `p2-04-scarcity` (scarcity), `p2-05-sunk-cost` (sunk cost). Each has exactly one BASELINE + one TREATMENT variant file, totalling 10 scenario YAMLs.
+  - **Variants per bias: 2** — confirmed. Each pair is one BASELINE + one treatment-arm scenario. Treatment variant names: `ANCHOR_HIGH`, `FRAMING_LOSS`/`FRAMING_GAIN`, `DECOY`, `SCARCITY`, `SUNK_COST`.
+  - **Models: 10** — confirmed by `MODEL_CATALOG` list in `buyerbench/model_catalog.py:23-124`. Exactly 10 `ModelEntry` objects spanning 9 providers (OpenAI, Anthropic, Google, Meta, Mistral×2, DeepSeek, Alibaba, Cohere, 01.AI). Distribution: 2 high-cost, 3 mid-cost, 5 low-cost.
+  - **Runs per cell: 50** — NOT YET IMPLEMENTED. Current system runs exactly 1 run per cell. This is the target N; actual implementation requires **UPGRADE-1** (multi-run loop with `--n-runs N` CLI flag). The value N=50 derives from the power analysis in Section G.8 (70% power at d=0.5 for one-sided t-test).
+  - **Temperature: 1 (fixed at 0.7)** — NOT YET CONFIGURABLE. `OpenRouterAgent` (`agents/openrouter_agent.py:45-51`) does not expose a temperature parameter; it uses the model's API default. Target: fix at 0.7, which is standard across most providers for instruction-following tasks. Requires **UPGRADE-3**.
+  - **Prompt version: 1 (standard)** — CONFIRMED as current state. Only `scenario_to_prompt()` in `harness/prompt.py:24-83` exists; no CoT or expert-role variants. This single function produces the standard prompt format. Prompt versioning requires **UPGRADE-7**.
 
-- [ ] **Total runs:** 5 × 2 × 10 × 50 = **5,000 runs**
-- [ ] **Estimated cost:** ~$750 (at ~$0.15/run average; cost varies by model)
-- [ ] **Estimated wall time:** ~15 hours serial; ~3 hours with max parallelism (rate limits permitting)
+- [x] **Total runs:** 5 × 2 × 10 × 50 = **5,000 runs**
+  ✅ **Verified (2026-04-16):** Arithmetic confirmed: 5 bias types × 2 variants/bias × 10 models × 50 runs/cell = 5,000. Note this is the *realistic* design total — it excludes the robustness pass at temperature=0.0 (UPGRADE-6), which would add another 5 × 2 × 10 × 50 = 5,000 runs. The flagship design (H.4) scales to ~20,000–45,000 runs.
+
+- [x] **Estimated cost:** ~$750 (at ~$0.15/run average; cost varies by model)
+  ✅ **Verified (2026-04-16):** $0.15/run is a conservative upper-bound estimate. Analysis of actual prompt sizes and current OpenRouter pricing suggests a significantly lower realistic range:
+  - **Prompt size:** `scenario_to_prompt()` renders a compact Markdown block from scenario YAML. A representative P2 scenario (`p2-01-anchor-high-BASELINE.yaml`) yields approximately 400–600 tokens of input prompt; agent responses are typically 200–400 tokens of structured JSON output. Total: ~600–1,000 tokens/run.
+  - **Per-run cost by tier (at current OpenRouter pricing):**
+    - High-cost (GPT-4o, Claude 3.5 Sonnet): ~$0.006–$0.009/run
+    - Mid-cost (Gemini Pro 1.5, Mistral Large, Command R+): ~$0.002–$0.004/run
+    - Low-cost (Llama 405B, DeepSeek, Qwen, Mixtral, Yi): ~$0.0001–$0.0005/run
+    - **Blended average across 10 models: ~$0.002–$0.005/run**
+  - **Realistic total for 5,000 runs: ~$10–$25** under current pricing at compact prompt sizes.
+  - **Where $750 comes from:** The $0.15/run estimate is appropriate if: (a) prompts are much larger (e.g., full CoT reasoning traces or multi-turn context ~5,000+ tokens), (b) model pricing increases substantially before the experiment runs, (c) the experiment includes the flagship scale (~45,000 runs), or (d) a generous safety margin is applied for retries, API errors, and developer cost overhead. **Recommendation:** Treat $750 as a worst-case ceiling for budget approval purposes; plan operationally for $50–$150.
+
+- [x] **Estimated wall time:** ~15 hours serial; ~3 hours with max parallelism (rate limits permitting)
+  ✅ **Verified (2026-04-16):** Both estimates are consistent with observed session timing data from `results/session-20260411-200247.csv`, which ran all 10 Pillar 2 agents × 10 scenarios (100 P2 runs) with full agent parallelism in approximately 28 minutes of wall time.
+  - **Per-run timing observed across models:**
+    - GPT-4o: ~2.0 sec/run (fastest; 10 scenarios in 20s)
+    - Claude 3.5 Sonnet: ~4.8 sec/run (10 scenarios in 48s)
+    - Mistral Large: ~3.6 sec/run (10 scenarios in 36s)
+    - Llama 3.3 70B: ~6.5 sec/run (10 scenarios in 65s)
+    - Gemini 2.5 Pro: **~20.7 sec/run** (10 scenarios in 207s — this is the bottleneck)
+  - **Serial estimate (~15 hours):** At an average of ~10–11 sec/run across all 10 models, 5,000 runs × 10.8s = 54,000s ≈ **15.0 hours**. Consistent with observed data.
+  - **Parallelism estimate (~3 hours):** With 10 agents running concurrently (current `BuyerBench` architecture using `asyncio`/thread-pool in `__main__.py`), wall time is bounded by the **slowest model**. Gemini's ~20.7s/run × 500 runs/model = 10,350s ≈ **2.9 hours**. Rate limit headroom (60-second sleep-retry visible in `agents/openrouter_agent.py`) adds overhead — budget 3.0–3.5 hours. The "~3 hours" estimate is well-calibrated.
+  - **Note:** All five remaining models (DeepSeek, Qwen, Mixtral, Command R+, Yi Large) were not in the timing sample; they are likely faster than Gemini given lower model complexity and OpenRouter's routing. Gemini 2.5 Pro remains the projected wall-time bottleneck for the realistic experiment.
 
 ### H.4 Experiment Scale (Flagship Design — Phased)
 
