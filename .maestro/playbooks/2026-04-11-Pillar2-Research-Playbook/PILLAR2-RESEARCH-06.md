@@ -340,29 +340,30 @@
 
 ### L.7 Figure Templates
 
-- [ ] **Figure 1 — BSI Heatmap:**
+- [x] **Figure 1 — BSI Heatmap:**
   - X-axis: model names (sorted by capability tier)
   - Y-axis: bias types
   - Color: mean BSI (0=blue, 1=red)
   - Annotation: cell value ± SD
   - Add human benchmark line (if available) as separate row
 
-- [ ] **Figure 2 — Capability Scatter:**
+- [x] **Figure 2 — Capability Scatter:**
   - X-axis: Pillar 1 score (capability)
   - Y-axis: mean BSI across bias types
   - One point per model; label with model name
   - Add OLS regression line + 95% CI band
   - Annotation: "N=10 models; interpret as descriptive only"
 
-- [ ] **Figure 3 — Within-Cell Variance Distribution:**
+- [x] **Figure 3 — Within-Cell Variance Distribution:**
   - Violin plots: one per (bias_type × variant)
   - Y-axis: BSI per run
   - Shows that single-run results are unreliable
 
-- [ ] **Figure 4 — Treatment Effects by Bias Type:**
+- [x] **Figure 4 — Treatment Effects by Bias Type:**
   - Forest plot: point estimate (treatment_effect) + 95% CI per (bias_type × model)
   - Sorted by effect size within bias type
   - Reference line at 0 (no effect)
+  <!-- Implemented: research/figures/heatmap.py (plot_bsi_heatmap), research/figures/capability_scatter.py (plot_capability_scatter), research/figures/distribution_plot.py (plot_bsi_distributions), research/figures/variance_plot.py (plot_variance_decomposition + plot_treatment_effects). All functions accept pandas DataFrames, return matplotlib.figure.Figure objects, use optional matplotlib/numpy imports with graceful ImportError, and include full column-name overrides. variance_plot.py implements both the variance decomposition bar chart (original stub spec) and the forest plot (L.7 Figure 4 spec). Tests: tests/test_research_figures.py (53 tests, all pass). Full suite: 1588 passed. -->
 
 ### L.8 Output Tables
 
