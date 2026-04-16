@@ -424,6 +424,18 @@ def run(
             f"[bold]{bsi_path}[/bold]"
         )
 
+        # UPGRADE-5: generate cell-level aggregates when N runs > 1
+        if all_results and n_runs > 1:
+            from results.aggregate_cells import aggregate_cells, write_cell_aggregates
+
+            cell_report = aggregate_cells(all_results)
+            cell_path = write_cell_aggregates(cell_report, output_dir)
+            console.print(
+                f"[bold cyan]Cell aggregates saved to[/bold cyan] "
+                f"[bold]{cell_path}[/bold] "
+                f"({cell_report.n_cells} cells, {cell_report.n_total_runs} runs)"
+            )
+
     # ── Post-run: Pillar 3 security/compliance summary ────────────────────────
     if pillar == "3":
         import json as _json
