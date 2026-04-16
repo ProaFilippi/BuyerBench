@@ -96,10 +96,11 @@
 
 ### B.3 AI/LLM Behavioral Studies (Key Prior Work to Beat)
 
-- [ ] **Binz & Schulz (2023)** "Using cognitive psychology to understand GPT-3." PNAS.
+- [x] **Binz & Schulz (2023)** "Using cognitive psychology to understand GPT-3." PNAS.
   - Design: Administered 10 classic cognitive psychology tasks to GPT-3. N=1 model.
   - Strength: Systematic battery. Limitation: Single model, no temperature variation, no replication.
   - BuyerBench difference: Multi-model, procurement domain, controlled variants, stochasticity modeling.
+  - ✅ *Completed 2026-04-16:* Full literature note written at `docs/paper/literature-map/b3-01-binz-schulz-2023.md`. Covers: (1) empirical design — ten-task cognitive psychology battery (exploration/exploitation, CRT, causal reasoning, base rate neglect, temporal discounting, risky choice, social learning) administered to GPT-3 text-davinci-003 via zero-shot prompting, N=1 per condition; key findings: GPT-3 shows mixed human-like rational/biased profile, System 1/2 co-activation pattern; (2) strengths — first systematic multi-task cognitive battery for an LLM, canonical paradigms with known human benchmarks, PNAS credibility anchor establishing the approach as scientifically mainstream; (3) limitations — single model (N=1 model), single run per condition (no stochasticity modeling), abstract cognitive tasks with no economic domain or ground-truth optimal, no controlled-variant design, GPT-3 now two generations obsolete relative to frontier models; (4) BuyerBench relevance — explicit 4-dimension extension table (multi-model, multi-run N=30, economic/procurement domain, between-subject controlled variants); task overlap mapping (CRT → scarcity heuristics, base rate neglect → anchoring, risky choice → loss aversion candidate p2-07); stochastic parrot concern response (novel procurement stimuli reduce training-data contamination vs. canonical bat-and-ball/Linda paradigms); capability confound argument explaining why frontier models may show lower BSI than text-davinci-003 despite being "better"; (5) paper framing guidance for introduction, related work, methodology, and discussion sections; BibTeX for Binz & Schulz 2023, Frederick 2005 (CRT), Gershman 2018, and Daw et al. 2011 included.
 
 - [ ] **Ortega & Maini (2023)** "AI Safety Gridworlds" — discusses instrumental reasoning. Not bias-specific but methodologically relevant.
 
