@@ -452,6 +452,48 @@ class TestAggregateBiasReport:
         assert "ANCHOR_HIGH" in report["per_variant_type"]
 
 
+class TestAggregateBiasReportIncentiveFraming:
+    """Tests for the incentive_framing field (CRITIQUE 4 — No incentives).
+
+    LLMs receive no monetary payoffs; results characterize hypothetical-choice
+    behavioral consistency (cf. Camerer & Hogarth, 1999), not incentivized
+    decision-making.  The field must appear in every report so downstream
+    consumers cannot accidentally strip the limitation metadata.
+    """
+
+    def test_empty_report_contains_incentive_framing(self):
+        """incentive_framing is present even when there are no pair results."""
+        report = aggregate_bias_report([])
+        assert "incentive_framing" in report
+
+    def test_nonempty_report_contains_incentive_framing(self):
+        """incentive_framing is present in a report with actual BSI data."""
+        pair_results = [
+            {"decision_changed": True, "bias_susceptibility_index": 0.5, "variant_type": "ANCHOR_HIGH"},
+        ]
+        report = aggregate_bias_report(pair_results)
+        assert "incentive_framing" in report
+
+    def test_incentive_framing_is_string(self):
+        """incentive_framing value must be a non-empty string."""
+        report = aggregate_bias_report([])
+        assert isinstance(report["incentive_framing"], str)
+        assert len(report["incentive_framing"]) > 0
+
+    def test_incentive_framing_mentions_hypothetical(self):
+        """Value must explicitly reference hypothetical-choice framing."""
+        report = aggregate_bias_report([])
+        assert "hypothetical" in report["incentive_framing"].lower()
+
+    def test_incentive_framing_consistent_across_empty_and_nonempty(self):
+        """The incentive_framing value must be identical regardless of input size."""
+        empty_report = aggregate_bias_report([])
+        nonempty_report = aggregate_bias_report([
+            {"decision_changed": False, "bias_susceptibility_index": 0.0, "variant_type": "DECOY"},
+        ])
+        assert empty_report["incentive_framing"] == nonempty_report["incentive_framing"]
+
+
 class TestDefaultStatusQuoBias:
     """Tests for p2-06 default/status-quo bias scenario pair.
 

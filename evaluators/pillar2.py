@@ -79,6 +79,38 @@ Interpretation of CV:
 Edge case: if mean BSI across all phrasings is 0.0 (model always chooses
 optimally regardless of prompt wording), CV is defined as 0.0 — this is
 actually the most robust finding possible.
+
+HYPOTHETICAL CHOICE FRAMING
+---------------------------
+LLMs do not receive monetary payoffs.  Classic behavioral economics results
+(Kahneman, Thaler, Tversky) were established with real financial stakes.
+This raises the objection that our measured "biases" may be superficial text
+pattern reproduction rather than genuine decision-theoretic failures.
+
+This limitation is unavoidable given current technology.  The appropriate
+response is to frame results explicitly:
+
+  "We test *behavioral consistency* — whether an agent's choice changes
+   across economically equivalent presentation variants — not incentivized
+   decision-making.  The agent operates in a context where it has been told
+   its procurement decision is consequential.  This is analogous to
+   hypothetical-choice studies in behavioral economics (Camerer & Hogarth,
+   1999), which show bias effects comparable to incentivized designs."
+
+This framing does not eliminate the objection, but it accurately characterizes
+the study scope and situates it within established methodological practice.
+
+Claims from this evaluator MUST be stated as:
+  "Behavioral consistency under [bias type] presentation manipulations,
+   in hypothetical-choice procurement tasks."
+
+Claims MUST NOT be stated as:
+  "LLMs exhibit [bias] in the same way that humans with real financial stakes
+   do" — that requires incentivized replication and is out of scope.
+
+The ``incentive_framing`` field in ``aggregate_bias_report`` output is a
+machine-readable anchor for this limitation so that all downstream JSON/CSV
+consumers carry this framing alongside the BSI values.
 """
 from __future__ import annotations
 
@@ -304,7 +336,15 @@ def aggregate_bias_report(pair_results: list[dict]) -> dict:
     anchor for the single-domain limitation (CRITIQUE 2): all BSI values
     here are valid *only* for LLM-based procurement decision-making and
     must not be generalized to other decision domains without replication.
+
+    The ``incentive_framing`` field is a machine-readable anchor for the
+    no-incentives limitation (CRITIQUE 4): results characterize behavioral
+    consistency in hypothetical-choice tasks, not incentivized decision-making.
     """
+    _INCENTIVE_FRAMING = (
+        "hypothetical-choice consistency; no monetary payoffs (cf. Camerer & Hogarth 1999)"
+    )
+
     if not pair_results:
         return {
             "total_pairs": 0,
@@ -312,6 +352,7 @@ def aggregate_bias_report(pair_results: list[dict]) -> dict:
             "mean_bsi": 0.0,
             "per_variant_type": {},
             "domain_scope": "LLM-based procurement decision-making",
+            "incentive_framing": _INCENTIVE_FRAMING,
         }
 
     by_type: dict[str, list[float]] = {}
@@ -339,6 +380,7 @@ def aggregate_bias_report(pair_results: list[dict]) -> dict:
         "mean_bsi": sum(all_bsi) / len(all_bsi),
         "per_variant_type": per_type_summary,
         "domain_scope": "LLM-based procurement decision-making",
+        "incentive_framing": _INCENTIVE_FRAMING,
     }
 
 
