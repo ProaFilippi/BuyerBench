@@ -129,7 +129,8 @@
 
 ### B.4 Rationality & Bounded Rationality
 
-- [ ] **Simon (1955)** "A Behavioral Model of Rational Choice." QJE. — Satisficing concept.
+- [x] **Simon (1955)** "A Behavioral Model of Rational Choice." QJE. — Satisficing concept.
+  - ✅ *Completed 2026-04-16:* Full literature note written at `docs/paper/literature-map/b4-01-simon-1955-satisficing.md`. Covers: (1) theoretical design — Simon's formal replacement of global optimization with sequential satisficing via aspiration-level thresholds and adaptive stopping rules, and the March & Simon (1958) organizational extension; (2) strengths — foundational Nobel-caliber theory, cross-domain ecological validity (consumer, organizational, foraging), aspiration-level dynamics generate falsifiable order-effect predictions for LLMs; (3) limitations — no quantitative human BSI benchmarks, 70-year-old model predates computational cognitive science, satisficing vs. optimization indistinguishable from a single observed choice without positional manipulation; (4) BuyerBench relevance — three-job citation role: (a) grounding the optimality criterion (simultaneous full-attribute presentation makes search costs zero, ruling out satisficing as an explanation for BSI deviations), (b) anticipating the "LLMs don't really optimize" reviewer objection with the controlled-variant design rebuttal, (c) motivating an option-presentation-order audit as a methodological requirement (first-listed-option satisficing is a confound for apparent bias effects); aspiration-level mechanism proposed as a candidate alternative account for the p2-06-status-quo scenario; BibTeX for Simon 1955, Simon 1956, March & Simon 1958, Gigerenzer & Todd 1999, and Schwartz et al. 2002 included.
 - [ ] **Thaler & Sunstein (2008)** *Nudge* — Choice architecture. Relevant to default bias design.
 - [ ] **Charness & Rabin (2002)** Social preferences in games — bound on "rationality" definition.
 
