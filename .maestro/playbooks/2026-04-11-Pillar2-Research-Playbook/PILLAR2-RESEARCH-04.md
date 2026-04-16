@@ -330,7 +330,77 @@
   - **Parallel (10 agents):** bounded by Gemini (~20.7s/run × 1,200 runs per model = 24,840s ≈ 6.9 hours per temperature pass) × 4 passes ≈ **28 hours total** wall time for all 4 temperatures run sequentially. If 4 temperature passes are run as concurrent independent jobs (e.g., separate machines or tmux sessions), wall time collapses to **~7–8 hours** (Gemini bottleneck per pass).
   - **Cost:** 12,000 corrected runs × $0.002–$0.005 blended = **~$24–$60 incremental**. The stated formula's 6,000-run count × $0.15/run = $900 is the same systematic overestimate identified in H.3.
   - **Cumulative budget after Phases 1–3:** Phase 1 ($10–$25) + Phase 2 incremental ($30–$75) + Phase 3 ($24–$60) = **$64–$160 total realistic vs. implied $3,000+ from stated formulas.**
-- [ ] **Phase 4 (human comparison):** 100 Prolific subjects × 8 scenarios (IRB required)
+- [x] **Phase 4 (human comparison):** 100 Prolific subjects × 8 scenarios (IRB required)
+  ✅ **Verified (2026-04-16):** Engineering and protocol analysis for the human comparison arm against current codebase state.
+
+  **Design clarification — what "8 scenarios" means:**
+  The 8-scenario count refers to the 8-bias-type flagship battery (5 core: anchoring, framing, decoy, scarcity, sunk cost; + 3 new from Phase 1: default, loss aversion, WARP). Each subject sees one scenario per bias type in a between-subject-across-variants, within-subject-across-bias-types design. This yields:
+  - 100 subjects × 8 bias types × 1 variant each = **800 structured observations**
+  - Each observation is a binary forced-choice supplier selection (matched to the LLM stimulus)
+  - Between-subject randomization across BASELINE vs. TREATMENT variants controls demand effects (see [[b2-03-within-between-subject-greenwald-1976]])
+  - Human arm data feeds H10: independent two-sample test, LLM_BSI(T=0.7, standard) vs. Human_BSI, per bias type
+
+  **Stimulus translation requirement — the central technical challenge:**
+  BuyerBench's current scenario format is designed for LLM consumption: `scenario_to_prompt()` in `harness/prompt.py:24-83` produces a Markdown block with system preamble (`_SYSTEM_PREAMBLE`, `line 14`) and requests a ````json ... ``` ` response block. This format is entirely unsuitable for a Prolific survey:
+  - Human subjects cannot respond in JSON; they need a forced-choice radio button or dropdown
+  - The BuyerBench preamble identifies itself as a "benchmark evaluation" — demand effects would be severe if shown verbatim to humans
+  - Supplier attribute tables (rendered via `_format_context()`, `harness/prompt.py:86-109`) must be translated to survey-native HTML or plain-text table formats
+
+  A new export function — `export_scenario_to_survey()` — must translate `Scenario` objects into a clean vignette text with:
+  - Procurement context paragraph (from `scenario.context["briefing"]`)
+  - Supplier comparison table in human-readable format (price, delivery, certification)
+  - Single forced-choice question: "Which supplier would you select?"
+  - Response options: supplier names as radio buttons (no JSON required)
+  - No mention of "BuyerBench", "benchmark", or "AI evaluation" in the stimulus text
+
+  **Codebase gap analysis — no human arm infrastructure exists:**
+
+  | Component | Status | Notes |
+  |---|---|---|
+  | Survey scenario export | **MISSING** | No `export_scenario_to_survey()` or Qualtrics CSV generation function anywhere in the codebase. `scenario_to_prompt()` is LLM-only. Planned as **UPGRADE-13** (Section I.4). |
+  | Survey response ingestion | **MISSING** | No parser for Qualtrics/Prolific CSV response format. Prolific exports a response CSV with one column per question; BuyerBench has no function to map these back to `(subject_id, scenario_id, variant, selected_supplier)` rows. |
+  | Human BSI computation | **MISSING** | `compute_bias_susceptibility()` (`evaluators/pillar2.py:67-110`) operates on two `EvaluationResult` objects (one BASELINE, one TREATMENT per agent). Human subjects produce aggregate frequency data, not per-subject `EvaluationResult` records. A new `compute_human_bsi_from_survey()` function is needed that operates on response frequency tables: BSI = |P(optimal | TREATMENT) − P(optimal | BASELINE)|. |
+  | Human result schema | **MISSING** | No `HumanObservation` or `HumanCellAggregate` dataclass exists. Survey data cannot be stored in `EvaluationResult` (requires `agent_id`). A parallel schema is needed: `HumanObservation(subject_id, scenario_id, variant, selected_supplier, timestamp)` and `HumanCellAggregate(scenario_id, bias_category, variant, n_subjects, choice_rate_optimal, mean_bsi, ci_95)`. |
+  | LLM/Human BSI comparison | **MISSING** | No statistical comparison module exists. The two-sample test (Cohen's d, 95% CI for BSI difference) must be implemented, likely in a new `results/human_comparison.py` module or as an optional analysis in `results/aggregate_cells.py` (UPGRADE-5). |
+  | Attention checks | **MISSING** | No attention check or comprehension filter logic exists. Prolific requires at least one attention check question; failed responses must be flagged and excluded before BSI computation. |
+  | IRB protocol documentation | **MISSING** | No IRB protocol draft, consent form, debrief script, or study description exists in the repository. `docs/paper/experimental-design/f2-flagship-design.md` specifies design intent but contains no IRB submission artifacts. |
+  | WARP triplet human design | **MISSING** | WARP (p2-08) requires 3 binary pairwise choices per subject to test transitivity (A vs B, B vs C, A vs C). This is more complex than the standard forced-choice format: it requires 3 separate survey questions per subject, with responses analyzed as a transitivity triplet. No survey logic for this exists. |
+
+  **IRB timeline reality check:**
+  `f2-flagship-design.md` notes "IRB approval in procurement survey research typically takes 2–6 months (expedited review likely)". The human arm is the **critical path item** for the Flagship Design timeline. All LLM data collection (Phases 1–3) can proceed before IRB approval. Key IRB preparation items:
+  - Study description: "Online survey study of procurement decision-making in adults; participants read a procurement vignette and select a supplier; no deception, no performance feedback, no personally sensitive questions"
+  - Expected review category: Expedited (Category 7: research involving survey procedures, no more than minimal risk)
+  - Consent form must state: purpose is procurement decision research, data is anonymized, Prolific ID is not linked to responses, participation is voluntary
+  - Debrief: participants are told the study compares human and AI procurement decisions after data collection closes (no debrief during study to avoid demand effects)
+
+  **Prolific study design parameters:**
+  Based on `f2-flagship-design.md:130-170`:
+  - **N = 100** total subjects (minimum for H10 test at exploratory significance; N=150 recommended for adequate power on d=0.4 cross-population BSI difference)
+  - **Eligibility criteria:** Fluent English, no prior BuyerBench exposure, standard Prolific demographics (no procurement expertise required — naïve subjects are appropriate since H10 tests whether LLMs match *general population* biases, not procurement specialist biases)
+  - **Payment:** ~$1.50–$2.00 per 10-minute session (Prolific standard). Total cost: ~$150–$200 for 100 subjects + Prolific 33% platform fee = ~$200–$267 total
+  - **Survey length:** 8 vignettes × 1–2 minutes each + attention checks = ~10–15 minutes
+  - **Within-subject design:** Each subject sees all 8 bias types but only 1 variant per bias type (between-subject randomization across BASELINE/TREATMENT). This prevents the "I answered this before" carry-over documented in [[b2-03-within-between-subject-greenwald-1976]].
+
+  **Dependency chain for Phase 4:**
+  Phase 4 does not depend on Phases 1–3 for data collection, but it depends on:
+  - **UPGRADE-8 + UPGRADE-9 + UPGRADE-10** (3 new scenarios: default, loss aversion, WARP) — Phase 4 uses the "8 scenarios" battery; collecting human data on only 5 scenarios is feasible but reduces H10 scope
+  - **UPGRADE-13** (human survey harness) — required to generate survey instrument; without it, scenarios must be manually transcribed to Qualtrics, which is error-prone and not reproducible
+  - **IRB approval** (external dependency) — hard prerequisite for any human data collection; start now, as all LLM work can proceed in parallel
+  - **UPGRADE-5** (cell-level aggregates) — required to produce the LLM_BSI cell means that will be compared against Human_BSI; the comparison requires both arms to produce the same cell-level aggregate format
+
+  **Engineering cost estimate for UPGRADE-13 (human harness, from Section I.4):**
+  The Section I.4 description scopes UPGRADE-13 as: "Export scenarios to Qualtrics-compatible survey format. Parse survey responses back into BSI format." Full estimate:
+  - Survey export (`export_scenario_to_survey()`): ~1 day (Qualtrics QSF JSON format is well-documented; each scenario becomes one block with display logic)
+  - Response ingestion parser: ~0.5 days (Prolific CSV → `HumanObservation` records)
+  - Human BSI compute + comparison module: ~1 day (frequency-based BSI, two-sample test, Cohen's d, CI)
+  - Schema definitions (`HumanObservation`, `HumanCellAggregate`): ~0.5 days
+  - **Total UPGRADE-13 effort: ~3 days** (vs. the I.4 listing which groups this under "Full Research Platform — ~3 months")
+
+  **Recommended implementation order:**
+  1. Start IRB application now (no engineering prerequisite; parallelizes with all other work)
+  2. After UPGRADE-8/9/10 land: draft survey vignettes manually for review by a non-technical colleague (validate that the plain-text stimulus is unambiguous before coding UPGRADE-13)
+  3. After IRB approval: implement UPGRADE-13 and run pilot with N=10 Prolific subjects; check comprehension and timing
+  4. After UPGRADE-5 lands: implement human BSI comparison module; run full N=100 collection
 
 - [ ] **Total LLM runs (Flagship, Phases 1–3):** ~45,000 (use fractional factorial to reduce to ~20,000)
 - [ ] **Budget estimate:** $3,000–$6,000 depending on model costs
