@@ -378,3 +378,141 @@ class TestSupplierOrderRandomisation:
         run_scenario(scenario, agent, output_dir=str(tmp_path))
 
         assert scenario.context == original_context
+
+
+# ---------------------------------------------------------------------------
+# Research mode: temperature=0.0 robustness pass (UPGRADE-6)
+# ---------------------------------------------------------------------------
+
+class TestResearchMode:
+    """--research-mode flag adds a mandatory T=0.0 robustness pass."""
+
+    def test_research_mode_creates_robustness_t0_dir(self, tmp_path):
+        """--research-mode must create a robustness-t0/ subdirectory."""
+        runner = CliRunner()
+        result = runner.invoke(
+            cli,
+            ["run", "--agent", "mock-agent-v1", "--pillar", "1",
+             "--research-mode", "--output-dir", str(tmp_path)],
+        )
+        assert result.exit_code == 0, f"Non-zero exit:\n{result.output}"
+        assert (tmp_path / "robustness-t0").is_dir(), (
+            "robustness-t0/ directory was not created"
+        )
+
+    def test_robustness_dir_contains_same_scenario_count(self, tmp_path):
+        """robustness-t0/<agent>/ must have the same number of result files as primary."""
+        runner = CliRunner()
+        runner.invoke(
+            cli,
+            ["run", "--agent", "mock-agent-v1", "--pillar", "1",
+             "--research-mode", "--output-dir", str(tmp_path)],
+        )
+
+        primary_files = list((tmp_path / "mock-agent-v1").glob("*.json"))
+        robustness_files = list(
+            (tmp_path / "robustness-t0" / "mock-agent-v1").glob("*.json")
+        )
+        # 6 pillar-1 scenarios × 1 run each in both passes
+        assert len(primary_files) == 6
+        assert len(robustness_files) == 6
+
+    def test_robustness_results_are_independent_json_files(self, tmp_path):
+        """robustness-t0/ result files must be valid JSON with agent_id and scenario_id."""
+        runner = CliRunner()
+        runner.invoke(
+            cli,
+            ["run", "--agent", "mock-agent-v1", "--pillar", "1",
+             "--research-mode", "--output-dir", str(tmp_path)],
+        )
+
+        rob_agent_dir = tmp_path / "robustness-t0" / "mock-agent-v1"
+        assert rob_agent_dir.is_dir()
+        for f in rob_agent_dir.glob("*.json"):
+            data = json.loads(f.read_text())
+            assert "agent_id" in data
+            assert "scenario_id" in data
+
+    def test_research_mode_output_mentions_robustness(self, tmp_path):
+        """CLI output must include a 'Robustness' banner when --research-mode is set."""
+        runner = CliRunner()
+        result = runner.invoke(
+            cli,
+            ["run", "--agent", "mock-agent-v1", "--pillar", "1",
+             "--research-mode", "--output-dir", str(tmp_path)],
+        )
+        assert result.exit_code == 0, f"Non-zero exit:\n{result.output}"
+        assert "Robustness" in result.output
+
+    def test_without_research_mode_no_robustness_dir(self, tmp_path):
+        """Without --research-mode, robustness-t0/ must NOT be created."""
+        runner = CliRunner()
+        runner.invoke(
+            cli,
+            ["run", "--agent", "mock-agent-v1", "--pillar", "1",
+             "--output-dir", str(tmp_path)],
+        )
+        assert not (tmp_path / "robustness-t0").exists(), (
+            "robustness-t0/ should not be created when --research-mode is not set"
+        )
+
+    def test_research_mode_with_n_runs(self, tmp_path):
+        """--research-mode with --n-runs 2 must write 2 files per scenario in robustness-t0/."""
+        runner = CliRunner()
+        result = runner.invoke(
+            cli,
+            ["run", "--agent", "mock-agent-v1", "--pillar", "1",
+             "--research-mode", "--n-runs", "2", "--output-dir", str(tmp_path)],
+        )
+        assert result.exit_code == 0, f"Non-zero exit:\n{result.output}"
+
+        rob_agent_dir = tmp_path / "robustness-t0" / "mock-agent-v1"
+        rob_files = sorted(rob_agent_dir.glob("*.json"))
+        # 6 pillar-1 scenarios × 2 runs = 12 files in robustness-t0/
+        assert len(rob_files) == 12, (
+            f"Expected 12 files in robustness-t0/, got {len(rob_files)}"
+        )
+
+    def test_bsi_comparison_helper_stable_signal(self):
+        """_print_robustness_bsi_comparison must identify stable BSI as non-collapsed."""
+        from buyerbench.__main__ import _print_robustness_bsi_comparison
+        from buyerbench.models import EvaluationResult, PillarScore
+        from rich.console import Console
+
+        def _make_result(bsi_value: float):
+            """Minimal EvaluationResult with one PillarScore containing a BSI."""
+            from buyerbench.models import Pillar, ScenarioVariant
+            ps = PillarScore(pillar=Pillar.PILLAR2, score=0.5, metrics={"bias_susceptibility_index": bsi_value})
+            return EvaluationResult(
+                agent_id="mock", scenario_id="p2-01-baseline",
+                pillar_scores=[ps], overall_pass=True,
+            )
+
+        primary = [_make_result(0.40)] * 5   # strong primary BSI
+        robust = [_make_result(0.38)] * 5    # T=0.0 BSI stays high → stable
+
+        buf = Console(record=True)
+        _print_robustness_bsi_comparison(primary, robust, buf)
+        output = buf.export_text()
+        assert "stable" in output.lower() or "✓" in output
+
+    def test_bsi_comparison_helper_collapse_detection(self):
+        """_print_robustness_bsi_comparison must warn when BSI collapses at T=0.0."""
+        from buyerbench.__main__ import _print_robustness_bsi_comparison
+        from buyerbench.models import EvaluationResult, PillarScore, Pillar
+        from rich.console import Console
+
+        def _make_result(bsi_value: float):
+            ps = PillarScore(pillar=Pillar.PILLAR2, score=0.5, metrics={"bias_susceptibility_index": bsi_value})
+            return EvaluationResult(
+                agent_id="mock", scenario_id="p2-01-baseline",
+                pillar_scores=[ps], overall_pass=True,
+            )
+
+        primary = [_make_result(0.50)] * 5   # high primary BSI
+        robust = [_make_result(0.01)] * 5    # collapses at T=0.0
+
+        buf = Console(record=True)
+        _print_robustness_bsi_comparison(primary, robust, buf)
+        output = buf.export_text()
+        assert "COLLAPSE" in output.upper() or "collapse" in output.lower()
