@@ -50,10 +50,11 @@
 
 ### B.1 Canonical Behavioral Bias Studies
 
-- [ ] **Anchoring** — Tversky & Kahneman (1974) "Judgment Under Uncertainty: Heuristics and Biases". Science.
+- [x] **Anchoring** — Tversky & Kahneman (1974) "Judgment Under Uncertainty: Heuristics and Biases". Science.
   - Design: Wheel-of-fortune anchor + Africa % estimate. N≈500 students.
   - Strength: Clean manipulation; large effect size (r≈0.8). Limitation: Lab, incentive-free, US students.
   - Relevance: BuyerBench p2-01 directly operationalizes this. Our anchor (historical price) is ecologically valid for procurement.
+  - ✅ *Completed 2026-04-15:* Full literature note written at `docs/paper/literature-map/b1-01-anchoring-tversky-kahneman-1974.md`. Covers: (1) empirical design including wheel-of-fortune paradigm, follow-up demonstrations, and N≈500 student sample; (2) strengths — r≈0.8 effect size, multiple converging paradigms, mechanism robustness under incentives; (3) limitations — lab/student sample, single-item measurement, mechanism ambiguity, no learning/feedback; (4) BuyerBench relevance — exact BASELINE vs. ANCHOR_HIGH controlled-variant mapping for p2-01, ecological validity discussion (causally plausible vs. arbitrary anchor), human benchmark BSI comparison table, stochasticity advantage, and paper-framing guidance for intro, related work, methodology, and results sections.
 
 - [ ] **Framing Effects** — Tversky & Kahneman (1981) "The Framing of Decisions". Science.
   - Design: Asian Disease problem; gain vs. loss frame. N≈152.
