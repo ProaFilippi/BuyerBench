@@ -13,10 +13,14 @@
   - Identified by: `run_id = f"{session_id}_{agent_id}_{scenario_id}_{run_index}"`
   - ✅ **Verified (2026-04-16):** `session_id` format `session-YYYYMMDD-HHMMSS` is already implemented in `results/session_export.py:generate_session_id()`. `agent_id` and `scenario_id` are present in `EvaluationResult` (`buyerbench/models.py`). `run_index` is not yet implemented — planned as **UPGRADE-1** (Section I.2). Run ID is naturally time-sortable and collision-free given timestamp precision.
 
-- [ ] **Aggregation levels:**
+- [x] **Aggregation levels:**
   - Cell: (agent_id, scenario_id, variant) — primary analysis unit
   - Model: (agent_id) — capability comparisons
   - Bias type: (bias_category) — cross-model patterns
+  - ✅ **Verified (2026-04-16):**
+    - **Cell level** — *implicit but not explicit*. Each `EvaluationResult` in `buyerbench/models.py` carries `agent_id` and `scenario_id`, making one row per cell. However, `variant` lives on `Scenario` (not on `EvaluationResult`), so cell-level grouping by `(agent_id, scenario_id, variant)` cannot be done directly from the result record. `variant_pair_id` on `EvaluationResult` is the current proxy — it groups baseline+variant pairs for Pillar 2 bias analysis (`evaluators/aggregate.py:64-86`). **Gap:** `variant` (or `bias_category`) should be promoted to `EvaluationResult` to enable direct cell-level slicing. This is planned as **UPGRADE-4** (Section I.2).
+    - **Model level** — *fully implemented*. Grouping by `agent_id` is the primary aggregation dimension throughout the codebase: `results/report.py:35-73` (`generate_summary_report`), `results/academic_tables.py:44-160` (`render_model_comparison_table`), and `buyerbench/dashboard.py:38-68` (`_aggregate`) all produce per-agent means, std, and pass rates.
+    - **Bias type level** — *partially implemented*. `evaluators/pillar2.py:113-151` (`aggregate_bias_report`) groups BSI by `variant_type` extracted from `PillarScore.notes` (e.g., "Variant: ANCHOR_HIGH"). `evaluators/aggregate.py:256+` (`compute_bsi_from_experiment_dir`) calls this per agent and produces cross-agent summaries. **Gap:** `bias_category` is not a first-class field — it is inferred from scenario_id naming conventions (e.g., "p2-01-anchoring") and variant enum values, not stored as a structured attribute. The Run Record schema in H.2 introduces `bias_category` as an explicit field, which will require a schema extension.
 
 ### H.2 Data Schema
 
