@@ -329,13 +329,14 @@
 
 ### L.6 Regression Templates
 
-- [ ] Create `research/analysis/regression.py` with these templates:
+- [x] Create `research/analysis/regression.py` with these templates:
   - `run_primary_regression(df)` — mixed-effects model: BSI ~ BiasType + Model + Treatment + BiasType×Model + (1|run)
   - `run_capability_regression(cell_df, p1_scores)` — OLS: mean_BSI ~ P1Score (N=10 models; descriptive only)
   - `run_variance_decomposition(df)` — ANOVA-style: partition SS by model, bias_type, temperature, residual
   - `apply_bh_correction(pvalues, alpha=0.05)` — Benjamini-Hochberg FDR
   - Use `statsmodels.formula.api.mixedlm` for primary regression
   - Bridge to R's `lme4` via `rpy2` for robustness check if available
+  <!-- Implemented: research/analysis/regression.py — run_primary_regression (statsmodels MixedLM + pure-Python WLS fallback + optional rpy2/lme4 robustness check), run_capability_regression (statsmodels OLS + fallback), run_variance_decomposition (pandas, includes Temperature factor), apply_bh_correction (consistent with results/stats_pipeline.py). All functions operate on pandas DataFrames of run-level records. Tests: tests/test_research_regression.py (63 tests, all pass). -->
 
 ### L.7 Figure Templates
 
