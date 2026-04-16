@@ -17,10 +17,11 @@
   - **Response:** The optimal is algorithmically derivable from the scenario's stated evaluation weights (explicit in the YAML). This is an *internal* rationality test — does the agent optimize the stated objective? This is defensible. The paper must be explicit: we test whether agents optimize *the stated objective function*, not whether that function is itself rational.
   - **Implementation:** Added module-level docstring to `evaluators/pillar2.py` that explicitly frames the evaluator as testing internal rationality against the scenario's stated objective function, not external/universal optimality. Also updated `score_pillar2` and `compute_bias_susceptibility` docstrings to reinforce this scope. These docstrings serve as code-level anchors for the paper's claim framing (2026-04-16).
 
-- [ ] **CRITIQUE 2 — Single domain:**
+- [x] **CRITIQUE 2 — Single domain:**
   > "You tested supplier selection in procurement. All your results are specific to this exact context. You cannot generalize to anchoring 'in general' — an anchoring effect in procurement says nothing about anchoring in contract negotiation or investment decisions."
   - **Severity:** Medium
   - **Response:** Acknowledged as limitation. Restrict claims: "Bias susceptibility in LLM-based procurement decision-making." Frame domain specificity as a *feature* for applied relevance. Future work extends to other domains.
+  - **Implementation:** Added `DOMAIN SCOPE` section to `evaluators/pillar2.py` module docstring (2026-04-16). The section: (1) names the exact canonical claim string ("LLM-based procurement decision-making"), (2) articulates three reasons domain specificity is a feature (applied relevance, ecological validity, scope control), (3) provides explicit MUST / MUST NOT examples for paper claim phrasing, and (4) documents future-work extension path. Also added `domain_scope` field to both return paths of `aggregate_bias_report` so the limitation is machine-readable in all downstream JSON/CSV exports.
 
 - [ ] **CRITIQUE 3 — Prompt sensitivity / researcher degrees of freedom:**
   > "You chose specific prompt wording. A different author with slightly different wording might find completely different BSI values. Your results are a property of *your prompts*, not of the models."

@@ -24,6 +24,33 @@ This framing is the correct response to the "no ground truth" critique: we
 measure deviation from the stated objective, making the claim falsifiable and
 scope-limited.  Any cross-scenario generalization must restrict claims to
 "procurement decision-making" and label them accordingly.
+
+DOMAIN SCOPE
+------------
+All results produced by this evaluator are scoped to **LLM-based procurement
+decision-making** — specifically, the final supplier/contract selection step
+when structured options are presented to an agent.
+
+Domain specificity is a deliberate feature, not a flaw:
+  * Applied relevance: procurement automation is an active deployment context
+    for LLM agents, making bias effects here practically significant.
+  * Ecological validity: scenarios mirror real procurement inputs (supplier
+    catalogs, unit prices, quality scores, delivery terms) rather than abstract
+    lotteries, increasing applicability to deployed systems.
+  * Scope control: restricting to one domain enables tighter experimental
+    control and avoids conflating context effects across dissimilar tasks.
+
+Claims about anchoring, framing, decoy, or scarcity effects from this
+evaluator MUST be stated as:
+  "Bias susceptibility in LLM-based procurement decision-making."
+
+Claims MUST NOT be stated as:
+  "LLMs exhibit anchoring bias [in general]" — that requires replication
+  across additional domains (contract negotiation, investment decisions,
+  hiring, etc.) and is explicitly out of scope for this study.
+
+Future work: extending these scenarios to contract negotiation and capital
+allocation domains would test whether procurement-observed effects generalize.
 """
 from __future__ import annotations
 
@@ -244,6 +271,11 @@ def aggregate_bias_report(pair_results: list[dict]) -> dict:
 
     Returns per-variant-type mean BSI, overall mean BSI, and count of
     pairs where decision_changed == True.
+
+    The ``domain_scope`` field in the returned dict is a machine-readable
+    anchor for the single-domain limitation (CRITIQUE 2): all BSI values
+    here are valid *only* for LLM-based procurement decision-making and
+    must not be generalized to other decision domains without replication.
     """
     if not pair_results:
         return {
@@ -251,6 +283,7 @@ def aggregate_bias_report(pair_results: list[dict]) -> dict:
             "pairs_with_decision_change": 0,
             "mean_bsi": 0.0,
             "per_variant_type": {},
+            "domain_scope": "LLM-based procurement decision-making",
         }
 
     by_type: dict[str, list[float]] = {}
@@ -277,6 +310,7 @@ def aggregate_bias_report(pair_results: list[dict]) -> dict:
         "pairs_with_decision_change": changed_count,
         "mean_bsi": sum(all_bsi) / len(all_bsi),
         "per_variant_type": per_type_summary,
+        "domain_scope": "LLM-based procurement decision-making",
     }
 
 
