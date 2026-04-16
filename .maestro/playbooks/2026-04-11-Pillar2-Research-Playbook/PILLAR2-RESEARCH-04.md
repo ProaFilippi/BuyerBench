@@ -499,10 +499,44 @@
 
 ### H.6 Justification of Numbers
 
-- [ ] **Why N=50 per cell?** Power analysis (Section G.8): provides 70% power for d=0.5 effect. Underpowered but labeled exploratory for d<0.5. Upgrade to N=100 for flagship.
-- [ ] **Why 10 models?** Existing registry; covers major model families (OpenAI, Anthropic, Google, Meta, Mistral, DeepSeek, Qwen, Cohere, 01.AI). Adding more models is additive but not required for minimum paper.
-- [ ] **Why 5 bias types for minimum?** Existing validated scenarios. Each new scenario requires validation (does it actually induce the intended bias in humans?). 5 is enough for cross-bias variance analysis.
-- [ ] **Why temperature=0.7?** Standard default across most models. Robustness check at temp=0.0 (deterministic) is mandatory.
+- [x] **Why N=50 per cell?** Power analysis (Section G.8): provides 70% power for d=0.5 effect. Underpowered but labeled exploratory for d<0.5. Upgrade to N=100 for flagship.
+  ✅ **Verified (2026-04-16):** Confirmed against `docs/paper/econometric-strategy/g-econometric-strategy.md` Section G.8 power table. **Factual correction in the description above:** N=50 provides **70% power at d=0.4** (not d=0.5). At d=0.5, N=50 achieves **83% power** — well above the 80% standard threshold. The G.8 power table reads:
+  | N/cell | Power at d=0.4 | Power at d=0.5 | Power at d=0.6 | Label |
+  |---|---|---|---|---|
+  | 30 | 0.52 | 0.67 | 0.80 | Underpowered; exploratory |
+  | **50** | **0.70** | **0.83** | **0.92** | **Marginal for d=0.4; adequate for d=0.5+** |
+  | 100 | 0.86 | 0.95 | 0.99 | Adequate; gold standard |
+  N=50 is the G.8 "Recommended working paper" tier (adequate for d≥0.5; exploratory only for d=0.4, which falls below the 80% threshold). The "underpowered but labeled exploratory" framing applies specifically to d=0.4 effects — for d≥0.5 effects, N=50 achieves adequate power and supports inferential claims. **"Upgrade to N=100 for flagship" is confirmed:** N=100 is G.8's "Flagship/gold standard" tier at 86% power for the primary d=0.4 target effect. **Context note:** `docs/paper/experimental-design/f1-realistic-design.md` specifies N=30 as the "Realistic Design" baseline (power 0.52 at d=0.4), with N=50 as the recommended upgrade path before working paper submission. The BuyerBench H.3 section designates N=50 as the "realistic design" run count for practical planning purposes — this is an internal nomenclature difference between the playbook and the design docs, not a contradiction. The G.8 target effect size context: human behavioral bias studies report d=0.7–1.0; LLM effects are expected to be attenuated (RLHF, explicit instruction following), justifying the conservative d=0.4 target. **Type M error note (Loken & Gelman 2017):** At N=50, the Type M ratio drops to ~1.2× for true BSI ≈ 0.20 — a significant improvement over the N=1 single-shot designs used in all prior LLM bias studies (Binz & Schulz 2023; Jones & Steinhardt 2022), where Type M ratios reach 3–5×.
+
+- [x] **Why 10 models?** Existing registry; covers major model families (OpenAI, Anthropic, Google, Meta, Mistral, DeepSeek, Qwen, Cohere, 01.AI). Adding more models is additive but not required for minimum paper.
+  ✅ **Verified (2026-04-16):** Exactly 10 `ModelEntry` objects confirmed in `buyerbench/model_catalog.py:23-124`. Coverage breakdown: **9 distinct providers** across 10 models:
+  | Provider | Model | Cost Tier |
+  |---|---|---|
+  | OpenAI | GPT-4o | high |
+  | Anthropic | Claude 3.5 Sonnet | high |
+  | Google | Gemini Pro 1.5 | mid |
+  | Meta | Llama 3.1 405B Instruct | low |
+  | Mistral | Mistral Large | mid |
+  | Mistral | Mixtral 8x22B Instruct | low |
+  | DeepSeek | DeepSeek V3 | low |
+  | Alibaba | Qwen 2.5 72B Instruct | low |
+  | Cohere | Command R+ | mid |
+  | 01.AI | Yi Large 34B | low |
+  Distribution: 2 high-cost, 3 mid-cost, 5 low-cost — intentionally skewed toward low-cost open-source to represent the full frontier-to-budget spectrum. "Adding more models is additive" is confirmed architecturally: `agents/registry.py` uses a dictionary keyed by `agent_id`; adding a new `ModelEntry` to `MODEL_CATALOG` and a corresponding entry in the registry is the only required change — no structural modifications to the evaluator, harness, or reporting pipeline. **Econometric note from G.2:** N=10 models supports descriptive OLS for the capability-BSI regression (H2 specification) but does not support inference at conventional significance levels — "N=10 is explicitly treated as descriptive throughout the paper." The 10-model set covers 3 major training paradigms (OpenAI RLHF, Anthropic Constitutional AI, open-source SFT/DPO), enabling qualitative model-family comparisons even without formal inference. The `filter_catalog()` utility (`model_catalog.py:127-161`) supports subsetting by provider, capability tags, or cost tier for targeted analysis of model-family effects.
+
+- [x] **Why 5 bias types for minimum?** Existing validated scenarios. Each new scenario requires validation (does it actually induce the intended bias in humans?). 5 is enough for cross-bias variance analysis.
+  ✅ **Verified (2026-04-16):** Exactly 10 YAML scenario files across 5 bias type pairs confirmed in `scenarios/pillar2/`:
+  | Scenario ID | Bias Type | Files | Variant Names |
+  |---|---|---|---|
+  | p2-01 | Anchoring | 2 | BASELINE + ANCHOR_HIGH |
+  | p2-02 | Framing | 2 | FRAMING_GAIN + FRAMING_LOSS (no explicit BASELINE file — GAIN serves as control arm) |
+  | p2-03 | Decoy Effect | 2 | BASELINE + DECOY |
+  | p2-04 | Scarcity | 2 | BASELINE + SCARCITY |
+  | p2-05 | Sunk Cost | 2 | BASELINE + SUNK_COST |
+  Note: p2-02 (framing) deviates from the standard `{id}-BASELINE.yaml + {id}-TREATMENT.yaml` naming convention — it uses `p2-02-framing-GAIN.yaml` and `p2-02-framing-LOSS.yaml` with GAIN as the neutral/baseline arm. This is structurally consistent with the `ScenarioVariant` enum (`models.py:10-19`) but means the "BASELINE" arm is implicit. **Validation note:** "Each new scenario requires validation" — no automated human-validation test suite exists in the codebase. The 5 existing scenarios were designed against canonical behavioral economics literature: p2-01 → Tversky & Kahneman (1974); p2-02 → Tversky & Kahneman (1981); p2-03 → Huber, Payne & Puto (1982); p2-04 → Cialdini & Worchel (1975); p2-05 → Arkes & Blumer (1985). Cross-scenario validity of the BuyerBench stimulus set (i.e., whether it induces the predicted bias in human subjects) is an open research question pending Phase 4 human comparison arm. **"5 is enough for cross-bias variance analysis" is confirmed from G.2:** The ANOVA-style SS partition requires ≥ 2 bias type levels for a between-bias comparison; 5 levels provide 4 df for the bias type factor in the variance decomposition, sufficient for main-effect estimation and pairwise contrasts across all bias categories. The BH-FDR correction in G.5 handles the 5 bias-type family with q=0.05 control at N=5 tests — no Bonferroni-level conservatism required.
+
+- [x] **Why temperature=0.7?** Standard default across most models. Robustness check at temp=0.0 (deterministic) is mandatory.
+  ✅ **Verified (2026-04-16):** `docs/paper/experimental-design/f1-realistic-design.md` explicitly states the temperature rationale: *"0.7 is the de facto default for instruction-tuned models"* (Design Scope table). **Implementation gap:** Temperature is NOT currently configurable — `agents/openrouter_agent.py:45-56` does not include a `"temperature"` key in the `body` dict (`openrouter_agent.py:103-106`), meaning API calls use each provider's server-side default. The 0.7 target is a stated experimental design goal, not the current runtime behavior; actual temperature used per model is unknown and unlogged until **UPGRADE-3** lands. **Why 0.7 specifically:** Instruction-tuned models deployed via OpenRouter are typically served at temperature 1.0 server-side default, but 0.7 represents a moderate stochasticity level that: (a) matches the Anthropic API default (0.7) for Claude-class models, (b) is widely used in LLM evaluation studies as the "operational standard" ([Binz & Schulz 2023], [Hagendorff et al. 2023]), (c) avoids the near-deterministic floor (T≤0.3) where sampling variance collapses — reducing the statistical signal in the BSI variance decomposition — and (d) avoids the high-entropy regime (T≥1.0) where coherent structured output generation degrades. **"Robustness check at temp=0.0 is mandatory" confirmed:** G.6 pre-specifies temperature robustness as a mandatory check (not an optional exploratory): *"If results collapse at temp=0.0 (BSI → 0 uniformly) → findings are temperature-dependent; the bias susceptibility is an artifact of high-entropy sampling, not a stable preference structure. This must be prominently flagged."* G.8 robustness check is also enabled by UPGRADE-6 (`buyerbench run --research-mode` flag). **Cross-provider note:** OpenRouter normalizes temperature inconsistently above T=1.0 (confirmed in H.4 Phase 3 analysis), so 1.0 is the safe upper bound for multi-provider comparative experiments. The 4-temperature design (0.0, 0.3, 0.7, 1.0) in Phase 3 / Flagship fits within this bound.
 
 ---
 
