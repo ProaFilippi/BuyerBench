@@ -15,10 +15,11 @@
   - Rejection triggers: "Interesting measurement but no economic insight"; "results don't generalize beyond these specific prompts"; "no theory"; "stochastic outputs treated as deterministic".
   - ✅ *Completed 2026-04-15:* Full journal-by-journal analysis written at `docs/paper/journal-strategy/tier1-top-general-interest-journals.md`. Per-journal fit rationale, evidence thresholds, rejection triggers, and strategic timeline documented for AER, QJE, JPE, and Econometrica. Tier 1 is a 5–10 year horizon; near-term target remains JEBO/Experimental Economics (Tier 2).
 
-- [ ] **[TIER 2 — Top Field: Behavioral & Experimental]** Document fit for Journal of Economic Behavior & Organization (JEBO), Experimental Economics, Journal of Behavioral Decision Making, Games and Economic Behavior
+- [x] **[TIER 2 — Top Field: Behavioral & Experimental]** Document fit for Journal of Economic Behavior & Organization (JEBO), Experimental Economics, Journal of Behavioral Decision Making, Games and Economic Behavior
   - Fit rationale: These journals accept well-identified empirical studies with solid methodology. A bias battery with clean controlled variants, proper statistical power, and credible stochasticity modeling can publish here without a human comparison arm — though it is preferred.
   - Required evidence level: N ≥ 30 runs per (bias × model × architecture) cell; mixed-effects regression; multiple bias types; variance decomposition by model family vs. prompt vs. temperature.
   - Rejection triggers: "Only descriptive statistics"; "no power justification"; "one-shot runs treated as evidence"; "no correction for multiple comparisons".
+  - ✅ *Completed 2026-04-15:* Full journal-by-journal analysis written at `docs/paper/journal-strategy/tier2-field-behavioral-journals.md`. Per-journal fit rationale, evidence thresholds, rejection triggers, and strategic timeline documented for JEBO, Experimental Economics, JBDM, and GEB. Decision gate and minimum viable paper specification included. **Primary recommendation: JEBO** (1,500 runs, $225 API cost, achievable in one weekend). Fast-path option: JBDM. GEB is a follow-on target for the WARP battery study only.
 
 - [ ] **[TIER 3 — Adjacent Credible]** Document fit for Journal of Artificial Intelligence Research (JAIR), AI & Society, Decision Support Systems, Management Science (IS track)
   - Fit rationale: Methodological contribution (BuyerBench as evaluation framework) is sufficient if paired with substantive empirical findings. Management Science IS track values applied rigor.
