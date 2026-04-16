@@ -1657,5 +1657,120 @@ def stats(experiment_dir: str, output_dir: str | None, p1_scores_str: str | None
     console.print()
 
 
+@cli.command()
+@click.option(
+    "--manifest",
+    required=True,
+    help="Path to experiment_manifest.json produced by `buyerbench run`.",
+)
+@click.option(
+    "--output-dir",
+    default=None,
+    help="Directory for prereg_osf.md and prereg_metadata.json (default: manifest directory).",
+)
+@click.option(
+    "--title",
+    default=None,
+    help="Custom document title.  Defaults to the standard BuyerBench pre-registration title.",
+)
+@click.option(
+    "--authors",
+    default="BuyerBench Research Team",
+    show_default=True,
+    help="Author attribution string for the pre-registration document.",
+)
+def prereg(
+    manifest: str,
+    output_dir: str | None,
+    title: str | None,
+    authors: str,
+) -> None:
+    """Generate an OSF-compatible pre-registration document.
+
+    Reads an experiment manifest produced by `buyerbench run` and outputs:
+
+    \b
+    - prereg_osf.md       — Structured Markdown for OSF/AsPredicted upload
+    - prereg_metadata.json — Machine-readable document model
+
+    The document includes all pre-specified hypotheses (H1–H10), the registered
+    model set, bias type battery, statistical analysis plan, and null-result
+    pre-specification.  It should be submitted to OSF before data collection begins.
+    """
+    from pathlib import Path as _Path
+
+    from results.experiment_manifest import ExperimentManifest
+    from results.prereg_export import (
+        generate_prereg_document,
+        write_prereg_document,
+    )
+
+    manifest_path = _Path(manifest)
+    if not manifest_path.exists():
+        console.print(f"[red]Manifest file not found: {manifest_path}[/red]")
+        raise SystemExit(1)
+
+    try:
+        manifest_data = ExperimentManifest.model_validate_json(manifest_path.read_text())
+    except Exception as exc:
+        console.print(f"[red]Failed to parse manifest: {exc}[/red]")
+        raise SystemExit(1)
+
+    out_path = _Path(output_dir) if output_dir else manifest_path.parent
+
+    console.print(
+        f"\n[bold cyan]Generating pre-registration document…[/bold cyan]\n"
+        f"  [dim]Manifest:[/dim]  {manifest_path}\n"
+        f"  [dim]Output:[/dim]    {out_path}"
+    )
+
+    kwargs = {}
+    if title:
+        kwargs["title"] = title
+    kwargs["authors"] = authors
+
+    doc, markdown = generate_prereg_document(manifest_data, **kwargs)
+    md_file = write_prereg_document(doc, markdown, out_path)
+
+    console.print(
+        f"\n[bold green]Pre-registration document written →[/bold green] "
+        f"[bold]{md_file}[/bold]"
+    )
+    console.print(
+        f"[bold green]Metadata JSON written →[/bold green] "
+        f"[bold]{out_path / 'prereg_metadata.json'}[/bold]"
+    )
+
+    # ── Summary ────────────────────────────────────────────────────────────────
+    from rich.table import Table as RichTable
+    from rich import box as rich_box
+
+    t = RichTable(
+        title="[bold]Pre-Registration Summary[/bold]",
+        box=rich_box.SIMPLE,
+    )
+    t.add_column("Field", style="bold cyan")
+    t.add_column("Value")
+
+    t.add_row("Experiment ID", doc.manifest_experiment_id)
+    t.add_row("Design tier", doc.manifest_design_tier)
+    t.add_row("Models", str(doc.manifest_n_models))
+    t.add_row("Scenarios", str(doc.manifest_n_scenarios))
+    t.add_row("Runs per cell", str(doc.manifest_n_runs_per_cell))
+    t.add_row("Planned runs", f"{doc.manifest_total_planned_runs:,}")
+    t.add_row("Hypotheses", str(len(doc.hypotheses)))
+    t.add_row("Bias types", ", ".join(doc.bias_types_tested))
+    t.add_row(
+        "Git commit",
+        doc.manifest_git_hash or "[dim]unknown[/dim]",
+    )
+    if doc.manifest_pre_registration_url:
+        t.add_row("Pre-reg URL", doc.manifest_pre_registration_url)
+
+    console.print()
+    console.print(t)
+    console.print()
+
+
 if __name__ == "__main__":
     cli()
