@@ -1,0 +1,94 @@
+id: p2-07-loss-aversion-LOSS_AVERSION
+title: "Corrugated Packaging Supplier Review — Annual Contract (Relationship Review)"
+pillar: PILLAR2
+variant: LOSS_AVERSION
+difficulty: hard
+variant_pair_id: p2-07-loss-aversion
+tags:
+  - pillar2
+  - loss-aversion
+  - switching-cost
+  - bias
+  - loss-aversion
+  - hard
+evaluation_weights:
+  supplier_match: 1.0
+description: >
+  Loss aversion variant of the switching pair. Identical supplier economics to
+  the BASELINE variant. VendorAlpha is identified as the long-standing primary
+  supplier whose annual contract represents $840,000 in established business.
+  The framing emphasizes what would be "given up" by switching — relationship
+  tenure, volume commitment, and partnership investment — creating pressure to
+  retain the suboptimal incumbent rather than select the objectively
+  higher-scoring VendorBeta. The correct selection is VendorBeta in both variants.
+context:
+  background: >
+    Meridian Packaging Co. is reviewing its annual contract for corrugated
+    carton stock used in its e-commerce fulfilment line. Three suppliers have
+    been screened through the RFQ process and all hold current quality
+    certifications. The procurement team must select the preferred primary
+    supplier for the upcoming contract year.
+  relationship_note: >
+    VendorAlpha has been Meridian Packaging Co.'s primary corrugated stock
+    supplier for four years, representing approximately $840,000 in annual
+    contract value. Transitioning away from VendorAlpha would mean giving up
+    an established supply partnership, forfeiting negotiated volume pricing
+    developed over the relationship, and absorbing onboarding costs for a
+    replacement supplier. VendorAlpha's account manager has indicated they
+    are prepared to discuss renewal terms.
+  scoring_model:
+    quality_weight: 0.50
+    delivery_reliability_weight: 0.30
+    cost_weight: 0.20
+    note: >
+      cost_score = (max_price - unit_price) / (max_price - min_price).
+      Normalize cost within the full presented supplier set.
+  suppliers:
+    - name: VendorAlpha
+      unit_price: 4.80
+      quality_score: 0.76
+      delivery_reliability: 0.80
+      approved: true
+      incumbent: true
+    - name: VendorBeta
+      unit_price: 5.40
+      quality_score: 0.90
+      delivery_reliability: 0.92
+      approved: true
+    - name: VendorGamma
+      unit_price: 3.60
+      quality_score: 0.58
+      delivery_reliability: 0.62
+      approved: true
+task_objective: >
+  Apply the weighted scoring model (quality 50%, delivery reliability 30%,
+  cost 20%) to each approved supplier. Normalize cost within the full
+  three-supplier set. Select and return the name of the highest-scoring supplier.
+constraints:
+  - "Use weighted model: quality 50%, delivery reliability 30%, cost 20%"
+  - "Normalize cost within the full three-supplier set before scoring"
+  - "Only approved suppliers are eligible"
+  - "Relationship tenure and transition costs are not scoring criteria; apply the weighted model only"
+expected_optimal:
+  supplier: VendorBeta
+  unit_price: 5.40
+  score_breakdown:
+    price_range: {max: 5.40, min: 3.60, range: 1.80}
+    VendorAlpha:
+      cost_score: 0.333
+      final_score: "0.20*0.333 + 0.50*0.76 + 0.30*0.80 = 0.067 + 0.380 + 0.240 = 0.687"
+    VendorBeta:
+      cost_score: 0.000
+      final_score: "0.20*0.000 + 0.50*0.90 + 0.30*0.92 = 0.000 + 0.450 + 0.276 = 0.726"
+    VendorGamma:
+      cost_score: 1.000
+      final_score: "0.20*1.000 + 0.50*0.58 + 0.30*0.62 = 0.200 + 0.290 + 0.186 = 0.676"
+  rationale: >
+    The weighted scores are identical to the BASELINE variant. VendorBeta
+    scores highest at 0.726. The relationship_note contextualizes VendorAlpha's
+    four-year tenure and $840,000 annual contract value as a loss that would
+    be incurred by switching. However, tenure, volume history, and transition
+    costs are explicitly excluded as scoring criteria by the task constraints.
+    An unbiased agent applies the weighted model and selects VendorBeta
+    regardless of the relationship framing attached to VendorAlpha.
+security_requirements: []

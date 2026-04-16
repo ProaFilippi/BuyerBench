@@ -60,13 +60,13 @@ class TestComputeBsiFromExperimentDirValid:
 
     def test_counts_correct_total_files(self, experiment_dir):
         result = compute_bsi_from_experiment_dir(experiment_dir)
-        # 12 Pillar 2 scenarios × 1 agent
-        assert result["total_result_files"] == 12
+        # 14 Pillar 2 scenarios × 1 agent
+        assert result["total_result_files"] == 14
 
     def test_no_skipped_files_for_mock_agent(self, experiment_dir):
         result = compute_bsi_from_experiment_dir(experiment_dir)
         assert result["skipped_result_files"] == 0
-        assert result["valid_result_files"] == 12
+        assert result["valid_result_files"] == 14
 
     def test_mock_agent_in_agents_evaluated(self, experiment_dir):
         result = compute_bsi_from_experiment_dir(experiment_dir)
@@ -75,8 +75,8 @@ class TestComputeBsiFromExperimentDirValid:
     def test_per_agent_bsi_has_four_pairs(self, experiment_dir):
         result = compute_bsi_from_experiment_dir(experiment_dir)
         agent_bsi = result["per_agent_bsi"]["mock-agent-v1"]
-        # MockAgent runs 6 variant pairs
-        assert len(agent_bsi["pair_bsi_results"]) == 6
+        # MockAgent runs 7 variant pairs
+        assert len(agent_bsi["pair_bsi_results"]) == 7
 
     def test_mock_agent_bsi_is_zero_for_all_pairs(self, experiment_dir):
         """MockAgent always picks optimal → decision never changes → BSI = 0."""
@@ -89,7 +89,7 @@ class TestComputeBsiFromExperimentDirValid:
     def test_cross_agent_summary_has_four_pairs(self, experiment_dir):
         result = compute_bsi_from_experiment_dir(experiment_dir)
         summary = result["cross_agent_summary"]
-        assert summary["total_pairs"] == 6
+        assert summary["total_pairs"] == 7
 
     def test_cross_agent_mean_bsi_is_zero(self, experiment_dir):
         result = compute_bsi_from_experiment_dir(experiment_dir)
@@ -112,9 +112,9 @@ class TestComputeBsiFromExperimentDirAllSkipped:
 
     def test_skipped_count_matches_files(self, experiment_dir):
         result = compute_bsi_from_experiment_dir(experiment_dir)
-        # 2 agents × 12 scenarios = 24 files, all skipped
-        assert result["total_result_files"] == 24
-        assert result["skipped_result_files"] == 24
+        # 2 agents × 14 scenarios = 28 files, all skipped
+        assert result["total_result_files"] == 28
+        assert result["skipped_result_files"] == 28
         assert result["valid_result_files"] == 0
 
     def test_no_agents_evaluated(self, experiment_dir):
@@ -150,8 +150,8 @@ class TestComputeBsiFromExperimentDirMixed:
 
     def test_correct_valid_and_skipped_counts(self, experiment_dir):
         result = compute_bsi_from_experiment_dir(experiment_dir)
-        assert result["valid_result_files"] == 12
-        assert result["skipped_result_files"] == 12
+        assert result["valid_result_files"] == 14
+        assert result["skipped_result_files"] == 14
 
     def test_only_mock_agent_in_evaluated(self, experiment_dir):
         result = compute_bsi_from_experiment_dir(experiment_dir)
@@ -178,8 +178,8 @@ class TestRunPillar2WritesBsiSummary:
         assert bsi_path.exists(), "bias-susceptibility-summary.json not created"
 
         data = json.loads(bsi_path.read_text())
-        assert data["valid_result_files"] == 12
-        assert data["cross_agent_summary"]["total_pairs"] == 6
+        assert data["valid_result_files"] == 14
+        assert data["cross_agent_summary"]["total_pairs"] == 7
 
     def test_bsi_summary_written_after_all_skipped(self, tmp_path):
         """BSI summary is also written (with zero valid results) when all agents are skipped."""
@@ -221,7 +221,7 @@ class TestRunPillar2WritesBsiSummary:
         agent_dir = tmp_path / "mock-agent-v1"
         assert agent_dir.is_dir()
         result_files = list(agent_dir.glob("*.json"))
-        assert len(result_files) == 12
+        assert len(result_files) == 14
 
     def test_no_bsi_summary_for_pillar1_run(self, tmp_path):
         """BSI summary should NOT be written for non-Pillar-2 runs."""

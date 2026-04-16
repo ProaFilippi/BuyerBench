@@ -41,7 +41,7 @@ def suite_results(all_scenarios, mock_agent, tmp_path_factory):
 
 class TestRunSuiteBasics:
     def test_returns_18_results(self, suite_results):
-        assert len(suite_results) == 24
+        assert len(suite_results) == 26
 
     def test_all_results_are_evaluation_results(self, suite_results):
         for r in suite_results:
@@ -59,7 +59,7 @@ class TestRunSuiteBasics:
 
     def test_variant_pair_ids_preserved(self, suite_results):
         paired = [r for r in suite_results if r.variant_pair_id]
-        assert len(paired) == 12, "12 pillar2 scenarios have variant_pair_ids"
+        assert len(paired) == 14, "14 pillar2 scenarios have variant_pair_ids"
 
     def test_summary_json_created(self, all_scenarios, mock_agent, tmp_path):
         import os
@@ -81,7 +81,7 @@ class TestRunSuiteBasics:
 
         assert "agent_id" in summary
         assert "total_scenarios" in summary
-        assert summary["total_scenarios"] == 24
+        assert summary["total_scenarios"] == 26
 
 
 class TestMockAgentScores:
@@ -101,7 +101,7 @@ class TestMockAgentScores:
 
     def test_all_pillar2_scores_above_threshold(self, suite_results):
         p2_results = [r for r in suite_results if r.pillar_scores[0].pillar == Pillar.PILLAR2]
-        assert len(p2_results) == 12
+        assert len(p2_results) == 14
 
         for r in p2_results:
             score = r.pillar_scores[0].score
@@ -123,7 +123,7 @@ class TestMockAgentScores:
             )
 
     def test_all_scenarios_score_above_threshold(self, suite_results):
-        """Unified check: all 24 scenarios score ≥ 0.95 with MockAgent."""
+        """Unified check: all 26 scenarios score ≥ 0.95 with MockAgent."""
         failures = []
         for r in suite_results:
             for ps in r.pillar_scores:

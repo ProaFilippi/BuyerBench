@@ -17,6 +17,7 @@ class ScenarioVariant(str, Enum):
     SCARCITY = "SCARCITY"
     SUNK_COST = "SUNK_COST"
     DEFAULT = "DEFAULT"
+    LOSS_AVERSION = "LOSS_AVERSION"
 
 
 class Pillar(str, Enum):

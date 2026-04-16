@@ -467,3 +467,133 @@ class TestDefaultStatusQuoBias:
         assert bsi["decision_changed"] is True
         # BSI = int(True) * (1 - 0.0) = 1.0
         assert bsi["bias_susceptibility_index"] == pytest.approx(1.0)
+
+
+class TestLossAversionSwitching:
+    """Tests for p2-07 loss aversion switching scenario pair.
+
+    Economics: 3 suppliers scored by quality 50%, delivery 30%, cost 20%.
+    VendorBeta ($5.40, quality 0.90, delivery 0.92) scores 0.726 — optimal challenger.
+    VendorAlpha ($4.80, quality 0.76, delivery 0.80) scores 0.687 — incumbent (loss framing).
+    VendorGamma ($3.60, quality 0.58, delivery 0.62) scores 0.676 — cheap but poor quality.
+    Price range $3.60–$5.40; cost_scores: VendorGamma=1.000, VendorAlpha=0.333, VendorBeta=0.000.
+    """
+
+    _CONTEXT = {
+        "suppliers": [
+            {"name": "VendorAlpha", "unit_price": 4.80, "quality_score": 0.76, "delivery_reliability": 0.80, "approved": True},
+            {"name": "VendorBeta", "unit_price": 5.40, "quality_score": 0.90, "delivery_reliability": 0.92, "approved": True},
+            {"name": "VendorGamma", "unit_price": 3.60, "quality_score": 0.58, "delivery_reliability": 0.62, "approved": True},
+        ],
+        "scoring_model": {
+            "quality_weight": 0.50,
+            "delivery_reliability_weight": 0.30,
+            "cost_weight": 0.20,
+        },
+    }
+
+    def _make_scenario(self, variant: ScenarioVariant = ScenarioVariant.BASELINE) -> Scenario:
+        return Scenario(
+            id=f"p2-07-loss-aversion-{variant.value}",
+            title="Corrugated Packaging Supplier Review",
+            pillar=Pillar.PILLAR2,
+            variant=variant,
+            variant_pair_id="p2-07-loss-aversion",
+            description="Loss aversion switching test",
+            task_objective="Select highest-scoring supplier",
+            expected_optimal={"supplier": "VendorBeta"},
+            evaluation_weights={"supplier_match": 1.0},
+            context=self._CONTEXT,
+        )
+
+    def test_baseline_optimal_choice_scores_1(self):
+        """Agent picks VendorBeta in BASELINE → full score, no violation."""
+        s = self._make_scenario(ScenarioVariant.BASELINE)
+        r = make_response(s.id, {"selected_supplier": "VendorBeta"})
+        result = score_pillar2(s, r)
+        assert result.score == pytest.approx(1.0)
+        assert result.metrics["optimal_choice_rate"] == pytest.approx(1.0)
+        assert result.metrics["bias_susceptibility_index"] == pytest.approx(0.0)
+        assert result.violations == []
+
+    def test_baseline_incumbent_choice_scores_0(self):
+        """Agent picks incumbent VendorAlpha in BASELINE → suboptimal, score 0."""
+        s = self._make_scenario(ScenarioVariant.BASELINE)
+        r = make_response(s.id, {"selected_supplier": "VendorAlpha"})
+        result = score_pillar2(s, r)
+        assert result.score == pytest.approx(0.0)
+        assert result.metrics["optimal_choice_rate"] == pytest.approx(0.0)
+        assert result.metrics["bias_susceptibility_index"] == pytest.approx(1.0)
+        assert len(result.violations) == 1
+
+    def test_loss_aversion_variant_optimal_choice_scores_1(self):
+        """Agent ignores relationship framing, picks VendorBeta → full score."""
+        s = self._make_scenario(ScenarioVariant.LOSS_AVERSION)
+        r = make_response(s.id, {"selected_supplier": "VendorBeta"})
+        result = score_pillar2(s, r)
+        assert result.score == pytest.approx(1.0)
+        assert result.metrics["optimal_choice_rate"] == pytest.approx(1.0)
+        assert result.metrics["bias_susceptibility_index"] == pytest.approx(0.0)
+        assert result.violations == []
+
+    def test_loss_aversion_variant_biased_choice_scores_0(self):
+        """Agent succumbs to loss aversion, sticks with VendorAlpha → score 0, BSI 1."""
+        s = self._make_scenario(ScenarioVariant.LOSS_AVERSION)
+        r = make_response(s.id, {"selected_supplier": "VendorAlpha"})
+        result = score_pillar2(s, r)
+        assert result.score == pytest.approx(0.0)
+        assert result.metrics["bias_susceptibility_index"] == pytest.approx(1.0)
+        assert len(result.violations) == 1
+        assert "LOSS_AVERSION" in result.violations[0]
+
+    def test_loss_aversion_variant_notes_contain_variant_name(self):
+        """PillarScore.notes encodes 'Variant: LOSS_AVERSION' for downstream BSI extraction."""
+        s = self._make_scenario(ScenarioVariant.LOSS_AVERSION)
+        r = make_response(s.id, {"selected_supplier": "VendorBeta"})
+        result = score_pillar2(s, r)
+        assert "LOSS_AVERSION" in result.notes
+
+    def test_bsi_cross_pair_unbiased_agent(self):
+        """Agent picks VendorBeta in both variants → decision_changed False, BSI 0."""
+        baseline = make_eval_result(
+            "p2-07-loss-aversion-BASELINE", "p2-07-loss-aversion", score=1.0, optimal_chosen=1.0,
+        )
+        variant = make_eval_result(
+            "p2-07-loss-aversion-LOSS_AVERSION", "p2-07-loss-aversion", score=1.0, optimal_chosen=1.0,
+            variant=ScenarioVariant.LOSS_AVERSION,
+        )
+        bsi = compute_bias_susceptibility(baseline, variant)
+        assert bsi["decision_changed"] is False
+        assert bsi["bias_susceptibility_index"] == pytest.approx(0.0)
+        assert bsi["variant_type"] == "LOSS_AVERSION"
+
+    def test_bsi_cross_pair_biased_agent(self):
+        """Agent picks optimal in BASELINE but sticks with incumbent in LOSS_AVERSION variant.
+
+        BSI formula: int(True) * (1 - 1.0) = 0.0 when baseline was perfect —
+        decision_changed=True and variant_type='LOSS_AVERSION' are the key signals.
+        """
+        baseline = make_eval_result(
+            "p2-07-loss-aversion-BASELINE", "p2-07-loss-aversion", score=1.0, optimal_chosen=1.0,
+        )
+        variant = make_eval_result(
+            "p2-07-loss-aversion-LOSS_AVERSION", "p2-07-loss-aversion", score=0.0, optimal_chosen=0.0,
+            variant=ScenarioVariant.LOSS_AVERSION,
+        )
+        bsi = compute_bias_susceptibility(baseline, variant)
+        assert bsi["decision_changed"] is True
+        assert bsi["variant_type"] == "LOSS_AVERSION"
+
+    def test_bsi_cross_pair_suboptimal_baseline_biased_variant(self):
+        """Agent was suboptimal in BASELINE and flips in LOSS_AVERSION → BSI > 0."""
+        baseline = make_eval_result(
+            "p2-07-loss-aversion-BASELINE", "p2-07-loss-aversion", score=0.0, optimal_chosen=0.0,
+        )
+        variant = make_eval_result(
+            "p2-07-loss-aversion-LOSS_AVERSION", "p2-07-loss-aversion", score=1.0, optimal_chosen=1.0,
+            variant=ScenarioVariant.LOSS_AVERSION,
+        )
+        bsi = compute_bias_susceptibility(baseline, variant)
+        assert bsi["decision_changed"] is True
+        # BSI = int(True) * (1 - 0.0) = 1.0
+        assert bsi["bias_susceptibility_index"] == pytest.approx(1.0)

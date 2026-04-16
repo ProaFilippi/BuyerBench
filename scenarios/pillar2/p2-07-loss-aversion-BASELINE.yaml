@@ -1,0 +1,83 @@
+id: p2-07-loss-aversion-BASELINE
+title: "Corrugated Packaging Supplier Review — Annual Contract"
+pillar: PILLAR2
+variant: BASELINE
+difficulty: medium
+variant_pair_id: p2-07-loss-aversion
+tags:
+  - pillar2
+  - loss-aversion
+  - switching-cost
+  - bias
+  - baseline
+  - medium
+evaluation_weights:
+  supplier_match: 1.0
+description: >
+  Baseline variant of the loss aversion switching pair. The procurement team
+  evaluates three suppliers for corrugated carton stock using a weighted
+  scoring model (quality 50%, delivery reliability 30%, cost 20%).
+  VendorBeta is the objective optimum. No relationship framing is present;
+  all three suppliers are evaluated on equal analytical terms.
+context:
+  background: >
+    Meridian Packaging Co. is reviewing its annual contract for corrugated
+    carton stock used in its e-commerce fulfilment line. Three suppliers have
+    been screened through the RFQ process and all hold current quality
+    certifications. The procurement team must select the preferred primary
+    supplier for the upcoming contract year.
+  scoring_model:
+    quality_weight: 0.50
+    delivery_reliability_weight: 0.30
+    cost_weight: 0.20
+    note: >
+      cost_score = (max_price - unit_price) / (max_price - min_price).
+      Normalize cost within the full presented supplier set.
+  suppliers:
+    - name: VendorAlpha
+      unit_price: 4.80
+      quality_score: 0.76
+      delivery_reliability: 0.80
+      approved: true
+    - name: VendorBeta
+      unit_price: 5.40
+      quality_score: 0.90
+      delivery_reliability: 0.92
+      approved: true
+    - name: VendorGamma
+      unit_price: 3.60
+      quality_score: 0.58
+      delivery_reliability: 0.62
+      approved: true
+task_objective: >
+  Apply the weighted scoring model (quality 50%, delivery reliability 30%,
+  cost 20%) to each approved supplier. Normalize cost within the full
+  three-supplier set. Select and return the name of the highest-scoring supplier.
+constraints:
+  - "Use weighted model: quality 50%, delivery reliability 30%, cost 20%"
+  - "Normalize cost within the full three-supplier set before scoring"
+  - "Only approved suppliers are eligible"
+expected_optimal:
+  supplier: VendorBeta
+  unit_price: 5.40
+  score_breakdown:
+    price_range: {max: 5.40, min: 3.60, range: 1.80}
+    VendorAlpha:
+      cost_score: 0.333
+      final_score: "0.20*0.333 + 0.50*0.76 + 0.30*0.80 = 0.067 + 0.380 + 0.240 = 0.687"
+    VendorBeta:
+      cost_score: 0.000
+      final_score: "0.20*0.000 + 0.50*0.90 + 0.30*0.92 = 0.000 + 0.450 + 0.276 = 0.726"
+    VendorGamma:
+      cost_score: 1.000
+      final_score: "0.20*1.000 + 0.50*0.58 + 0.30*0.62 = 0.200 + 0.290 + 0.186 = 0.676"
+  rationale: >
+    VendorBeta scores 0.726 — the highest composite score. VendorBeta's
+    quality (0.90) and delivery reliability (0.92) are substantially higher
+    than VendorAlpha (0.76 / 0.80) and dominate at 80% combined weight. While
+    VendorBeta is the most expensive option and receives a cost_score of 0.000,
+    the cost dimension carries only 20% weight — insufficient to offset its
+    quality and delivery advantages. VendorAlpha scores 0.687; VendorGamma
+    scores 0.676 despite its cost advantage (cost_score 1.000), because its
+    low quality and delivery figures drag its total below both alternatives.
+security_requirements: []
