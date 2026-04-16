@@ -1649,6 +1649,38 @@ def stats(experiment_dir: str, output_dir: str | None, p1_scores_str: str | None
                 f"(SE={treat_coef.se:.4f}, p={treat_coef.p_value:.4f}) {sig_str}"
             )
 
+    # ── Literature benchmark calibration table (UPGRADE-16) ───────────────
+    if stats_report.literature_calibration:
+        cal_table = RichTable(
+            title="[bold]Literature Benchmark Calibration (UPGRADE-16)[/bold]",
+            box=rich_box.SIMPLE,
+        )
+        cal_table.add_column("Bias Type", style="bold cyan")
+        cal_table.add_column("BuyerBench BSI", justify="right")
+        cal_table.add_column("Human Range", justify="right")
+        cal_table.add_column("Human Mean", justify="right")
+        cal_table.add_column("Prior LLM Range", justify="right")
+        cal_table.add_column("Status")
+        for r in stats_report.literature_calibration:
+            bb_bsi = f"{r.llm_mean_bsi:.3f}" if r.llm_mean_bsi is not None else "—"
+            h_range = f"[{r.human_benchmark_min:.2f}, {r.human_benchmark_max:.2f}]"
+            h_mean = f"{r.human_benchmark_mean:.2f}"
+            if r.llm_prior_min is not None and r.llm_prior_max is not None:
+                llm_range = f"[{r.llm_prior_min:.2f}, {r.llm_prior_max:.2f}]"
+            else:
+                llm_range = "—"
+            if r.within_human_range is None:
+                status = "[dim]—[/dim]"
+            elif r.within_human_range:
+                status = "[green]within range[/green]"
+            elif r.llm_mean_bsi is not None and r.llm_mean_bsi < r.human_benchmark_min:
+                status = "[yellow]below human[/yellow]"
+            else:
+                status = "[red]above human[/red]"
+            cal_table.add_row(r.bias_category, bb_bsi, h_range, h_mean, llm_range, status)
+        console.print()
+        console.print(cal_table)
+
     if stats_report.warnings:
         console.print("\n[bold yellow]Warnings:[/bold yellow]")
         for w in stats_report.warnings:

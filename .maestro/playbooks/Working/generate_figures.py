@@ -4,19 +4,25 @@ Generates all 5 paper figures from available experimental data.
 
 Figures:
   fig1-radar-chart.png        — Per-agent radar chart (pillars)
-  fig2-bsi-by-bias-type.png   — BSI by bias type & agent (placeholder: CLI skipped)
+  fig2-bsi-by-bias-type.png   — BSI by bias type & agent with literature reference lines
   fig3-compliance-heatmap.png — Compliance adherence rate heatmap (Stripe toolkit)
   fig4-skills-mcp-delta.png   — Skills/MCP delta bar chart (placeholder: CLI skipped)
   fig5-harness-architecture.png — Architecture diagram (Scenario→Harness→Agent→Evaluator→Results)
 """
 
 import pathlib
+import sys
 import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import matplotlib.patheffects as pe
+
+# Add repo root to path so we can import results.literature_benchmarks
+_REPO_ROOT = pathlib.Path(__file__).parent.parent.parent.parent
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
 
 OUTPUT_DIR = pathlib.Path(__file__).parent.parent.parent.parent / "docs" / "paper" / "figures"
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -92,58 +98,138 @@ def fig1_radar_chart():
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def fig2_bsi_by_bias_type():
-    """
-    Pillar 2 scenarios require CLI agents; all were skipped in this run.
-    Produces a labeled placeholder figure showing the four bias types and
-    expected BSI = 0 (no data) with a clear 'Pending Evaluation' notice.
-    The figure structure matches what will be populated on CLI agent runs.
-    """
-    bias_types = ["Anchoring\n(p2-01)", "Framing\n(p2-02)",
-                  "Decoy\n(p2-03)", "Scarcity\n(p2-04)"]
-    agents_pending = ["claude-code", "codex", "gemini"]
-    x = np.arange(len(bias_types))
-    width = 0.25
+    """BSI by bias type with literature reference bands (UPGRADE-16).
 
-    fig, ax = plt.subplots(figsize=(10, 5))
+    Pillar 2 CLI agent evaluation is still pending, so agent bars are shown
+    as placeholder zeros with a watermark.  Literature human-range shaded
+    bands and prior-LLM reference lines are always rendered, providing
+    calibration context even before experiment data arrives.
+    """
+    # ── Load literature benchmark overlay data ────────────────────────────
+    try:
+        from results.literature_benchmarks import get_benchmark_overlay_data
+        bias_order = ["anchoring", "framing", "decoy", "scarcity", "sunk_cost"]
+        overlays = {o.bias_category: o for o in get_benchmark_overlay_data(bias_order)}
+    except Exception:
+        overlays = {}
+
+    bias_labels = [
+        "Anchoring\n(p2-01)",
+        "Framing\n(p2-02)",
+        "Decoy\n(p2-03)",
+        "Scarcity\n(p2-04)",
+        "Sunk Cost\n(p2-05)",
+    ]
+    bias_keys = ["anchoring", "framing", "decoy", "scarcity", "sunk_cost"]
+    agents_pending = ["claude-code", "codex", "gemini"]
+    x = np.arange(len(bias_labels))
+    width = 0.22
+
+    fig, ax = plt.subplots(figsize=(11, 5.5))
     ax.set_facecolor("#f9f9f9")
 
+    # ── Placeholder agent bars ────────────────────────────────────────────
     for i, agent in enumerate(agents_pending):
-        bars = ax.bar(x + i * width - width, [0] * len(bias_types),
-                      width, label=agent, color=COLORS["cli-placeholder"],
-                      edgecolor="white", linewidth=0.8, alpha=0.6)
+        ax.bar(x + i * width - width, [0] * len(bias_labels),
+               width, label=agent, color=COLORS["cli-placeholder"],
+               edgecolor="white", linewidth=0.8, alpha=0.6)
 
-    # Grid lines at 0.2 intervals
+    # ── Literature reference lines and shaded bands ───────────────────────
+    HUMAN_BAND_COLOR = "#2ca02c"   # green
+    LLM_REF_COLOR    = "#ff7f0e"   # orange
+
+    _human_band_drawn = False
+    _llm_ref_drawn = False
+
+    for xi, bias_key in enumerate(bias_keys):
+        ov = overlays.get(bias_key)
+        if ov is None:
+            continue
+
+        # Shaded band: human min–max across all human benchmarks
+        if ov.human_reference_lines:
+            ax.fill_between(
+                [xi - 0.45, xi + 0.45],
+                ov.human_range_min,
+                ov.human_range_max,
+                color=HUMAN_BAND_COLOR, alpha=0.12,
+                label="Human range (literature)" if not _human_band_drawn else "_nolegend_",
+            )
+            # Solid line for human mean
+            ax.plot(
+                [xi - 0.40, xi + 0.40],
+                [ov.human_range_mean, ov.human_range_mean],
+                color=HUMAN_BAND_COLOR, linewidth=1.8, linestyle="-",
+                label="Human mean (literature)" if not _human_band_drawn else "_nolegend_",
+                zorder=5,
+            )
+            _human_band_drawn = True
+
+        # Dashed line(s) for prior LLM benchmarks
+        for ref in ov.llm_reference_lines:
+            ax.plot(
+                [xi - 0.38, xi + 0.38],
+                [ref["effect_size"], ref["effect_size"]],
+                color=LLM_REF_COLOR, linewidth=1.4, linestyle="--",
+                label="Prior LLM (literature)" if not _llm_ref_drawn else "_nolegend_",
+                zorder=5,
+            )
+            _llm_ref_drawn = True
+
+    # ── Grid and axes ─────────────────────────────────────────────────────
     for y in [0.2, 0.4, 0.6, 0.8, 1.0]:
         ax.axhline(y, color="white", linewidth=1.2, zorder=0)
     ax.axhline(0, color="#444", linewidth=0.8, linestyle="--", zorder=1)
 
     ax.set_ylim(0, 1)
     ax.set_xticks(x)
-    ax.set_xticklabels(bias_types, fontsize=FONT_SIZES["label"])
+    ax.set_xticklabels(bias_labels, fontsize=FONT_SIZES["label"])
     ax.set_xlabel("Bias Type (Scenario)", fontsize=FONT_SIZES["label"])
     ax.set_ylabel("Bias Susceptibility Index (BSI)", fontsize=FONT_SIZES["label"])
-    ax.set_title("BSI by Bias Type and Agent\n"
-                 "[Pending: CLI Agent Evaluation Required]",
-                 fontsize=FONT_SIZES["title"], fontweight="bold")
+    ax.set_title(
+        "BSI by Bias Type and Agent  [with Literature Benchmarks]\n"
+        "[Pending: CLI Agent Evaluation Required]",
+        fontsize=FONT_SIZES["title"], fontweight="bold",
+    )
     ax.tick_params(axis="y", labelsize=FONT_SIZES["tick"])
 
-    legend_patches = [mpatches.Patch(color=COLORS["cli-placeholder"], alpha=0.7, label=a)
-                      for a in agents_pending]
-    ax.legend(handles=legend_patches, title="Agent", bbox_to_anchor=(1.01, 1),
-              loc="upper left", fontsize=FONT_SIZES["tick"])
+    # ── Legend: agents + literature markers ──────────────────────────────
+    agent_patches = [
+        mpatches.Patch(color=COLORS["cli-placeholder"], alpha=0.7, label=a)
+        for a in agents_pending
+    ]
+    human_band_patch = mpatches.Patch(
+        color=HUMAN_BAND_COLOR, alpha=0.3, label="Human range (literature)"
+    )
+    human_mean_line = plt.Line2D(
+        [0], [0], color=HUMAN_BAND_COLOR, linewidth=1.8, label="Human mean (literature)"
+    )
+    llm_ref_line = plt.Line2D(
+        [0], [0], color=LLM_REF_COLOR, linewidth=1.4, linestyle="--",
+        label="Prior LLM (literature)",
+    )
+    ax.legend(
+        handles=agent_patches + [human_band_patch, human_mean_line, llm_ref_line],
+        title="Agent / Reference",
+        bbox_to_anchor=(1.01, 1),
+        loc="upper left",
+        fontsize=FONT_SIZES["tick"],
+    )
 
-    # Pending watermark
-    ax.text(1.5, 0.5, "PENDING\nEVALUATION",
-            fontsize=32, color="#cccccc", ha="center", va="center",
+    # ── Pending watermark ─────────────────────────────────────────────────
+    ax.text(2.0, 0.5, "PENDING\nEVALUATION",
+            fontsize=30, color="#cccccc", ha="center", va="center",
             fontweight="bold", rotation=20, alpha=0.5, zorder=10,
             transform=ax.transData)
 
-    fig.text(0.5, 0.01,
-             "BSI = 0 for all entries (no CLI agent evaluation data).\n"
-             "Run: python -m buyerbench run --agent claude-code  to populate.",
-             ha="center", fontsize=FONT_SIZES["note"], color="grey", style="italic")
+    fig.text(
+        0.5, 0.01,
+        "Green band = human literature BSI range (Tversky & Kahneman 1974–1981; Arkes & Blumer 1985; et al.). "
+        "Orange dashed = prior LLM BSI (Binz & Schulz 2023; Hagendorff et al. 2023).",
+        ha="center", fontsize=FONT_SIZES["note"], color="grey", style="italic",
+    )
 
-    plt.tight_layout(rect=[0, 0.06, 0.85, 1])
+    plt.tight_layout(rect=[0, 0.06, 0.82, 1])
     out = OUTPUT_DIR / "fig2-bsi-by-bias-type.png"
     plt.savefig(out, dpi=DPI, bbox_inches="tight")
     plt.close()

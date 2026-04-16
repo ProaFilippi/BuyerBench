@@ -337,6 +337,12 @@ class StatsPipelineReport(BaseModel):
     bh_family_size: int = 0
     """Number of hypotheses in the primary BH-FDR family."""
 
+    literature_calibration: list | None = None
+    """UPGRADE-16: BuyerBench BSI calibrated against human and prior-LLM
+    literature benchmarks.  Each entry is a
+    :class:`results.literature_benchmarks.BenchmarkCalibrationResult`.
+    ``None`` when no Pillar 2 cells are present."""
+
     warnings: list[str] = Field(default_factory=list)
 
 
@@ -1002,6 +1008,23 @@ def run_stats_pipeline(
             "Pass evaluation_results=list[EvaluationResult] to enable."
         )
 
+    # ── Literature benchmark calibration (UPGRADE-16) ─────────────────────
+    from results.literature_benchmarks import compute_benchmark_calibration
+
+    p2_cells = _p2_cells_for_ols(cells)
+    experiment_bsi: dict[str, float] | None = None
+    if p2_cells:
+        bsi_by_bias: dict[str, list[float]] = {}
+        for c in p2_cells:
+            if c.bias_category:
+                bsi_by_bias.setdefault(c.bias_category, []).append(c.mean_bsi)
+        if bsi_by_bias:
+            experiment_bsi = {
+                bias: sum(vals) / len(vals)
+                for bias, vals in bsi_by_bias.items()
+            }
+    lit_calibration = compute_benchmark_calibration(experiment_bsi)
+
     agents = {c.agent_id for c in cells}
     return StatsPipelineReport(
         n_cells=len(cells),
@@ -1014,6 +1037,7 @@ def run_stats_pipeline(
         session_order_ols=session_order,
         h2_capability=h2,
         bh_family_size=len(te_tests),
+        literature_calibration=lit_calibration,
         warnings=warnings,
     )
 
