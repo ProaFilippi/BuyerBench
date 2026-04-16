@@ -51,6 +51,34 @@ Claims MUST NOT be stated as:
 
 Future work: extending these scenarios to contract negotiation and capital
 allocation domains would test whether procurement-observed effects generalize.
+
+PROMPT SENSITIVITY
+------------------
+A genuine threat to validity: BSI values may be a property of the *specific
+prompt wording* chosen by researchers rather than a stable model property.
+Slight rephrasing (e.g., "Please select the best supplier" vs. "Which supplier
+would you recommend?") can shift BSI by >0.1, making results non-replicable.
+
+This threat cannot be eliminated by design — it must be measured and reported.
+
+Mandatory robustness check (REV-5 from the red-team plan): before the main
+experiment, run a 5-run pilot at 3 prompt phrasings per scenario.  Compute
+the coefficient of variation (CV = population_std / mean) of mean-BSI across
+phrasings.  If CV > 0.50, the scenario wording is unstable and must be
+redesigned before data collection proceeds.  This is an explicit go/no-go gate.
+
+The ``compute_prompt_sensitivity`` function in this module implements the check.
+All CV values — whether robust or not — must be reported in the paper's
+Appendix D (robustness checks).  Do not selectively report only passing checks.
+
+Interpretation of CV:
+  * CV ≤ 0.20 — low sensitivity; wording has negligible effect
+  * 0.20 < CV ≤ 0.50 — moderate; report but may proceed
+  * CV > 0.50 — high sensitivity; result is wording-dependent → redesign
+
+Edge case: if mean BSI across all phrasings is 0.0 (model always chooses
+optimally regardless of prompt wording), CV is defined as 0.0 — this is
+actually the most robust finding possible.
 """
 from __future__ import annotations
 
@@ -311,6 +339,81 @@ def aggregate_bias_report(pair_results: list[dict]) -> dict:
         "mean_bsi": sum(all_bsi) / len(all_bsi),
         "per_variant_type": per_type_summary,
         "domain_scope": "LLM-based procurement decision-making",
+    }
+
+
+def compute_prompt_sensitivity(
+    bsi_by_phrasing: dict[str, list[float]],
+    cv_threshold: float = 0.50,
+) -> dict:
+    """Compute a prompt-sensitivity report across multiple prompt phrasings.
+
+    Takes BSI values from pilot runs for each of 2+ prompt phrasings of the
+    *same* scenario.  Computes the coefficient of variation (CV = population
+    std / mean) across per-phrasing mean BSI values to test whether the
+    measured bias is a stable model property or an artifact of the specific
+    wording.
+
+    Per REV-5: if CV > cv_threshold (default 0.50), the scenario is wording-
+    sensitive and must be redesigned before any main experiment data is
+    collected.  If mean BSI is 0.0 across all phrasings, CV is set to 0.0
+    (the model is robustly optimal regardless of wording — the strongest
+    possible robustness finding).
+
+    Args:
+        bsi_by_phrasing: dict mapping phrasing label → list of BSI floats
+            from pilot runs (e.g. ``{"phrasing_a": [0.2, 0.0, 0.4], ...}``).
+            At least 2 phrasings required; each list should contain ≥2 runs.
+        cv_threshold: coefficient of variation above which the result is
+            considered wording-sensitive.  Per REV-5, the go/no-go gate is
+            0.50.
+
+    Returns:
+        dict with fields:
+            phrasings: int — number of prompt phrasings evaluated.
+            per_phrasing_mean_bsi: dict — mean BSI per phrasing label.
+            mean_of_means: float — grand mean of per-phrasing mean BSI values.
+            std_of_means: float — population std-dev across phrasing means.
+            cv: float — coefficient of variation; 0.0 when mean_of_means == 0.
+            cv_threshold: float — the threshold value used for the go/no-go.
+            robust: bool — True when CV ≤ cv_threshold (safe to proceed).
+            recommendation: str — ``"PROCEED"`` or ``"REDESIGN"``.
+
+    Raises:
+        ValueError: if fewer than 2 phrasings are provided.
+    """
+    if len(bsi_by_phrasing) < 2:
+        raise ValueError(
+            "compute_prompt_sensitivity requires at least 2 prompt phrasings; "
+            f"got {len(bsi_by_phrasing)}."
+        )
+
+    per_phrasing_mean: dict[str, float] = {
+        label: (sum(vals) / len(vals)) if vals else 0.0
+        for label, vals in bsi_by_phrasing.items()
+    }
+
+    means = list(per_phrasing_mean.values())
+    mean_of_means = sum(means) / len(means)
+
+    # Population std-dev (we're characterising these specific phrasings, not a sample)
+    variance = sum((m - mean_of_means) ** 2 for m in means) / len(means)
+    std_of_means = variance ** 0.5
+
+    # CV is undefined when the mean is zero; treat as 0.0 — perfect robustness
+    cv = std_of_means / mean_of_means if mean_of_means > 0.0 else 0.0
+
+    robust = cv <= cv_threshold
+
+    return {
+        "phrasings": len(bsi_by_phrasing),
+        "per_phrasing_mean_bsi": per_phrasing_mean,
+        "mean_of_means": mean_of_means,
+        "std_of_means": std_of_means,
+        "cv": cv,
+        "cv_threshold": cv_threshold,
+        "robust": robust,
+        "recommendation": "PROCEED" if robust else "REDESIGN",
     }
 
 

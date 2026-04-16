@@ -14,6 +14,7 @@ from buyerbench.models import (
 from evaluators.pillar2 import (
     aggregate_bias_report,
     compute_bias_susceptibility,
+    compute_prompt_sensitivity,
     compute_warp_transitivity,
     score_pillar2,
 )
@@ -310,6 +311,117 @@ class TestSunkCostBias:
         assert bsi["variant_type"] == "SUNK_COST"
         # BSI formula: int(True) * (1 - 1.0) = 0.0 when baseline was perfect
         assert bsi["bias_susceptibility_index"] == pytest.approx(0.0)
+
+
+class TestPromptSensitivity:
+    """Tests for compute_prompt_sensitivity (REV-5 robustness check)."""
+
+    def test_identical_phrasings_cv_zero_robust(self):
+        """Identical mean BSI across all phrasings → CV = 0 → robust."""
+        bsi_by_phrasing = {
+            "phrasing_a": [0.4, 0.4, 0.4],
+            "phrasing_b": [0.4, 0.4, 0.4],
+            "phrasing_c": [0.4, 0.4, 0.4],
+        }
+        result = compute_prompt_sensitivity(bsi_by_phrasing)
+        assert result["cv"] == pytest.approx(0.0)
+        assert result["robust"] is True
+        assert result["recommendation"] == "PROCEED"
+
+    def test_high_variation_flags_redesign(self):
+        """Phrasings with wildly different means → CV > 0.50 → REDESIGN."""
+        bsi_by_phrasing = {
+            "phrasing_a": [0.0, 0.0],   # mean = 0.0
+            "phrasing_b": [1.0, 1.0],   # mean = 1.0
+        }
+        result = compute_prompt_sensitivity(bsi_by_phrasing)
+        assert result["cv"] > 0.50
+        assert result["robust"] is False
+        assert result["recommendation"] == "REDESIGN"
+
+    def test_zero_bsi_all_phrasings_cv_zero(self):
+        """Mean BSI = 0 across all phrasings → CV defined as 0.0 (most robust finding)."""
+        bsi_by_phrasing = {
+            "phrasing_a": [0.0, 0.0, 0.0],
+            "phrasing_b": [0.0, 0.0, 0.0],
+        }
+        result = compute_prompt_sensitivity(bsi_by_phrasing)
+        assert result["cv"] == pytest.approx(0.0)
+        assert result["mean_of_means"] == pytest.approx(0.0)
+        assert result["robust"] is True
+
+    def test_moderate_variation_below_threshold_proceeds(self):
+        """Moderate spread (CV < 0.50) should pass the go/no-go gate."""
+        # means: 0.30, 0.36, 0.34 → mean_of_means ≈ 0.333, std ≈ 0.025, CV ≈ 0.075
+        bsi_by_phrasing = {
+            "phrasing_a": [0.30, 0.30],
+            "phrasing_b": [0.36, 0.36],
+            "phrasing_c": [0.34, 0.34],
+        }
+        result = compute_prompt_sensitivity(bsi_by_phrasing)
+        assert result["cv"] < 0.50
+        assert result["robust"] is True
+        assert result["recommendation"] == "PROCEED"
+
+    def test_custom_threshold_respected(self):
+        """A tighter cv_threshold=0.20 should flag moderate variation."""
+        bsi_by_phrasing = {
+            "phrasing_a": [0.20, 0.20],
+            "phrasing_b": [0.40, 0.40],
+        }
+        result = compute_prompt_sensitivity(bsi_by_phrasing, cv_threshold=0.20)
+        assert result["cv_threshold"] == pytest.approx(0.20)
+        # means differ by 0.20 from grand mean 0.30 → CV = 0.0667 / 0.30 ≈ 0.667 > 0.20
+        assert result["robust"] is False
+
+    def test_requires_at_least_two_phrasings(self):
+        """Single phrasing should raise ValueError."""
+        with pytest.raises(ValueError, match="at least 2"):
+            compute_prompt_sensitivity({"phrasing_a": [0.2, 0.4]})
+
+    def test_return_dict_has_all_required_fields(self):
+        """Return value contains the documented schema."""
+        bsi_by_phrasing = {
+            "phrasing_a": [0.3, 0.1],
+            "phrasing_b": [0.5, 0.3],
+        }
+        result = compute_prompt_sensitivity(bsi_by_phrasing)
+        for key in (
+            "phrasings", "per_phrasing_mean_bsi", "mean_of_means",
+            "std_of_means", "cv", "cv_threshold", "robust", "recommendation",
+        ):
+            assert key in result, f"Missing field: {key}"
+
+    def test_per_phrasing_means_computed_correctly(self):
+        """per_phrasing_mean_bsi should be the arithmetic mean of each phrasing's runs."""
+        bsi_by_phrasing = {
+            "phrasing_a": [0.2, 0.4, 0.6],  # mean = 0.4
+            "phrasing_b": [0.1, 0.3],         # mean = 0.2
+        }
+        result = compute_prompt_sensitivity(bsi_by_phrasing)
+        assert result["per_phrasing_mean_bsi"]["phrasing_a"] == pytest.approx(0.4)
+        assert result["per_phrasing_mean_bsi"]["phrasing_b"] == pytest.approx(0.2)
+
+    def test_phrasings_count_matches_input(self):
+        """phrasings field equals the number of keys in bsi_by_phrasing."""
+        bsi_by_phrasing = {
+            "p1": [0.3], "p2": [0.4], "p3": [0.5],
+        }
+        result = compute_prompt_sensitivity(bsi_by_phrasing)
+        assert result["phrasings"] == 3
+
+    def test_cv_exactly_at_threshold_is_robust(self):
+        """CV exactly equal to threshold should be treated as robust (≤ not <)."""
+        # Construct phrasings where CV == 0.50 exactly.
+        # means: 0.25, 0.75 → grand mean = 0.50, pop_std = 0.25, CV = 0.50
+        bsi_by_phrasing = {
+            "phrasing_a": [0.25, 0.25],
+            "phrasing_b": [0.75, 0.75],
+        }
+        result = compute_prompt_sensitivity(bsi_by_phrasing, cv_threshold=0.50)
+        assert result["cv"] == pytest.approx(0.50)
+        assert result["robust"] is True
+        assert result["recommendation"] == "PROCEED"
 
 
 class TestAggregateBiasReport:
