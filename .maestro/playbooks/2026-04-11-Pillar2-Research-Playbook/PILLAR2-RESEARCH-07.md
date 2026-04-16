@@ -57,10 +57,11 @@
 
 ### M.3 AI Evaluation Weaknesses
 
-- [ ] **CRITIQUE 8 — Stochastic parroting:**
+- [x] **CRITIQUE 8 — Stochastic parroting:**
   > "LLMs trained on human text will reproduce human survey response patterns. Your 'biases' might just be training data memorization of human experiment results, not genuine cognitive patterns."
   - **Severity:** Medium
   - **Response:** Our scenarios use novel procurement contexts with specific numerical values unlikely to appear in training data. However, this cannot be fully ruled out. Frame as: "We cannot exclude training data effects; our results characterize behavioral patterns in deployment conditions regardless of mechanism." For flagship: include novel scenarios generated after models' knowledge cutoffs.
+  - **Implementation:** Added `STOCHASTIC PARROTING / TRAINING DATA CONFOUND` section to `evaluators/pillar2.py` module docstring documenting: (1) the threat framing (LLMs reproduce training text patterns, not genuine decision-theoretic failures), (2) the "stochastic parroting" label and its distinction from genuine preference inconsistency, (3) the required claim framing ("behavioral patterns in deployment conditions regardless of mechanism"), (4) weak mitigation via novel post-cutoff scenarios for the flagship study, and (5) MUST / MUST NOT phrasing examples. Added `training_data_confound` field to both return paths of `aggregate_bias_report` — a machine-readable anchor so every downstream JSON/CSV export carries the training-data limitation alongside BSI values. Updated `aggregate_bias_report` docstring to document the new field. Added 9 tests in `TestAggregateBiasReportStochasticParroting` covering: field presence in empty/non-empty reports, value is a non-empty string, mentions "training", mentions "deployment", mentions "mechanism", consistent across empty/non-empty inputs, constant across n_runs_per_cell values, and schema completeness across all eight limitation fields. All 108 pillar2 tests pass (2026-04-16).
 
 - [ ] **CRITIQUE 9 — Prompt injection via anchors:**
   > "When you put 'previous emergency procurement was $91/unit' in the prompt, you're not testing anchoring — you're testing whether the model can correctly ignore irrelevant information when explicitly told to. That's an instruction-following test, not a bias test."

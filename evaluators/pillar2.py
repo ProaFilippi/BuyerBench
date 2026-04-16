@@ -228,6 +228,54 @@ The ``multiple_comparisons`` field in ``aggregate_bias_report`` is a
 machine-readable anchor for this limitation so that all downstream JSON/CSV
 consumers carry a reminder that BH correction and pre-registration are
 required before any inferential p-value is reported.
+
+STOCHASTIC PARROTING / TRAINING DATA CONFOUND
+----------------------------------------------
+LLMs are pre-trained on vast corpora of human text, including published
+behavioral economics papers, psychology textbooks, and popular accounts of
+cognitive biases (anchoring, framing, decoy, etc.).  A plausible alternative
+explanation for any observed bias in our scenarios: the model is not exhibiting
+a genuine decision-theoretic failure, but is instead reproducing statistical
+patterns from training documents that describe *human* behavioral biases in
+similar contexts.
+
+This threat is sometimes called "stochastic parroting" — the model outputs
+what commonly follows in training text, not what would follow from independent
+evaluation of the choice set.  It is distinct from genuine preference
+inconsistency.
+
+This confound cannot be fully excluded within the current experimental design.
+The appropriate response is transparent framing:
+
+  "We cannot exclude training data effects.  Our results characterize
+   behavioral *patterns in deployment conditions* regardless of underlying
+   mechanism — whether driven by learned text patterns or genuine
+   decision-theoretic failures.  The practical implication (the agent
+   makes systematically different choices under framing manipulations) is
+   the same in either case."
+
+This framing remains empirically honest: practitioners deploying LLM buyer
+agents care about decision consistency in production regardless of mechanism.
+
+Additional mitigation for the flagship study: include at least 2 novel
+scenarios whose numerical values and supplier names were generated *after*
+the knowledge cutoffs of all evaluated models.  Novel-context results that
+match standard-context BSI provide weak evidence against pure memorization,
+though they cannot fully resolve the confound.
+
+Claims from this evaluator MUST be stated as:
+  "Behavioral patterns under [bias type] presentation manipulations,
+   observed in deployment conditions; training data confound unexcluded."
+
+Claims MUST NOT be stated as:
+  "LLMs exhibit [bias] as a cognitive failure independent of training data"
+  — that would require experiments specifically designed to rule out
+  memorization (e.g., entirely novel domains generated post-cutoff).
+
+The ``training_data_confound`` field in ``aggregate_bias_report`` is a
+machine-readable anchor for this limitation so that all downstream JSON/CSV
+consumers carry a reminder that training-data effects cannot be excluded
+from any observed BSI pattern.
 """
 from __future__ import annotations
 
@@ -482,6 +530,13 @@ def aggregate_bias_report(
     5 bias types × 2 variants) require BH correction and pre-registration
     before any inferential p-value can be reported.
 
+    The ``training_data_confound`` field is a machine-readable anchor for the
+    stochastic-parroting limitation (CRITIQUE 8): LLMs trained on behavioral
+    economics literature may reproduce bias patterns through text pattern
+    matching rather than genuine decision-theoretic failure.  This confound
+    cannot be fully excluded; results must be framed as behavioral patterns
+    observed in deployment conditions, regardless of underlying mechanism.
+
     Args:
         pair_results: list of dicts from ``compute_bias_susceptibility``.
         n_runs_per_cell: number of independent runs per (model × scenario)
@@ -502,6 +557,10 @@ def aggregate_bias_report(
         "pre-registration + BH correction required before any p-value claim; "
         "100 cells (10 models × 5 bias types × 2 variants) → ~5 false positives at α=0.05"
     )
+    _TRAINING_DATA_CONFOUND = (
+        "training data confound unexcluded: results characterize behavioral patterns "
+        "in deployment conditions regardless of mechanism (stochastic parroting threat)"
+    )
 
     exploratory_only = n_runs_per_cell is None or n_runs_per_cell <= 1
 
@@ -518,6 +577,7 @@ def aggregate_bias_report(
             "sample_size_warning": _SAMPLE_SIZE_WARNING,
             "cross_model_analysis": _CROSS_MODEL_ANALYSIS,
             "multiple_comparisons": _MULTIPLE_COMPARISONS,
+            "training_data_confound": _TRAINING_DATA_CONFOUND,
         }
 
     by_type: dict[str, list[float]] = {}
@@ -551,6 +611,7 @@ def aggregate_bias_report(
         "sample_size_warning": _SAMPLE_SIZE_WARNING,
         "cross_model_analysis": _CROSS_MODEL_ANALYSIS,
         "multiple_comparisons": _MULTIPLE_COMPARISONS,
+        "training_data_confound": _TRAINING_DATA_CONFOUND,
     }
 
 

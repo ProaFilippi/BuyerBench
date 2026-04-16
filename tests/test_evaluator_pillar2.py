@@ -743,6 +743,83 @@ class TestAggregateBiasReportMultipleComparisons:
             assert field in report, f"Missing field: {field}"
 
 
+class TestAggregateBiasReportStochasticParroting:
+    """Tests for the training_data_confound field (CRITIQUE 8 — stochastic parroting).
+
+    LLMs trained on behavioral economics literature may reproduce bias patterns
+    from training text rather than exhibiting genuine decision-theoretic failure.
+    The ``training_data_confound`` field is a machine-readable anchor carrying
+    the limitation that training-data effects cannot be excluded from any observed
+    BSI pattern, and that results must be framed as deployment-condition observations
+    regardless of mechanism.
+    """
+
+    def test_empty_report_contains_training_data_confound(self):
+        """training_data_confound field is present even with no pair results."""
+        report = aggregate_bias_report([])
+        assert "training_data_confound" in report
+
+    def test_nonempty_report_contains_training_data_confound(self):
+        """training_data_confound field is present when BSI data is provided."""
+        pair_results = [
+            {"decision_changed": True, "bias_susceptibility_index": 0.5, "variant_type": "ANCHOR_HIGH"},
+        ]
+        report = aggregate_bias_report(pair_results)
+        assert "training_data_confound" in report
+
+    def test_training_data_confound_is_string(self):
+        """training_data_confound value must be a non-empty string."""
+        report = aggregate_bias_report([])
+        assert isinstance(report["training_data_confound"], str)
+        assert len(report["training_data_confound"]) > 0
+
+    def test_training_data_confound_mentions_training_data(self):
+        """Value must explicitly reference training data as the source of the threat."""
+        report = aggregate_bias_report([])
+        value = report["training_data_confound"].lower()
+        assert "training" in value
+
+    def test_training_data_confound_mentions_deployment(self):
+        """Value must reference deployment conditions as the framing for results."""
+        report = aggregate_bias_report([])
+        value = report["training_data_confound"].lower()
+        assert "deployment" in value
+
+    def test_training_data_confound_mentions_mechanism(self):
+        """Value must note that the confound is independent of the underlying mechanism."""
+        report = aggregate_bias_report([])
+        value = report["training_data_confound"].lower()
+        assert "mechanism" in value
+
+    def test_training_data_confound_consistent_across_empty_and_nonempty(self):
+        """The field value must be identical regardless of input size."""
+        empty_report = aggregate_bias_report([])
+        nonempty_report = aggregate_bias_report([
+            {"decision_changed": False, "bias_susceptibility_index": 0.0, "variant_type": "FRAMING"},
+        ])
+        assert empty_report["training_data_confound"] == nonempty_report["training_data_confound"]
+
+    def test_training_data_confound_constant_across_n_runs(self):
+        """The field value does not depend on n_runs_per_cell."""
+        r1 = aggregate_bias_report([], n_runs_per_cell=1)
+        r50 = aggregate_bias_report([], n_runs_per_cell=50)
+        assert r1["training_data_confound"] == r50["training_data_confound"]
+
+    def test_schema_completeness_all_eight_limitation_fields(self):
+        """Report schema includes all eight limitation fields after CRITIQUE 8."""
+        report = aggregate_bias_report([])
+        for field in (
+            "domain_scope",
+            "incentive_framing",
+            "exploratory_only",
+            "sample_size_warning",
+            "cross_model_analysis",
+            "multiple_comparisons",
+            "training_data_confound",
+        ):
+            assert field in report, f"Missing field: {field}"
+
+
 class TestDefaultStatusQuoBias:
     """Tests for p2-06 default/status-quo bias scenario pair.
 
