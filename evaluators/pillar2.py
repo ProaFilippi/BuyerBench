@@ -142,6 +142,44 @@ The ``exploratory_only`` field in ``aggregate_bias_report`` is True whenever
 downstream consumers can check before treating BSI values as inference-valid.
 The ``sample_size_warning`` field carries the limitation text for JSON/CSV
 consumers that log metadata alongside results.
+
+CROSS-MODEL REGRESSION SCOPE
+-----------------------------
+The BuyerBench benchmark evaluates N=10 models.  N=10 is a critical
+statistical threshold: OLS regression at N=10 units (models) provides no
+meaningful inferential value.  Standard errors span the full coefficient
+magnitude, confidence intervals are enormous, and reported p-values are
+unreliable.  Any cross-model OLS regression (e.g., "models with higher
+Pillar 1 scores show lower mean BSI") is a *description of the 10 observed
+models*, not a statistical estimate of a population effect.
+
+This has direct implications for how results must be labeled:
+
+  * Cross-model analyses (H2, capability gradient scatter, inter-model
+    comparisons) are DESCRIPTIVE PATTERNS ONLY.  Do not report p-values,
+    regression coefficients, or confidence intervals for cross-model
+    comparisons.  Present as scatter plots or tables with no inferential
+    claim.
+
+  * Within-model analyses (H1, H3, H5, H7) are the primary inferential
+    engines.  These use N=50+ runs per (model × scenario) cell, which is
+    sufficient for mixed-effects models and BH-corrected hypothesis tests.
+
+  * The key distinction: across models is N=10 (descriptive), within a
+    single model across runs is N=50+ (inferential).
+
+Claims from cross-model comparisons MUST be stated as:
+  "Descriptive pattern across 10 evaluated models (N=10 units; no
+   inferential claim)."
+
+Claims MUST NOT be stated as:
+  "Higher Pillar 1 capability is associated with lower bias susceptibility
+   (β = ..., p < 0.05)" — that framing requires far larger N at the model
+   level and is not supported by this study design.
+
+The ``cross_model_analysis`` field in ``aggregate_bias_report`` is a
+machine-readable anchor for this limitation so that all downstream JSON/CSV
+consumers carry the scope label alongside BSI values.
 """
 from __future__ import annotations
 
@@ -384,6 +422,13 @@ def aggregate_bias_report(
     The ``sample_size_warning`` field carries the same limitation as a
     human-readable string for JSON/CSV logging alongside BSI values.
 
+    The ``cross_model_analysis`` field is a machine-readable anchor for the
+    N=10-models limitation (CRITIQUE 6): any comparison *across* models is
+    a descriptive pattern over 10 observed units, not a statistical inference.
+    Cross-model regression (OLS or otherwise) is not valid at N=10 and must
+    never be labeled as inferential.  Within-model analyses (N=50+ runs per
+    cell) remain inferential.
+
     Args:
         pair_results: list of dicts from ``compute_bias_susceptibility``.
         n_runs_per_cell: number of independent runs per (model × scenario)
@@ -396,6 +441,9 @@ def aggregate_bias_report(
     _SAMPLE_SIZE_WARNING = (
         "N=1 per cell: single-realization data; exploratory only — "
         "N≥50 required for inference (N≥5 for pilot gates)"
+    )
+    _CROSS_MODEL_ANALYSIS = (
+        "descriptive only (N=10 models); no cross-model regression inference valid"
     )
 
     exploratory_only = n_runs_per_cell is None or n_runs_per_cell <= 1
@@ -411,6 +459,7 @@ def aggregate_bias_report(
             "n_runs_per_cell": n_runs_per_cell,
             "exploratory_only": exploratory_only,
             "sample_size_warning": _SAMPLE_SIZE_WARNING,
+            "cross_model_analysis": _CROSS_MODEL_ANALYSIS,
         }
 
     by_type: dict[str, list[float]] = {}
@@ -442,6 +491,7 @@ def aggregate_bias_report(
         "n_runs_per_cell": n_runs_per_cell,
         "exploratory_only": exploratory_only,
         "sample_size_warning": _SAMPLE_SIZE_WARNING,
+        "cross_model_analysis": _CROSS_MODEL_ANALYSIS,
     }
 
 

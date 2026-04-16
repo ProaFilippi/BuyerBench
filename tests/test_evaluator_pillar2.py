@@ -593,6 +593,80 @@ class TestAggregateBiasReportSampleSizeLimitation:
         assert empty["sample_size_warning"] == nonempty["sample_size_warning"]
 
 
+class TestAggregateBiasReportCrossModelRegressionScope:
+    """Tests for the cross_model_analysis field (CRITIQUE 6 — N=10 for regression).
+
+    With only N=10 models, any cross-model OLS regression has no inferential
+    value.  The ``cross_model_analysis`` field is a machine-readable anchor
+    so that all downstream JSON/CSV consumers carry the scope label and cannot
+    accidentally treat cross-model scatter patterns as inferential results.
+    Within-model analyses (H1, H3, H5, H7 at N=50+ per cell) remain the
+    primary inferential engines.
+    """
+
+    def test_empty_report_contains_cross_model_analysis(self):
+        """cross_model_analysis field is present even with no pair results."""
+        report = aggregate_bias_report([])
+        assert "cross_model_analysis" in report
+
+    def test_nonempty_report_contains_cross_model_analysis(self):
+        """cross_model_analysis field is present when BSI data is provided."""
+        pair_results = [
+            {"decision_changed": True, "bias_susceptibility_index": 0.5, "variant_type": "ANCHOR_HIGH"},
+        ]
+        report = aggregate_bias_report(pair_results)
+        assert "cross_model_analysis" in report
+
+    def test_cross_model_analysis_is_string(self):
+        """cross_model_analysis value must be a non-empty string."""
+        report = aggregate_bias_report([])
+        assert isinstance(report["cross_model_analysis"], str)
+        assert len(report["cross_model_analysis"]) > 0
+
+    def test_cross_model_analysis_mentions_descriptive(self):
+        """Value must explicitly label cross-model analysis as descriptive."""
+        report = aggregate_bias_report([])
+        assert "descriptive" in report["cross_model_analysis"].lower()
+
+    def test_cross_model_analysis_mentions_no_inference(self):
+        """Value must explicitly state that inference is not valid."""
+        report = aggregate_bias_report([])
+        value = report["cross_model_analysis"].lower()
+        # Must contain either "no" or "not" adjacent to inferential language
+        assert "no" in value or "not" in value
+
+    def test_cross_model_analysis_consistent_across_empty_and_nonempty(self):
+        """The field value must be identical regardless of input size."""
+        empty_report = aggregate_bias_report([])
+        nonempty_report = aggregate_bias_report([
+            {"decision_changed": False, "bias_susceptibility_index": 0.0, "variant_type": "DECOY"},
+        ])
+        assert empty_report["cross_model_analysis"] == nonempty_report["cross_model_analysis"]
+
+    def test_cross_model_analysis_constant_across_n_runs(self):
+        """The field value does not depend on n_runs_per_cell."""
+        r1 = aggregate_bias_report([], n_runs_per_cell=1)
+        r50 = aggregate_bias_report([], n_runs_per_cell=50)
+        assert r1["cross_model_analysis"] == r50["cross_model_analysis"]
+
+    def test_cross_model_analysis_mentions_n10(self):
+        """Value must reference N=10 to make the limitation concrete."""
+        report = aggregate_bias_report([])
+        assert "10" in report["cross_model_analysis"]
+
+    def test_schema_completeness_with_cross_model_field(self):
+        """Report schema includes all six limitation fields together."""
+        report = aggregate_bias_report([])
+        for field in (
+            "domain_scope",
+            "incentive_framing",
+            "exploratory_only",
+            "sample_size_warning",
+            "cross_model_analysis",
+        ):
+            assert field in report, f"Missing field: {field}"
+
+
 class TestDefaultStatusQuoBias:
     """Tests for p2-06 default/status-quo bias scenario pair.
 
