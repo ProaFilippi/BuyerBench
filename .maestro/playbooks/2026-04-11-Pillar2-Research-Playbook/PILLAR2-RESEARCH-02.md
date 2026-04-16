@@ -211,10 +211,11 @@
 
 ### E.6 Design Comparison Matrix
 
-- [ ] Create formatted table comparing all 5 designs on:
+- [x] Create formatted table comparing all 5 designs on:
   - Identification strength (1–5)
   - Statistical power (1–5)
   - Engineering cost (1–5, lower=cheaper)
   - Time to execute
   - Publication tier enabled
   - Key risk
+  - ✅ *Completed 2026-04-16:* Full design comparison matrix written at `docs/paper/empirical-design/e6-design-comparison-matrix.md`. Scores and rationale provided for all 5 designs across all 6 dimensions. Dimension-by-dimension analysis tables expand each score with prose justification. **Recommended sequencing:** Phase 1 = E.1 Bias Battery (1–2 weeks, minimum viable); Phase 2 = E.4 WARP Battery (sections addition, 2–4 weeks); Phase 3 = E.3 Multi-Factor Factorial (flagship, 4–6 weeks); Parallel track = E.5 Human Arm IRB submission (submit now, 3–8 months). E.2 Economic Games classified as supplementary only due to incentive incompatibility and Aher (2023) prior-art saturation. Pre-registered design decision locked 2026-04-16 before any data collection. Risk Heatmap Summary table with star ratings provides executive overview.
