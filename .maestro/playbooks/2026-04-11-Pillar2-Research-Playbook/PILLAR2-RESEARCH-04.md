@@ -256,7 +256,36 @@
 
   **Recommended implementation order:** p2-06-default (no blockers) → p2-07-loss-aversion (add 1 enum value) → p2-08-warp (requires loader refactor; defer to Phase 1 completion sprint).
 
-- [ ] **Phase 2 (add prompt variants):** 3 prompt versions × existing 5 bias types × 10 models × 50 runs
+- [x] **Phase 2 (add prompt variants):** 3 prompt versions × existing 5 bias types × 10 models × 50 runs
+  ✅ **Verified (2026-04-16):** Engineering analysis of Phase 2 prompt-variant expansion against current codebase.
+
+  **The three prompt versions (from UPGRADE-7 spec):**
+  1. `standard` — current implementation. `_SYSTEM_PREAMBLE` in `harness/prompt.py:14-21` is the active preamble; `scenario_to_prompt()` (`harness/prompt.py:24-83`) appends task objective, context, constraints, and output format with no cognitive framing prefix.
+  2. `cot` (chain-of-thought) — UPGRADE-7 target prefix: *"Think step by step through each option before making your final decision."* Not yet implemented anywhere in the codebase.
+  3. `expert_role` — UPGRADE-7 target prefix: *"You are a senior procurement officer with 20 years of experience in industrial supply chain management."* Not yet implemented anywhere in the codebase.
+
+  **Run count calculation:**
+  The task formula "3 prompt versions × existing 5 bias types × 10 models × 50 runs" omits the 2 variants/bias dimension (BASELINE + TREATMENT). Corrected total: **3 × 5 × 2 × 10 × 50 = 15,000 runs** for the full Phase 2 prompt-variant sweep applied to all 5-bias-type cells. Since Phase 1 already covers the `standard` version (5,000 runs), the **net incremental runs are 10,000** (2 new prompt versions × 5 × 2 × 10 × 50). Running total after Phases 1 + 2: 15,000 runs. Budget impact: ~$30–$75 incremental at realistic prompt pricing (prompt tokens increase by ~10–15 tokens per CoT/expert prefix — negligible cost effect).
+
+  **Implementation gap analysis by component:**
+
+  | Component | Status | Gap / Path to Fix |
+  |---|---|---|
+  | `harness/prompt.py:scenario_to_prompt()` | **MISSING** | Single function with no `prompt_version` parameter. `_SYSTEM_PREAMBLE` is a module-level constant (`line 14`), not a per-version dispatch table. Needs a `prompt_version: str = "standard"` parameter and a dict of preamble templates. |
+  | `buyerbench/models.py:Scenario` | **MISSING** | No `prompt_version` field. The `Scenario` dataclass (`models.py:34-49`) defines the scenario contract; adding `prompt_version` here enables scenario-level prompt pinning for reproducibility. |
+  | `buyerbench/models.py:EvaluationResult` | **MISSING** | No `prompt_version` field (`models.py:69-77`). Without it, cell-level grouping by `(agent_id, scenario_id, variant, prompt_version)` is impossible from result records alone. Requires UPGRADE-4. |
+  | `results/schemas.py:EvaluationResultJSON` | **MISSING** | No `prompt_version` field (`schemas.py:18-27`). JSON/CSV exports cannot distinguish same-scenario runs under different prompt versions. Requires UPGRADE-4. |
+  | `agents/openrouter_agent.py:respond()` | **MISSING** | Calls `scenario_to_prompt(scenario)` with no version argument (`openrouter_agent.py:65`). Once `scenario_to_prompt()` is parameterized, the agent must pass the prompt version through. |
+  | `buyerbench/__main__.py:run()` | **MISSING** | No `--prompt-version` CLI option (`__main__.py:147-205`). The run command currently has no parameter for prompt variant selection. Requires UPGRADE-7 to add `--prompt-version standard|cot|expert_role`. |
+  | Cell aggregate grouping key | **MISSING** | The `cell_id` formula (`H.2 Cell Aggregate Record`) includes `prompt_version` as a dimension: `{agent_id}__{scenario_id}__{variant}__{prompt_version}__{temperature}`. This field cannot be constructed until `prompt_version` lands on `EvaluationResult`. Requires UPGRADE-4 + UPGRADE-5. |
+
+  **Dependency chain for Phase 2:**
+  - **UPGRADE-1** (multi-run support, `--n-runs N`) — hard prerequisite: N=50 per cell is required before any cell-level statistics are meaningful.
+  - **UPGRADE-7** (prompt variant support) — the specific Phase 2 enabler: parameterizes `scenario_to_prompt()`, adds CoT and expert-role templates, and adds `--prompt-version` CLI flag. Estimated effort: 2 days.
+  - **UPGRADE-4** (run metadata logging) — required to store `prompt_version` on `EvaluationResult` and `EvaluationResultJSON` so that Phase 2 runs are distinguishable in output data.
+  - **UPGRADE-5** (cell-level aggregate output) — required to produce `cell_aggregates.json` broken down by `(agent_id, scenario_id, variant, prompt_version)` for Phase 2 analysis.
+
+  **Research rationale for Phase 2:** Prompt framing is itself an independent variable in LLM behavioral research. The three versions test whether: (a) `standard` — neutral framing — already reveals bias patterns, (b) `cot` — explicit reasoning mandate — suppresses biases by forcing deliberate utility comparison, and (c) `expert_role` — identity priming — either amplifies or attenuates biases by shifting the model's in-context "role." If CoT and expert-role systematically reduce BSI across all bias types, this isolates prompt engineering as a bias-mitigation mechanism and motivates prompt design guidelines for production AI buyer agents.
 - [ ] **Phase 3 (temperature sweep):** 4 temperatures × 5 bias types × 10 models × 30 runs
 - [ ] **Phase 4 (human comparison):** 100 Prolific subjects × 8 scenarios (IRB required)
 
