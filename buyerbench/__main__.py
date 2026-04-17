@@ -228,6 +228,29 @@ def select(output: str, filter_tag: str | None, filter_provider: str | None) -> 
         "or 'expert_role' (senior-procurement-officer identity prefix)."
     ),
 )
+@click.option(
+    "--supplier-order-seed",
+    "supplier_order_seed",
+    default=None,
+    type=int,
+    help=(
+        "Base seed for supplier ordering across all runs. "
+        "Per-run seeds are derived via HMAC-SHA256(base_seed, scenario_id|variant|run_index), "
+        "making the full experiment reproducible from this single integer. "
+        "Omit to use a fresh random seed per run (default, recommended for production experiments)."
+    ),
+)
+@click.option(
+    "--supplier-order-static",
+    "supplier_order_static",
+    is_flag=True,
+    default=False,
+    help=(
+        "Present suppliers in their original YAML order — no randomisation. "
+        "Useful for debugging or comparing runs that must see identical supplier ordering. "
+        "Overrides --supplier-order-seed when both are supplied."
+    ),
+)
 def run(
     agent: str | None,
     from_selection: str | None,
@@ -243,6 +266,8 @@ def run(
     temperature: float | None,
     research_mode: bool,
     prompt_version: str,
+    supplier_order_seed: int | None,
+    supplier_order_static: bool,
 ) -> None:
     """Run the benchmark suite against a named CLI agent (or all agents)."""
     import json
@@ -455,8 +480,19 @@ def run(
 
         for s in all_scenarios:
             for run_idx in range(n_runs):
+                # Derive a per-run seed from the base seed when one is provided,
+                # so the full experiment is reproducible from a single integer while
+                # each (scenario, run_index) cell still receives a distinct seed.
+                from harness.runner import derive_seed as _derive_seed
+                per_run_seed: int | None = (
+                    _derive_seed(supplier_order_seed, s.id, s.variant, run_idx)
+                    if supplier_order_seed is not None and not supplier_order_static
+                    else None
+                )
                 result = run_scenario(
-                    s, agent_instance, output_dir=output_dir, run_index=run_idx
+                    s, agent_instance, output_dir=output_dir, run_index=run_idx,
+                    supplier_order_seed=per_run_seed,
+                    supplier_order_static=supplier_order_static,
                 )
                 all_results.append(result)
                 score = result.pillar_scores[0].score if result.pillar_scores else 0.0

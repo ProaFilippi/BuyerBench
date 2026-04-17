@@ -599,3 +599,170 @@ class TestResearchMode:
         _print_robustness_bsi_comparison(primary, robust, buf)
         output = buf.export_text()
         assert "COLLAPSE" in output.upper() or "collapse" in output.lower()
+
+
+# ---------------------------------------------------------------------------
+# UPGRADE-2: derive_seed() unit tests
+# ---------------------------------------------------------------------------
+
+class TestDeriveSeed:
+    """harness.runner.derive_seed() must be deterministic, distinct across cell
+    dimensions, and produce values in [0, 2**31)."""
+
+    def _ds(self, base=42, sid="p2-01", variant=None, run_index=0):
+        from harness.runner import derive_seed
+        return derive_seed(base, sid, variant, run_index)
+
+    def test_deterministic_same_inputs(self):
+        """Same inputs must always produce the same seed."""
+        assert self._ds() == self._ds()
+
+    def test_different_run_indices(self):
+        """run_index 0 and 1 must yield different seeds."""
+        assert self._ds(run_index=0) != self._ds(run_index=1)
+
+    def test_different_scenario_ids(self):
+        """Different scenario_ids must yield different seeds."""
+        assert self._ds(sid="p2-01") != self._ds(sid="p2-02")
+
+    def test_different_variants(self):
+        """BASELINE variant and FRAMING_GAIN must yield different seeds."""
+        assert self._ds(variant=None) != self._ds(variant="FRAMING_GAIN")
+
+    def test_different_base_seeds(self):
+        """Different base seeds must yield different derived seeds."""
+        assert self._ds(base=1) != self._ds(base=2)
+
+    def test_output_in_positive_int31_range(self):
+        """Result must be in [0, 2**31)."""
+        seed = self._ds()
+        assert 0 <= seed < 2**31
+
+    def test_none_variant_equivalent_to_empty_string_in_message(self):
+        """None variant is treated as empty string — calling twice with None is consistent."""
+        from harness.runner import derive_seed
+        assert derive_seed(99, "p2-03", None, 0) == derive_seed(99, "p2-03", None, 0)
+
+    def test_output_is_int(self):
+        """Return type must be int."""
+        assert isinstance(self._ds(), int)
+
+    def test_all_five_dimensions_are_independent(self):
+        """Changing any single input dimension changes the output seed."""
+        from harness.runner import derive_seed
+        base = derive_seed(10, "p2-01", "BASELINE", 0)
+        assert base != derive_seed(11, "p2-01", "BASELINE", 0)   # base seed change
+        assert base != derive_seed(10, "p2-02", "BASELINE", 0)   # scenario_id change
+        assert base != derive_seed(10, "p2-01", "FRAMING_GAIN", 0)  # variant change
+        assert base != derive_seed(10, "p2-01", "BASELINE", 1)   # run_index change
+
+
+# ---------------------------------------------------------------------------
+# UPGRADE-2: CLI flags --supplier-order-seed and --supplier-order-static
+# ---------------------------------------------------------------------------
+
+class TestUpgrade2CLIFlags:
+    """CLI must accept --supplier-order-seed and --supplier-order-static flags."""
+
+    def test_supplier_order_seed_flag_is_accepted(self, tmp_path):
+        """--supplier-order-seed must be accepted without error."""
+        runner = CliRunner()
+        result = runner.invoke(
+            cli,
+            ["run", "--agent", "mock-agent-v1", "--pillar", "1",
+             "--supplier-order-seed", "42", "--output-dir", str(tmp_path)],
+        )
+        assert result.exit_code == 0, f"CLI rejected --supplier-order-seed:\n{result.output}"
+
+    def test_supplier_order_static_flag_is_accepted(self, tmp_path):
+        """--supplier-order-static must be accepted without error."""
+        runner = CliRunner()
+        result = runner.invoke(
+            cli,
+            ["run", "--agent", "mock-agent-v1", "--pillar", "1",
+             "--supplier-order-static", "--output-dir", str(tmp_path)],
+        )
+        assert result.exit_code == 0, f"CLI rejected --supplier-order-static:\n{result.output}"
+
+    def test_base_seed_produces_reproducible_run_ids(self, tmp_path):
+        """Two runs with the same --supplier-order-seed must produce the same run_id for each scenario."""
+        from agents.mock import MockAgent
+        from harness.loader import load_all_scenarios
+        from harness.runner import run_scenario, derive_seed
+
+        scenarios_root = Path(__file__).parent.parent / "scenarios"
+        scenarios = [s for s in load_all_scenarios(str(scenarios_root)) if "p2" in s.id][:2]
+        agent = MockAgent()
+
+        def collect_run_ids(base_seed, out_dir):
+            ids = []
+            for s in scenarios:
+                ps = derive_seed(base_seed, s.id, s.variant, 0)
+                r = run_scenario(s, agent, output_dir=str(out_dir),
+                                 run_index=0, supplier_order_seed=ps)
+                ids.append(r.run_id)
+            return ids
+
+        ids_a = collect_run_ids(12345, tmp_path / "run_a")
+        ids_b = collect_run_ids(12345, tmp_path / "run_b")
+        assert ids_a == ids_b, "Same base seed must produce identical run_ids"
+
+    def test_different_base_seeds_produce_different_run_ids(self, tmp_path):
+        """Different --supplier-order-seed values must yield different run_ids."""
+        from agents.mock import MockAgent
+        from harness.loader import load_all_scenarios
+        from harness.runner import run_scenario, derive_seed
+
+        scenarios_root = Path(__file__).parent.parent / "scenarios"
+        scenario = [s for s in load_all_scenarios(str(scenarios_root)) if "p2" in s.id][0]
+        agent = MockAgent()
+
+        r1 = run_scenario(scenario, agent, output_dir=str(tmp_path / "a"),
+                          run_index=0, supplier_order_seed=derive_seed(100, scenario.id, scenario.variant, 0))
+        r2 = run_scenario(scenario, agent, output_dir=str(tmp_path / "b"),
+                          run_index=0, supplier_order_seed=derive_seed(200, scenario.id, scenario.variant, 0))
+        assert r1.run_id != r2.run_id, "Different base seeds must produce different run_ids"
+
+    def test_static_mode_stores_none_seed(self, tmp_path):
+        """--supplier-order-static: result.supplier_order_seed must be None."""
+        from agents.mock import MockAgent
+        from harness.loader import load_all_scenarios
+        from harness.runner import run_scenario
+
+        scenarios_root = Path(__file__).parent.parent / "scenarios"
+        scenario = load_all_scenarios(str(scenarios_root))[0]
+        agent = MockAgent()
+
+        result = run_scenario(scenario, agent, output_dir=str(tmp_path),
+                              supplier_order_static=True)
+        assert result.supplier_order_seed is None
+
+    def test_static_mode_run_id_contains_static_component(self, tmp_path):
+        """Static-mode run_id must differ from any seeded run_id for the same scenario."""
+        from agents.mock import MockAgent
+        from harness.loader import load_all_scenarios
+        from harness.runner import run_scenario
+
+        scenarios_root = Path(__file__).parent.parent / "scenarios"
+        scenario = load_all_scenarios(str(scenarios_root))[0]
+        agent = MockAgent()
+
+        static_result = run_scenario(scenario, agent, output_dir=str(tmp_path / "static"),
+                                     run_index=0, supplier_order_static=True)
+        seeded_result = run_scenario(scenario, agent, output_dir=str(tmp_path / "seeded"),
+                                     run_index=0, supplier_order_seed=42)
+        assert static_result.run_id != seeded_result.run_id
+
+    def test_static_overrides_seed_when_both_supplied(self, tmp_path):
+        """supplier_order_static=True must override supplier_order_seed; result seed must be None."""
+        from agents.mock import MockAgent
+        from harness.loader import load_all_scenarios
+        from harness.runner import run_scenario
+
+        scenarios_root = Path(__file__).parent.parent / "scenarios"
+        scenario = load_all_scenarios(str(scenarios_root))[0]
+        agent = MockAgent()
+
+        result = run_scenario(scenario, agent, output_dir=str(tmp_path),
+                              supplier_order_seed=99, supplier_order_static=True)
+        assert result.supplier_order_seed is None
