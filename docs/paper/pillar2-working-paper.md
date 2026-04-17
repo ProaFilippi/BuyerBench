@@ -39,7 +39,9 @@ related:
 
 Large language models are increasingly deployed as buyer agents that execute supplier selection and procurement decisions autonomously. Whether these agents make economically rational decisions — or whether they are susceptible to the same cognitive biases documented in human decision-makers — is an open empirical question with direct consequences for procurement outcomes. We present a pre-registered, multi-model benchmark study measuring behavioral bias susceptibility across five canonical bias types (anchoring, framing, decoy, scarcity, and sunk cost) in ten frontier LLMs operating on structured procurement selection tasks. Using the Bias Susceptibility Index (BSI) — the probability of a bias-induced decision change weighted by its economic cost — we evaluate each model across N=50 independent runs per (model × bias type × variant) cell (5,000 total runs), providing the first stochasticity-aware, within-model estimate of procurement decision bias in LLMs. We test four pre-registered confirmatory hypotheses (H1: bias universality; H3: decoy reliability; H5: framing asymmetry; H7: stochastic variance proportionality), applying Benjamini-Hochberg false discovery rate correction at q=0.05. *Optimality is defined relative to each scenario's stated evaluation weights; we test internal rationality, not external optimality.* Preliminary infrastructure validation with N=1 pilot data confirms the measurement pipeline is valid; full results will be reported at the pre-specified N=50.
 
-**[TIER-A PLACEHOLDER]** At N=50 per cell: `{{RESULT: X}}/10` models show BSI > 0.10 on at least one bias type (BH-corrected p < 0.05). The decoy effect produces the highest mean BSI (`{{RESULT: mean_BSI_decoy}}`), followed by `{{RESULT: second_highest_bias_type}}`. Within-cell variance is positively correlated with mean BSI across cells (H7: β₁ = `{{RESULT: H7_beta}}`, p = `{{RESULT: H7_p}}`), consistent with a boundary-response mechanism.
+**[TIER-A]** At N=50 per cell: `{{RESULT: X}}/10` models show BSI > 0.10 on at least one bias type (BH-corrected p < 0.05). The decoy effect produces BSI higher than the cross-bias mean (H3 Dunnett: d = `{{RESULT: h3_dunnett_d}}`, p = `{{RESULT: h3_dunnett_p}}`). Within-cell variance is positively correlated with mean BSI across cells (H7: β₁ = `{{RESULT: H7_beta}}`, p = `{{RESULT: H7_p}}`), consistent with the pre-specified boundary-response interpretive frame for H7 (mechanism not directly tested).
+
+**[TIER-B]** Descriptively, among the five bias types, the decoy effect shows the highest mean BSI (`{{RESULT: mean_BSI_decoy}}`), followed by `{{RESULT: second_highest_bias_type}}` (N=10 models; cross-bias ranking is descriptive, not pre-registered).
 
 ---
 
@@ -226,7 +228,7 @@ Weights: $w_{mbv} = n_{\text{valid}}$ per cell. Standard errors: clustered at th
 > - **[TIER-B]** Suggestive: descriptive patterns, N=10 models, no p-values, hedged language required
 > - **[TIER-C]** Speculative: future work only; must NOT appear in Results or Conclusions
 
-### 4.1 Sample Quality and Descriptive Statistics
+### 4.1 Sample Quality and Descriptive Statistics [TIER-A: execution gate | TIER-B: per-model descriptives]
 
 **Table 3. Experiment execution summary**
 
@@ -349,7 +351,7 @@ Weights: $w_{mbv} = n_{\text{valid}}$ per cell. Standard errors: clustered at th
 
 ### 4.7 Robustness Checks
 
-**Prompt sensitivity (REV-5):** `{{RESULT: prompt_cv_table}}` — Overall verdict: `{{RESULT: prompt_rev5_verdict}}`. Scenarios flagged for CV > 0.50: `{{RESULT: flagged_scenarios_list}}`.
+**Prompt sensitivity (REV-5):** [TIER-A: pre-specified gate — go/no-go criterion, not an interpretive claim] `{{RESULT: prompt_cv_table}}` — Overall verdict: `{{RESULT: prompt_rev5_verdict}}`. Scenarios flagged for CV > 0.50: `{{RESULT: flagged_scenarios_list}}`.
 
 **Temperature robustness (T=0.0):** At T=0.0, mean BSI across all cells: `{{RESULT: T0_mean_bsi}}` (vs. T=0.7: `{{RESULT: T07_mean_bsi}}`). [TIER-B] This `{{RESULT: T0_verdict_description}}` (is consistent with / contradicts) the primary T=0.7 findings. `{{RESULT: T0_qualification_if_needed}}`
 
@@ -364,6 +366,22 @@ Weights: $w_{mbv} = n_{\text{valid}}$ per cell. Standard errors: clustered at th
 | Sunk Cost | ≈ 0.85 [@arkes1985psychology] | `{{RESULT: sunk_bsi}}` | `{{RESULT: sunk_d}}` | `{{RESULT: sunk_human_comparison}}` |
 
 *Note: LLM Cohen's d is approximated from BSI estimates under the assumption that BSI ≈ P(bias-susceptible response). Direct comparison to human d requires a common scaling assumption; this comparison is illustrative and does not constitute a formal test. A human comparison arm (Phase 4, IRB pending) will enable a proper between-group Welch t-test.*
+
+### 4.8 Hard-Difficulty Ceiling Scenarios (p2-09 through p2-11) [TIER-B]
+
+> **Data requirement:** Results from hard-difficulty scenarios (p2-09 compound, p2-10 anchor-hard, p2-11 scarcity-hard) require the same N=50 pre-registered experiment. These scenarios were added per REV-4 (ceiling effect mitigation) and are reported separately from the primary confirmatory analysis. All values are `{{RESULT:...}}` placeholders.
+
+*These scenarios are not part of the pre-registered confirmatory battery (B.9); their results are exploratory.*
+
+| Scenario | Bias Type | n_suppliers | δ | Mean BSI (T=0.7, N=50) | 95% CI | Compared to Primary |
+|---|---|---|---|---|---|---|
+| p2-09 (compound) | Anchor + Scarcity | 6 | 0.031 | `{{RESULT: p209_bsi}}` | `{{RESULT: p209_ci}}` | `{{RESULT: p209_vs_primary}}` |
+| p2-10 (anchor-hard) | Anchoring | 7 | 0.039 | `{{RESULT: p210_bsi}}` | `{{RESULT: p210_ci}}` | `{{RESULT: p210_vs_primary}}` |
+| p2-11 (scarcity-hard) | Scarcity | 8 | 0.005 | `{{RESULT: p211_bsi}}` | `{{RESULT: p211_ci}}` | `{{RESULT: p211_vs_primary}}` |
+
+**Ceiling-effect verdict:** `{{RESULT: ceiling_gate_verdict}}` (Gate criterion: ≥7/10 models show mean BSI < 0.05 on all primary bias types → trigger hard-scenario pivot). `{{RESULT: ceiling_gate_description}}`
+
+*Ceiling-effect detection pipeline implemented in `research/analysis/ceiling_effect.py` (`detect_ceiling_effect()`, `gate1_decision()`). Analysis script: `research/scripts/03_analyze_ceiling_effect.py`.*
 
 ---
 
@@ -580,19 +598,6 @@ BuyerBench is open-source (MIT License). All scenario definitions, evaluation co
 
 ---
 
-## Appendix E — Registered Model Versions
-
-*To be completed at experiment execution time. Model versions are pinned in `experiment_manifest.json` (`experiment_id: buyerbench-pillar2-realistic-v1`). Any model version drift between experiment sessions will be documented here.*
-
-| Model ID | Registered Version | Actual Version (at run time) | Version Drift Flag |
-|---|---|---|---|
-| openai/gpt-4o | (registered at experiment start) | `{{RESULT: gpt4o_actual_version}}` | `{{RESULT: gpt4o_drift}}` |
-| anthropic/claude-3.5-sonnet | (registered at experiment start) | `{{RESULT: claude_actual_version}}` | `{{RESULT: claude_drift}}` |
-| google/gemini-pro-1.5 | (registered at experiment start) | `{{RESULT: gemini_actual_version}}` | `{{RESULT: gemini_drift}}` |
-| (remaining 7 models) | (registered at experiment start) | `{{RESULT: remaining_versions}}` | `{{RESULT: remaining_drift}}` |
-
----
-
 ## Appendix D — Robustness Checks
 
 This appendix reports all pre-specified robustness checks described in Section 3.5. Each check addresses a specific threat to internal validity. A finding is considered robust if it survives all three checks; a finding that collapses on any check must be qualified in the main text.
@@ -696,3 +701,16 @@ All three phrasings preserve the JSON output instruction for parseability.
 **Verification:** Across all cells in the primary experiment, the optimal supplier occupies each list position (1st, 2nd, ..., nth) with approximately equal frequency: `{{RESULT: supplier_position_distribution}}`. The correlation between choice_is_correct and supplier_position is: r = `{{RESULT: position_choice_correlation}}` (expected ≈ 0 if positional bias is absent).
 
 *Supplier order randomization is implemented in `harness/runner.py` (`derive_seed()` function). The `--supplier-order-seed` and `--supplier-order-static` CLI flags enable reproducibility and controlled comparisons.*
+
+---
+
+## Appendix E — Registered Model Versions
+
+*To be completed at experiment execution time. Model versions are pinned in `experiment_manifest.json` (`experiment_id: buyerbench-pillar2-realistic-v1`). Any model version drift between experiment sessions will be documented here.*
+
+| Model ID | Registered Version | Actual Version (at run time) | Version Drift Flag |
+|---|---|---|---|
+| openai/gpt-4o | (registered at experiment start) | `{{RESULT: gpt4o_actual_version}}` | `{{RESULT: gpt4o_drift}}` |
+| anthropic/claude-3.5-sonnet | (registered at experiment start) | `{{RESULT: claude_actual_version}}` | `{{RESULT: claude_drift}}` |
+| google/gemini-pro-1.5 | (registered at experiment start) | `{{RESULT: gemini_actual_version}}` | `{{RESULT: gemini_drift}}` |
+| (remaining 7 models) | (registered at experiment start) | `{{RESULT: remaining_versions}}` | `{{RESULT: remaining_drift}}` |

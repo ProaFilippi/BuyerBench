@@ -91,18 +91,18 @@ Separate focused paper for the Pillar 2 pre-registered bias study.
 
 | Section | Status | Notes |
 |---|---|---|
-| Abstract | **Draft** | Templated; `{{RESULT:...}}` placeholders for main findings |
+| Abstract | **Review** | Tier-A/B separation applied (Week 7 review); "second highest bias type" moved to Tier-B sentence; "boundary-response mechanism" scoped to pre-specified frame |
 | 1. Introduction | **Draft** | Motivation, scope (REV-7), contributions, limitations |
 | 2. Related Work | **Draft** | Human biases, LLM bias lit, procurement AI, methodology rigor |
-| 3. Methodology | **Draft** | Design, scenario battery, BSI formula, stats plan, robustness |
-| 4. Results | **Template** | All cells `{{RESULT:...}}`; requires N=50 experiment data |
-| 5. Discussion | **Pending** | To be written after data |
-| 6. Conclusion | **Pending** | To be written after data |
+| 3. Methodology | **Draft** | Design, scenario battery, BSI formula, stats plan, robustness; H4/H6 gap noted for Week 8 |
+| 4. Results | **Template** | All cells `{{RESULT:...}}`; tier labels audited (Week 7); Section 4.8 (hard-difficulty) added; requires N=50 experiment data |
+| 5. Discussion | **Pending** | To be written (Week 8); Section 5.3 (pipeline scope limitations) is a referenced-but-missing forward ref |
+| 6. Conclusion | **Pending** | To be written (Week 8) |
 | Appendix A (Pre-reg deviations) | **Stub** | Filled post-experiment |
 | Appendix B (Pre-registration document) | **Draft** | Full condensed pre-reg: metadata, design, sampling, variables, analysis plan, H1–H10 table, registered model set |
 | Appendix C (Scenario YAML metadata) | **Draft** | Evaluation weights and δ table included |
-| Appendix D (Robustness checks) | **Draft** | D.1 Prompt sensitivity (REV-5), D.2 Temperature T=0.0 pass, D.3 CoT analysis, D.4 Supplier order stability; all result cells templated |
-| Appendix E (Model versions) | **Stub** | Filled at experiment execution time |
+| Appendix D (Robustness checks) | **Draft** | D.1–D.4 complete; ordering bug fixed (was placed after E, now correctly before E) |
+| Appendix E (Model versions) | **Stub** | Filled at experiment execution time; ordering fixed (now correctly after D) |
 
 ---
 
@@ -115,3 +115,15 @@ Separate focused paper for the Pillar 2 pre-registered bias study.
 - [ ] Add human baseline scores to Pillar 1 Results once pilot study runs
 - [ ] Verify all BibTeX DOIs and arXiv IDs before submission
 - [ ] Create .pdf and .svg exports of figures for camera-ready submission
+
+### Pillar 2 Working Paper — Week 8 Priority Issues (from Week 7 review)
+
+- [ ] **P0** Write Section 5 (Discussion): 5.1 H1–H7 verdict interpretation, 5.2 deployment implications, 5.3 pipeline scope limitations, 5.4 pre-reg deviations, 5.5 future work
+- [ ] **P0** Write Section 6 (Conclusion)
+- [ ] **P0** Strip all `[TIER-X]` labels from result text; replace with in-text hedges before submission
+- [ ] **P1** Add H4 deferred-to-flagship note in Section 3.4 (requires p2-01b low-anchor variant, not yet implemented)
+- [ ] **P1** Add H6 (Sunk Cost–Capability correlation) to Section 3.4 exploratory list
+- [ ] **P1** Reconcile H2 direction: Appendix B.7 says "negative direction" but Section 4.6 says "neither direction pre-specified"
+- [ ] **P1** Verify all BibTeX keys in `references.bib`: `@binz2023using`, `@scherrer2024moral`, `@loken2017measurement`, `@opensciencecollaboration2015`
+- [ ] **P2** Add power analysis for Spearman ρ at N=10 to Discussion (ρ=0.5 gives ~40% power — must be stated)
+- [ ] **P2** Register pre-registration on OSF; fill in OSF URL and commit hash in Appendix B.1
