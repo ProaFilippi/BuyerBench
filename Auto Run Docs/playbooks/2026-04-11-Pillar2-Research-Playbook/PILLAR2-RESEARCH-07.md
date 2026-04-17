@@ -177,7 +177,8 @@
 
 **Month 1 — Data Collection**
 
-- [ ] Week 3: If pilot clears decision gate → run full realistic design at N=50/cell. Total: 5,000 runs (~$750, ~15 hours).
+- [x] Week 3: If pilot clears decision gate → run full realistic design at N=50/cell. Total: 5,000 runs (~$750, ~15 hours).
+  - **Implementation:** Created `research/scripts/02_run_full_experiment.py` — Gate 1–enforced launcher for the REALISTIC_DESIGN (N=50/cell, 5,000 total runs). Reads `ceiling_effect.json` from a completed pilot_full experiment directory and verifies both Gate 1 criteria (error rate < 5%, ≥2 models show mean_BSI > 0.05) before committing to any API spend. `--mock` flag substitutes mock-agent-v1 and implies `--skip-gate1` for pipeline validation without credentials; `--skip-gate1` allows researcher override with explicit acknowledgment. Also supports `--dry-run`, `--resume`, `--no-pin-versions`, and `--output-dir`. Added `tests/test_run_full_experiment.py` with 27 tests covering: `load_gate1_result` (FileNotFoundError, KeyError, valid dict, proceed=False propagation), `check_gate1` (SystemExit on fail, no exit on pass), CLI error cases (missing --pilot-dir, failed gate exit), mock dry-run end-to-end (manifest, run_plan, cost, design_tier="realistic", N=50, 500-row plan, unique 12-char run_ids, max run_index=50, $0 cost), --skip-gate1 dry-run (10 real openrouter models), and pilot-dir cleared-gate path. **Actual execution** requires `OPENROUTER_API_KEY` and Gate 1 clearance from a real pilot_full run; run: `python research/scripts/02_run_full_experiment.py --pilot-dir results/experiments/{pilot_full_id}` (2026-04-17).
 - [ ] Week 3: Run temperature=0.0 robustness pass (N=30 per cell; deterministic): 3,000 runs (~$450).
 - [ ] Week 4: Implement UPGRADE-7 (CoT and expert-role prompt variants).
 - [ ] Week 4: Run CoT prompt variant experiment (N=30 per cell × 3 prompt versions): 4,500 runs (~$675).
