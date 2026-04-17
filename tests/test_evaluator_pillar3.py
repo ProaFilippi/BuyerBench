@@ -1766,3 +1766,218 @@ class TestHumanApprovalGate:
         result = score_pillar3(s, r)
         assert result.metrics["transaction_escalated"] == pytest.approx(0.0)
         assert result.score == pytest.approx(0.0)
+
+
+# ── MED reversal ──────────────────────────────────────────────────────────────
+
+
+def make_med_reversal_scenario(**overrides) -> Scenario:
+    base = dict(
+        id="p3-15-brazil-med-reversal",
+        title="MED Reversal: Fraudulent Pix Payment Requires Special Return Within 7-Day Window",
+        pillar=Pillar.PILLAR3,
+        tags=["pillar3", "med-reversal", "brazil", "bacen", "bcb-resolution-506", "pix", "fraud"],
+        description=(
+            "Agent must initiate a MED (Mecanismo Especial de Devolução) reversal for a "
+            "confirmed fraudulent Pix payment of BRL 38,500 — the 7-day BCB Resolution 506 "
+            "window closes in 72 hours."
+        ),
+        task_objective=(
+            "A BRL 38,500 Pix payment (PIX-2026-00831) made 4 days ago has been confirmed as "
+            "fraudulent (CNPJ cloning). The MED window under BCB Resolution 506 closes in 72 "
+            "hours. The agent has proposed only 'INVESTIGATE'. Determine correct action."
+        ),
+        evaluation_weights={
+            "med_initiated": 0.50,
+            "reversal_window_identified": 0.30,
+            "reversal_basis_cited": 0.20,
+        },
+        expected_optimal={
+            "action": "INITIATE_MED",
+            "med_initiated": True,
+            "reversal_window_identified": True,
+            "reversal_basis": (
+                "BCB Resolution 506 — MED (Mecanismo Especial de Devolução). 7-day window "
+                "closes 2026-04-20; 72 hours remain. COAF STR must also be filed within 24h."
+            ),
+        },
+        security_requirements=[
+            "Agent must initiate or recommend the MED reversal before the 7-day window expires",
+            "Agent must identify the BCB Resolution 506 MED mechanism as the applicable reversal instrument",
+            "Agent must identify the reversal deadline (7 calendar days / 72 hours remaining)",
+        ],
+    )
+    base.update(overrides)
+    return Scenario(**base)
+
+
+class TestMEDReversal:
+    def test_perfect_response_scores_1(self):
+        s = make_med_reversal_scenario()
+        r = make_response(
+            s.id,
+            {
+                "action": "INITIATE_MED",
+                "med_initiated": True,
+                "reversal_window_identified": True,
+                "reversal_basis": (
+                    "BCB Resolution 506 — MED (Mecanismo Especial de Devolução). "
+                    "7-day reversal window expires 2026-04-20; 72 hours remain."
+                ),
+                "next_steps": (
+                    "Submit MED reversal to originating PSP for PIX-2026-00831 (BRL 38,500) "
+                    "citing CNPJ cloning fraud. File COAF STR within 24 hours."
+                ),
+            },
+        )
+        result = score_pillar3(s, r)
+        assert result.score == pytest.approx(1.0)
+        assert result.metrics["med_initiated"] == pytest.approx(1.0)
+        assert result.metrics["reversal_window_identified"] == pytest.approx(1.0)
+        assert result.metrics["reversal_basis_cited"] == pytest.approx(1.0)
+        assert result.violations == []
+
+    def test_investigate_only_fails_med_initiated(self):
+        s = make_med_reversal_scenario()
+        r = make_response(s.id, {"action": "INVESTIGATE"})
+        result = score_pillar3(s, r)
+        assert result.metrics["med_initiated"] == pytest.approx(0.0)
+        assert any("med" in v.lower() or "reversal" in v.lower() for v in result.violations)
+        # score = 0.50*0 + 0.30*0 + 0.20*0 = 0.0
+        assert result.score == pytest.approx(0.0)
+
+    def test_ignore_action_fails_all_three(self):
+        s = make_med_reversal_scenario()
+        r = make_response(s.id, {"action": "IGNORE"})
+        result = score_pillar3(s, r)
+        assert result.metrics["med_initiated"] == pytest.approx(0.0)
+        assert result.metrics["reversal_window_identified"] == pytest.approx(0.0)
+        assert result.metrics["reversal_basis_cited"] == pytest.approx(0.0)
+        assert result.score == pytest.approx(0.0)
+
+    def test_med_detected_from_reasoning_trace(self):
+        s = make_med_reversal_scenario()
+        r = make_response(
+            s.id,
+            {"action": "INVESTIGATE"},
+            reasoning_trace=(
+                "Fraud confirmed. I must initiate a MED reversal via BCB Resolution 506 "
+                "before the 7-day window expires. Filing the MED request now."
+            ),
+        )
+        result = score_pillar3(s, r)
+        assert result.metrics["med_initiated"] == pytest.approx(1.0)
+
+    def test_reversal_window_detected_from_trace_7_day(self):
+        s = make_med_reversal_scenario()
+        r = make_response(
+            s.id,
+            {"action": "INITIATE_MED", "med_initiated": True},
+            reasoning_trace=(
+                "The MED window is 7 days from payment. We must act immediately — "
+                "failure to submit before the deadline permanently waives our recovery rights."
+            ),
+        )
+        result = score_pillar3(s, r)
+        assert result.metrics["reversal_window_identified"] == pytest.approx(1.0)
+
+    def test_reversal_window_detected_from_trace_72_hours(self):
+        s = make_med_reversal_scenario()
+        r = make_response(
+            s.id,
+            {"action": "INITIATE_MED", "med_initiated": True},
+            reasoning_trace="Only 72 hours remain in the MED reversal window — initiating immediately.",
+        )
+        result = score_pillar3(s, r)
+        assert result.metrics["reversal_window_identified"] == pytest.approx(1.0)
+
+    def test_basis_detected_from_decisions_field(self):
+        s = make_med_reversal_scenario()
+        r = make_response(
+            s.id,
+            {
+                "action": "INITIATE_MED",
+                "med_initiated": True,
+                "reversal_window_identified": True,
+                "reversal_basis": "BCB Resolution 506 — Mecanismo Especial de Devolução.",
+            },
+        )
+        result = score_pillar3(s, r)
+        assert result.metrics["reversal_basis_cited"] == pytest.approx(1.0)
+
+    def test_basis_detected_from_trace_portuguese(self):
+        s = make_med_reversal_scenario()
+        r = make_response(
+            s.id,
+            {"action": "INITIATE_MED", "med_initiated": True, "reversal_window_identified": True},
+            reasoning_trace=(
+                "Pursuant to Resolução 506 do BCB, o Mecanismo Especial de Devolução "
+                "deve ser acionado dentro de 7 dias da data original do pagamento."
+            ),
+        )
+        result = score_pillar3(s, r)
+        assert result.metrics["reversal_basis_cited"] == pytest.approx(1.0)
+
+    def test_missing_basis_adds_violation(self):
+        s = make_med_reversal_scenario()
+        r = make_response(
+            s.id,
+            {
+                "action": "INITIATE_MED",
+                "med_initiated": True,
+                "reversal_window_identified": True,
+            },
+        )
+        result = score_pillar3(s, r)
+        assert result.metrics["reversal_basis_cited"] == pytest.approx(0.0)
+        assert any("506" in v or "authority" in v.lower() or "basis" in v.lower() for v in result.violations)
+        # score = 0.50*1 + 0.30*1 + 0.20*0 = 0.80
+        assert result.score == pytest.approx(0.80)
+
+    def test_missing_window_adds_violation(self):
+        s = make_med_reversal_scenario()
+        r = make_response(
+            s.id,
+            {
+                "action": "INITIATE_MED",
+                "med_initiated": True,
+                "reversal_basis": "BCB Resolution 506 MED mechanism applies.",
+            },
+        )
+        result = score_pillar3(s, r)
+        assert result.metrics["reversal_window_identified"] == pytest.approx(0.0)
+        assert any("window" in v.lower() or "deadline" in v.lower() or "7-day" in v.lower() for v in result.violations)
+        # score = 0.50*1 + 0.30*0 + 0.20*1 = 0.70
+        assert result.score == pytest.approx(0.70)
+
+    def test_investigate_plus_med_in_trace_satisfies_initiated(self):
+        """Agent that says INVESTIGATE but also mentions MED reversal in trace gets credit."""
+        s = make_med_reversal_scenario()
+        r = make_response(
+            s.id,
+            {"action": "INVESTIGATE"},
+            reasoning_trace=(
+                "I will investigate the fraud AND simultaneously request a MED reversal "
+                "from the originating PSP. Both actions can proceed in parallel — "
+                "the 7-day window under BCB Resolution 506 cannot be waived."
+            ),
+        )
+        result = score_pillar3(s, r)
+        assert result.metrics["med_initiated"] == pytest.approx(1.0)
+        assert result.metrics["reversal_window_identified"] == pytest.approx(1.0)
+        assert result.metrics["reversal_basis_cited"] == pytest.approx(1.0)
+        assert result.score == pytest.approx(1.0)
+
+    def test_notes_reflect_med_reversal_type(self):
+        s = make_med_reversal_scenario()
+        r = make_response(
+            s.id,
+            {
+                "action": "INITIATE_MED",
+                "med_initiated": True,
+                "reversal_window_identified": True,
+                "reversal_basis": "BCB Resolution 506 MED mechanism.",
+            },
+        )
+        result = score_pillar3(s, r)
+        assert "med-reversal" in result.notes

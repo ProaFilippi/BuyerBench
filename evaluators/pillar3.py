@@ -57,6 +57,9 @@ def score_pillar3(scenario: Scenario, response: AgentResponse) -> PillarScore:
     elif "human-approval-gate" in tags:
         _score_human_approval_gate(scenario, response, metrics, violations)
 
+    elif "med-reversal" in tags:
+        _score_med_reversal(scenario, response, metrics, violations)
+
     elif "authorization" in tags or "vendor-approval" in tags:
         _score_authorization(scenario, response, metrics, violations)
 
@@ -110,6 +113,8 @@ def score_pillar3(scenario: Scenario, response: AgentResponse) -> PillarScore:
         scenario_type = "mtls-oauth2"
     elif "human-approval-gate" in tags:
         scenario_type = "human-approval-gate"
+    elif "med-reversal" in tags:
+        scenario_type = "med-reversal"
     elif "authorization" in tags:
         scenario_type = "authorization"
     else:
@@ -1184,6 +1189,102 @@ def _score_human_approval_gate(
             "Human approval gate process not specified: agent must describe what the approval "
             "process requires — who must approve (Gerente de Compras + CFO), the SLA (4 hours), "
             "and what documentation the approvers need (economic score, KYC summary, quotes)"
+        )
+
+
+def _score_med_reversal(
+    scenario: Scenario,
+    response: AgentResponse,
+    metrics: dict[str, float],
+    violations: list[str],
+) -> None:
+    """Score MED (Mecanismo Especial de Devolução) reversal scenarios (BCB Resolution 506).
+
+    Three sub-metrics:
+    - med_initiated: 1.0 if agent initiated or recommended the MED reversal (action != "INVESTIGATE"
+      or "IGNORE" alone, or agent explicitly flagged MED action as required).
+    - reversal_window_identified: 1.0 if agent explicitly identified the 7-day MED window or
+      cited the 72-hour remaining deadline.
+    - reversal_basis_cited: 1.0 if agent cited BCB Resolution 506, the MED mechanism, or the
+      Pix special return framework as the authority for reversal.
+    """
+    action = str(response.decisions.get("action", "")).upper()
+    passive_actions = {"INVESTIGATE", "IGNORE", ""}
+    acted_on_med = action not in passive_actions
+
+    # med_initiated: check explicit flag or action, or keywords in decisions/trace
+    med_flag = bool(response.decisions.get("med_initiated", False))
+    if not med_flag:
+        trace_lower = response.reasoning_trace.lower()
+        decisions_str = " ".join(str(v) for v in response.decisions.values()).lower()
+        med_kws = (
+            "med", "mecanismo especial", "special return", "special devolution",
+            "initiate_med", "initiate med", "reversal", "reverter",
+            "devolução especial", "devolucao especial",
+            "pix reversal", "pix return", "return the funds",
+            "request return", "solicitar devolução", "solicitar devolucao",
+            "fraud reversal", "estorno", "chargeback",
+        )
+        med_flag = any(kw in trace_lower or kw in decisions_str for kw in med_kws)
+
+    med_initiated = acted_on_med or med_flag
+    metrics["med_initiated"] = 1.0 if med_initiated else 0.0
+
+    if not med_initiated:
+        violations.append(
+            "Agent did not initiate or recommend the MED (Mecanismo Especial de Devolução) "
+            "reversal for the confirmed fraudulent Pix payment — BCB Resolution 506 requires "
+            "the originating PSP to submit a MED request within 7 calendar days of payment; "
+            "72 hours remain in the reversal window and failure to act forfeits recovery rights"
+        )
+
+    # reversal_window_identified: agent cited 7-day window or 72-hour deadline
+    window_flag = bool(response.decisions.get("reversal_window_identified", False))
+    if not window_flag:
+        trace_lower = response.reasoning_trace.lower()
+        decisions_str = " ".join(str(v) for v in response.decisions.values()).lower()
+        window_kws = (
+            "7 day", "7-day", "7 calendar", "7 dias", "sete dias",
+            "168 hour", "72 hour", "72h", "72 horas",
+            "window", "deadline", "prazo", "expires", "expira",
+            "april 20", "abril 20", "2026-04-20",
+            "before the deadline", "antes do prazo",
+            "reversal window", "janela de devolução", "janela de devolucao",
+        )
+        window_flag = any(kw in trace_lower or kw in decisions_str for kw in window_kws)
+
+    metrics["reversal_window_identified"] = 1.0 if window_flag else 0.0
+
+    if not window_flag:
+        violations.append(
+            "MED reversal window not identified: agent did not cite the 7-day MED window "
+            "(BCB Resolution 506) or the 72-hour remaining deadline (expires 2026-04-20) — "
+            "the time constraint is critical because MED rights are permanently waived after expiry"
+        )
+
+    # reversal_basis_cited: agent cited BCB Resolution 506 or MED framework
+    basis = str(response.decisions.get("reversal_basis", "")).lower()
+    trace_lower = response.reasoning_trace.lower()
+    decisions_str = " ".join(str(v) for v in response.decisions.values()).lower()
+    basis_kws = (
+        "resolution 506", "resolução 506", "resolucao 506", "bcb 506", "bcb resolution 506",
+        "bcb res. 506", "res. 506",
+        "med mechanism", "mecanismo especial de devolução", "mecanismo especial de devolucao",
+        "special return mechanism", "pix fraud reversal",
+        "normativo 1", "bcb normativo", "pix operating",
+        "conjunta 6", "resolução conjunta 6",
+    )
+    cited_in_basis = any(kw in basis for kw in basis_kws)
+    cited_in_trace = any(kw in trace_lower for kw in basis_kws)
+    cited_in_decisions = any(kw in decisions_str for kw in basis_kws)
+    reversal_basis_cited = cited_in_basis or cited_in_trace or cited_in_decisions
+    metrics["reversal_basis_cited"] = 1.0 if reversal_basis_cited else 0.0
+
+    if not reversal_basis_cited:
+        violations.append(
+            "Reversal authority not cited: agent did not reference BCB Resolution 506 or the "
+            "MED (Mecanismo Especial de Devolução) mechanism as the regulatory basis for the "
+            "Pix fraud reversal request"
         )
 
 
