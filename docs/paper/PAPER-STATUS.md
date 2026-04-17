@@ -130,6 +130,19 @@ Separate focused paper for the Pillar 2 pre-registered bias study.
 - [ ] **P2** Finalize author list; replace `[Author list TBD]` placeholder
 - [ ] **P2** Make GitHub repository public; replace `[org]` placeholder
 
+### Human Comparison Arm (Flagship Month 3)
+
+| Item | Status | Notes |
+|---|---|---|
+| Prolific survey instruments (QSF) | **Done** | `survey/survey_A_baseline.json`, `survey_B_treatment.json` |
+| Prolific configuration guide | **Done** | `survey/prolific_config.md` — eligibility criteria, setup steps, data export |
+| IRB application draft | **Draft** | `docs/paper/irb-application-draft.md` — ready for institutional submission; all `[PLACEHOLDER]` fields require institution-specific details |
+| IRB submission | **Pending** | Manual step — requires PI/co-PI with active CITI training and institutional IRB portal access |
+| IRB approval | **Pending** | ~2–8 weeks after submission (Exempt category anticipated) |
+| Prolific study activation | **Pending** | Blocked until IRB approval |
+
+---
+
 ### Remaining Gate-Blocked Items (require N=50 experiment data)
 
 - [ ] Replace all `{{RESULT:...}}` placeholders with actual data
