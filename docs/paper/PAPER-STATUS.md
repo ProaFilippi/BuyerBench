@@ -99,9 +99,10 @@ Separate focused paper for the Pillar 2 pre-registered bias study.
 | 5. Discussion | **Pending** | To be written after data |
 | 6. Conclusion | **Pending** | To be written after data |
 | Appendix A (Pre-reg deviations) | **Stub** | Filled post-experiment |
-| Appendix B (Scenario YAML metadata) | **Draft** | Evaluation weights and δ table included |
-| Appendix C (Model versions) | **Stub** | Filled at experiment execution time |
-| Appendix D (Prompt sensitivity) | **Template** | CV table templated; requires REV-5 pilot data |
+| Appendix B (Pre-registration document) | **Draft** | Full condensed pre-reg: metadata, design, sampling, variables, analysis plan, H1–H10 table, registered model set |
+| Appendix C (Scenario YAML metadata) | **Draft** | Evaluation weights and δ table included |
+| Appendix D (Robustness checks) | **Draft** | D.1 Prompt sensitivity (REV-5), D.2 Temperature T=0.0 pass, D.3 CoT analysis, D.4 Supplier order stability; all result cells templated |
+| Appendix E (Model versions) | **Stub** | Filled at experiment execution time |
 
 ---
 

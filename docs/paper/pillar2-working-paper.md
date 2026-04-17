@@ -429,7 +429,133 @@ Worchel, S., Lee, J., & Adewole, A. (1975). Effects of supply and demand on rati
 
 ---
 
-## Appendix B — Scenario YAML Metadata
+## Appendix B — Pre-Registration Document
+
+> This appendix reproduces the key content of OSF pre-registration `buyerbench-pillar2-realistic-v1`. The full machine-generated document is available at `docs/preregistration/prereg_osf.md` in the BuyerBench repository and at [OSF link TBD — register before data collection]. In the event of any conflict between this appendix and the OSF document, the OSF document takes precedence.
+
+### B.1 Registration Metadata
+
+| Field | Value |
+|---|---|
+| Experiment ID | `buyerbench-pillar2-realistic-v1` |
+| Pre-registration date | [TBD — must precede first data collection run] |
+| OSF URL | [TBD] |
+| Codebase commit at registration | [TBD — pin with `git rev-parse HEAD` before running] |
+| Registered by | BuyerBench Research Team |
+
+### B.2 Primary Research Question
+
+> Does the behavioral bias susceptibility of LLM-based agents — measured as deviation from economically optimal choices under controlled presentation manipulations — vary systematically across model capability tiers, bias types, and experimental conditions, in ways analogous to, attenuated relative to, or amplified compared to documented human behavioral patterns?
+
+### B.3 Study Design
+
+**Study type:** Controlled computational experiment. Each scenario pair consists of a BASELINE condition and a TREATMENT condition in which a single behavioral manipulation is introduced. All other economic parameters are held constant across conditions. The design is between-condition (each agent–scenario pair is assigned to one condition per run) with N repeated runs per cell.
+
+**Blinding:** LLM agents receive no meta-information about the experimental design, bias types being tested, or BuyerBench framework. Agents see only the scenario prompt. No human rater blinding is required for the primary LLM experiment.
+
+**Within-participant elements:** Each model is evaluated on all scenarios (within-agent design across bias types and variants). Analysis accounts for this with clustered standard errors at the agent level.
+
+**Randomization:** Supplier order is randomized per run using a per-run seed (`supplier_order_seed = HMAC-SHA256(base_seed, scenario_id|variant|run_index)` folded to [0, 2³¹)). Seeds are stored in run metadata for exact replayability.
+
+### B.4 Sampling Plan
+
+| Parameter | Value |
+|---|---|
+| Models | 10 LLM agents via OpenRouter API (see B.8) |
+| Scenarios | 10 YAML files (5 bias type batteries × BASELINE + TREATMENT) |
+| Runs per cell | N = 50 independent, stateless API calls |
+| Temperature (primary) | 0.7 |
+| Prompt version (primary) | `standard` |
+| Total planned runs | 5,000 |
+| Power justification | N=50 achieves ≥70% power for d=0.4 and ≥80% power for d≥0.5 (one-sided t-test, α=0.05) |
+| Stopping rule | Fixed N; no data-dependent stopping. Models exceeding 20% failure rate are paused and resumed; partial runs included if n_valid ≥ 40. |
+
+### B.5 Variables
+
+**Manipulated variables:**
+- `variant` (categorical): BASELINE vs. TREATMENT within each bias type battery
+- `agent_id` (categorical): 10 OpenRouter LLM agents
+- `bias_category` (categorical): anchoring, framing, decoy, scarcity, sunk_cost
+- `supplier_order_seed` (integer): per-run seed controlling positional bias
+
+**Primary outcome:** Cell-level Bias Susceptibility Index (BSI), estimated from N=50 independent runs per (agent × scenario × variant) cell. At the run level: BSI = int(decision\_changed) × (1 − baseline\_score). At the cell level: mean of N run-level BSI values with 95% t-interval.
+
+**Secondary outcomes:** Within-cell BSI variance (std\_bsi); optimality gap; choice rate distribution; model-level 5-dimension BSI vector; reasoning trace length (token count).
+
+### B.6 Analysis Plan
+
+**Confirmatory tests (BH-FDR correction at q=0.05):**
+
+- *H1 (Bias Universality):* One-sample t-test per bias type (H₀: BSI = 0). Test family: 5 bias types × 10 models = 50 tests.
+- *H3 (Decoy Reliability):* One-sample t-test (decoy BSI > 0) + Dunnett's test vs. cross-bias mean.
+- *H5 (Framing Asymmetry):* Paired t-test: BSI_LOSS > BSI_GAIN across models.
+- *H7 (Stochastic Variance):* OLS: std_bsi ~ β₀ + β₁·mean_bsi. Significant positive β₁ confirms H7.
+
+**Primary regression (Level 1 WLS):** Cell-level WLS with weights = n_valid_runs; HC3 clustered SEs at model level.
+
+**Variance decomposition:** ANOVA-style SS partition (Model, BiasType, Treatment, Residual) with η² effect sizes.
+
+**Exploratory analyses (descriptive only; no inferential claims):** H2 (Capability-Bias correlation); H8 (CoT × Bias interaction); H9 (Bias Profile Cronbach's α); H10 (Human benchmark comparison). All cross-model analyses (N=10) are descriptive; no p-values for cross-model comparisons.
+
+**Inference criteria:** α = 0.05; BH-FDR at q = 0.05 for confirmatory tests only.
+
+**Data exclusion:** Runs with error_flag=True excluded from BSI computation. Models with <80% valid runs (n_valid < 40) flagged and excluded from aggregate analyses.
+
+**Null result pre-specification:** If BH-FDR-corrected tests fail to reject H₀: BSI = 0 for ≥3 of 5 bias types, the primary finding is: "Domain structure suppresses behavioral bias susceptibility in LLM procurement agents." This is a valid scientific contribution, not a failed study.
+
+### B.7 Pre-Specified Hypothesis Summary
+
+| ID | Statement (condensed) | Direction | Analysis Type | Test |
+|---|---|---|---|---|
+| H1 | ≥5/10 models show BSI > 0.10 on ≥1 bias type (BH-FDR q < 0.05) | positive | **CONFIRMATORY** | One-sample t per bias type |
+| H2 | Negative Spearman ρ between Pillar 1 score and mean BSI across models | negative | exploratory | Spearman ρ (N=10, descriptive) |
+| H3 | Decoy BSI > 0 and > cross-bias mean BSI | positive | **CONFIRMATORY** | One-sample t + Dunnett contrast |
+| H4 | BSI_ANCHOR_HIGH > BSI_ANCHOR_LOW (not yet implemented: p2-01b missing) | positive | exploratory | Paired t (pending p2-01b) |
+| H5 | BSI_LOSS > BSI_GAIN across models (loss aversion prediction) | positive | **CONFIRMATORY** | Paired t (LOSS vs. GAIN) |
+| H6 | Sunk cost BSI positively correlated with capability (non-monotone; opposite H2) | positive | exploratory | Spearman ρ for p2-05 specifically |
+| H7 | std_bsi positively correlated with mean_bsi across cells (boundary mechanism) | positive | **CONFIRMATORY** | OLS: std_bsi ~ β₁·mean_bsi |
+| H8 | CoT reduces anchoring but not decoy BSI (interaction) | non-directional | exploratory | 2×2 ANOVA: BSI ~ bias_type × prompt_version |
+| H9 | Cronbach's α < 0.50 on 5D BSI vector across models (bias-specific patterns) | null | exploratory | Cronbach's α + hierarchical clustering |
+| H10 | LLM BSI effect sizes smaller than human meta-analytic d (attenuation) | negative | exploratory | Cohen's d comparison vs. published baselines |
+
+*Bold = confirmatory (BH-FDR correction applies). Italic = exploratory (descriptive only; no p-value claims permitted).*
+
+### B.8 Registered Model Set
+
+No post-hoc model additions are permitted. Models may be excluded if they exceed the 20% failure threshold (see Section B.6).
+
+| # | Model ID | Provider |
+|---|---|---|
+| 1 | `openai/gpt-4o` | OpenAI |
+| 2 | `anthropic/claude-3.5-sonnet` | Anthropic |
+| 3 | `google/gemini-pro-1.5` | Google |
+| 4 | `meta-llama/llama-3.1-405b-instruct` | Meta |
+| 5 | `mistralai/mistral-large` | Mistral AI |
+| 6 | `mistralai/mixtral-8x22b-instruct` | Mistral AI |
+| 7 | `deepseek/deepseek-chat` | DeepSeek |
+| 8 | `qwen/qwen-2.5-72b-instruct` | Alibaba |
+| 9 | `cohere/command-r-plus` | Cohere |
+| 10 | `01-ai/yi-large` | 01.AI |
+
+### B.9 Registered Bias Type Battery
+
+No post-hoc additions to the primary confirmatory analysis are permitted.
+
+| Bias Type | Scenario ID | Confirmatory Hypothesis |
+|---|---|---|
+| anchoring | p2-01 | H1 |
+| framing | p2-02 | H1, H5 |
+| decoy | p2-03 | H1, H3 |
+| scarcity | p2-04 | H1 |
+| sunk_cost | p2-05 | H1 |
+
+### B.10 Open Science Statement
+
+BuyerBench is open-source (MIT License). All scenario definitions, evaluation code, raw run records (excluding any API credentials), and analysis scripts will be made publicly available at the time of paper submission. Pre-registration predates any data collection. Deviations from this pre-registration, if any, are documented in Appendix A.
+
+---
+
+## Appendix C — Scenario YAML Metadata
 
 *Full scenario definitions available in `scenarios/` directory of the BuyerBench repository. Key fields reproduced here for reproducibility.*
 
@@ -454,7 +580,7 @@ Worchel, S., Lee, J., & Adewole, A. (1975). Effects of supply and demand on rati
 
 ---
 
-## Appendix C — Registered Model Versions
+## Appendix E — Registered Model Versions
 
 *To be completed at experiment execution time. Model versions are pinned in `experiment_manifest.json` (`experiment_id: buyerbench-pillar2-realistic-v1`). Any model version drift between experiment sessions will be documented here.*
 
@@ -467,14 +593,106 @@ Worchel, S., Lee, J., & Adewole, A. (1975). Effects of supply and demand on rati
 
 ---
 
-## Appendix D — Prompt Sensitivity Analysis (REV-5)
+## Appendix D — Robustness Checks
 
-*BSI coefficient of variation (CV) across three prompt phrasings per scenario pair. CV > 0.50 triggers REDESIGN gate (scenario excluded from confirmatory analysis).*
+This appendix reports all pre-specified robustness checks described in Section 3.5. Each check addresses a specific threat to internal validity. A finding is considered robust if it survives all three checks; a finding that collapses on any check must be qualified in the main text.
 
-| Scenario Pair | Phrasing A BSI | Phrasing B BSI | Phrasing C BSI | CV | Gate |
+---
+
+### D.1 Prompt Sensitivity (REV-5)
+
+**Threat:** BSI values may be a property of the specific prompt wording chosen by the researcher rather than a genuine property of the model's decision-making. Minor synonym substitutions should not substantially change BSI if the bias effect is real.
+
+**Protocol:** Three prompt phrasings were evaluated per scenario pair in a 5-run pilot prior to the main experiment (design tier: `pilot`; model: `mock-agent-v1` for infrastructure validation; real-model pilot uses the same three phrasings on a selected frontier model). Phrasings differ only in the system preamble:
+
+| Label | Phrasing Description | Key Substitutions |
+|---|---|---|
+| `robustness_a` | Control — identical to `standard` phrasing | (none; serves as anchor) |
+| `robustness_b` | Synonym substitution A | "best" → "optimal"; otherwise unchanged |
+| `robustness_c` | Synonym substitution B | "Your task is to act as" → "Your role is to serve as"; "best" → "most appropriate"; "determine" → "make" |
+
+All three phrasings preserve the JSON output instruction for parseability.
+
+**Gate criterion (REV-5):** Coefficient of variation (CV = std\_BSI / mean\_BSI) across three phrasings per scenario pair. CV > 0.50 triggers **REDESIGN** — the scenario is excluded from confirmatory analysis pending scenario revision. CV ≤ 0.20 = low sensitivity; 0.20–0.50 = moderate (proceed with qualification); > 0.50 = high (REDESIGN).
+
+**Results** (requires real-model REV-5 pilot data; mock pilot confirms infrastructure only):
+
+| Scenario Pair | Bias Type | BSI (Phrasing A) | BSI (Phrasing B) | BSI (Phrasing C) | CV | Gate |
+|---|---|---|---|---|---|---|
+| p2-01 | Anchoring | `{{RESULT: p201_bsiA}}` | `{{RESULT: p201_bsiB}}` | `{{RESULT: p201_bsiC}}` | `{{RESULT: p201_cv}}` | `{{RESULT: p201_gate}}` |
+| p2-02 | Framing | `{{RESULT: p202_bsiA}}` | `{{RESULT: p202_bsiB}}` | `{{RESULT: p202_bsiC}}` | `{{RESULT: p202_cv}}` | `{{RESULT: p202_gate}}` |
+| p2-03 | Decoy | `{{RESULT: p203_bsiA}}` | `{{RESULT: p203_bsiB}}` | `{{RESULT: p203_bsiC}}` | `{{RESULT: p203_cv}}` | `{{RESULT: p203_gate}}` |
+| p2-04 | Scarcity | `{{RESULT: p204_bsiA}}` | `{{RESULT: p204_bsiB}}` | `{{RESULT: p204_bsiC}}` | `{{RESULT: p204_cv}}` | `{{RESULT: p204_gate}}` |
+| p2-05 | Sunk Cost | `{{RESULT: p205_bsiA}}` | `{{RESULT: p205_bsiB}}` | `{{RESULT: p205_bsiC}}` | `{{RESULT: p205_cv}}` | `{{RESULT: p205_gate}}` |
+
+**Overall REV-5 verdict:** `{{RESULT: rev5_overall_verdict}}` — `{{RESULT: rev5_n_redesign}}` of 5 scenario pairs triggered REDESIGN gate. `{{RESULT: rev5_qualification_if_any}}`
+
+*REV-5 robustness check is implemented in `harness/robustness_pilot.py` (`run_robustness_pilot()`) and the `compute_prompt_sensitivity()` function in `evaluators/pillar2.py`. Results are written to `results/robustness-pilot/robustness_pilot.json`.*
+
+---
+
+### D.2 Temperature Robustness (T=0.0 Pass)
+
+**Threat:** BSI estimates at T=0.7 may reflect stochastic sampling noise rather than genuine bias susceptibility. At T=0.0 (deterministic decoding), each run is identical within a session; if BSI persists at T=0.0, the finding is not attributable to sampling variance.
+
+**Protocol:** Secondary experiment at T=0.0, N=30 per cell (design tier: `robustness_t0`; 3,000 total runs across 10 models). The T=0.0 pass is run after Gate 1 clearance using `research/scripts/05_run_robustness_t0.py`.
+
+**Interpretation rules:**
+- If T=0.0 BSI ≈ T=0.7 BSI: finding is temperature-robust; no qualification needed.
+- If T=0.0 BSI ≈ 0 but T=0.7 BSI > 0: finding is temperature-sensitive ("bias only emerges under stochastic sampling"); must be qualified in main text and Abstract.
+- If T=0.0 BSI > T=0.7 BSI: BSI is amplified under determinism; note as an unexpected direction and investigate.
+
+**Results** (requires `ROBUSTNESS_T0_DESIGN` experiment; mock infrastructure pass confirmed):
+
+| Bias Type | Mean BSI (T=0.7, N=50) | Mean BSI (T=0.0, N=30) | Δ (T=0.7 − T=0.0) | Temperature-robust? |
+|---|---|---|---|---|
+| Anchoring | `{{RESULT: anchor_bsi_t07}}` | `{{RESULT: anchor_bsi_t00}}` | `{{RESULT: anchor_delta_t}}` | `{{RESULT: anchor_t_robust}}` |
+| Framing | `{{RESULT: framing_bsi_t07}}` | `{{RESULT: framing_bsi_t00}}` | `{{RESULT: framing_delta_t}}` | `{{RESULT: framing_t_robust}}` |
+| Decoy | `{{RESULT: decoy_bsi_t07}}` | `{{RESULT: decoy_bsi_t00}}` | `{{RESULT: decoy_delta_t}}` | `{{RESULT: decoy_t_robust}}` |
+| Scarcity | `{{RESULT: scarcity_bsi_t07}}` | `{{RESULT: scarcity_bsi_t00}}` | `{{RESULT: scarcity_delta_t}}` | `{{RESULT: scarcity_t_robust}}` |
+| Sunk Cost | `{{RESULT: sunk_bsi_t07}}` | `{{RESULT: sunk_bsi_t00}}` | `{{RESULT: sunk_delta_t}}` | `{{RESULT: sunk_t_robust}}` |
+| **Grand mean** | `{{RESULT: grand_bsi_t07}}` | `{{RESULT: grand_bsi_t00}}` | `{{RESULT: grand_delta_t}}` | `{{RESULT: grand_t_robust}}` |
+
+**T=0.0 verdict:** `{{RESULT: t0_overall_verdict}}` — `{{RESULT: t0_qualification_statement}}`
+
+*T=0.0 robustness pass is implemented in `research/scripts/05_run_robustness_t0.py`. Results are written to `results/experiments/pillar2-robustness_t0-{timestamp}/`.*
+
+---
+
+### D.3 CoT Prompt Variant Analysis (UPGRADE-7)
+
+**Threat:** The `standard` prompt version (no explicit reasoning instruction) may suppress deliberate evaluation, making models more susceptible to superficial bias cues. Chain-of-thought (CoT) prompting may attenuate bias effects by forcing explicit step-by-step reasoning. If CoT substantially reduces BSI, the `standard` results characterize LLMs under *minimal deliberation* — a valid but scoped finding.
+
+**Protocol:** Three prompt versions evaluated at N=15 per cell (design tier: `cot_experiment`; 4,500 total runs). Prompt versions:
+
+| Version | Preamble Addition |
+|---|---|
+| `standard` | Standard system preamble (no reasoning instruction) |
+| `cot` | "Think step by step through each option before making your final decision." (prepended) |
+| `expert_role` | "You are a senior procurement officer with 15 years of experience evaluating suppliers for enterprise clients." (prepended) |
+
+**Results** (requires `COT_EXPERIMENT_DESIGN` run; mock infrastructure pass confirmed):
+
+| Bias Type | BSI (standard) | BSI (cot) | BSI (expert_role) | Δ (cot − standard) | Δ (expert − standard) |
 |---|---|---|---|---|---|
-| p2-01 (anchoring) | `{{RESULT: p201_bsiA}}` | `{{RESULT: p201_bsiB}}` | `{{RESULT: p201_bsiC}}` | `{{RESULT: p201_cv}}` | `{{RESULT: p201_gate}}` |
-| p2-02 (framing) | `{{RESULT: p202_bsiA}}` | `{{RESULT: p202_bsiB}}` | `{{RESULT: p202_bsiC}}` | `{{RESULT: p202_cv}}` | `{{RESULT: p202_gate}}` |
-| p2-03 (decoy) | `{{RESULT: p203_bsiA}}` | `{{RESULT: p203_bsiB}}` | `{{RESULT: p203_bsiC}}` | `{{RESULT: p203_cv}}` | `{{RESULT: p203_gate}}` |
-| p2-04 (scarcity) | `{{RESULT: p204_bsiA}}` | `{{RESULT: p204_bsiB}}` | `{{RESULT: p204_bsiC}}` | `{{RESULT: p204_cv}}` | `{{RESULT: p204_gate}}` |
-| p2-05 (sunk cost) | `{{RESULT: p205_bsiA}}` | `{{RESULT: p205_bsiB}}` | `{{RESULT: p205_bsiC}}` | `{{RESULT: p205_cv}}` | `{{RESULT: p205_gate}}` |
+| Anchoring | `{{RESULT: anchor_std}}` | `{{RESULT: anchor_cot}}` | `{{RESULT: anchor_exp}}` | `{{RESULT: anchor_cot_delta}}` | `{{RESULT: anchor_exp_delta}}` |
+| Framing | `{{RESULT: framing_std}}` | `{{RESULT: framing_cot}}` | `{{RESULT: framing_exp}}` | `{{RESULT: framing_cot_delta}}` | `{{RESULT: framing_exp_delta}}` |
+| Decoy | `{{RESULT: decoy_std}}` | `{{RESULT: decoy_cot}}` | `{{RESULT: decoy_exp}}` | `{{RESULT: decoy_cot_delta}}` | `{{RESULT: decoy_exp_delta}}` |
+| Scarcity | `{{RESULT: scarcity_std}}` | `{{RESULT: scarcity_cot}}` | `{{RESULT: scarcity_exp}}` | `{{RESULT: scarcity_cot_delta}}` | `{{RESULT: scarcity_exp_delta}}` |
+| Sunk Cost | `{{RESULT: sunk_std}}` | `{{RESULT: sunk_cot}}` | `{{RESULT: sunk_exp}}` | `{{RESULT: sunk_cot_delta}}` | `{{RESULT: sunk_exp_delta}}` |
+
+**H8 test (exploratory):** 2×2 ANOVA (anchoring × decoy × standard/cot prompt version). Key interaction contrast: Δ(decoy CoT − decoy standard) vs. Δ(anchor CoT − anchor standard). Verdict: `{{RESULT: H8_anova_verdict}}`. *This analysis is exploratory (H8 is not confirmatory); no inferential claims are warranted.*
+
+*CoT experiment is implemented in `research/scripts/06_run_cot_experiment.py`. Results are written to `results/experiments/pillar2-cot_experiment-{timestamp}/`.*
+
+---
+
+### D.4 Supplier Order Stability
+
+**Threat:** Models may exhibit positional bias — preferring the first or last supplier listed regardless of attributes. If supplier order is correlated with the optimal supplier's position, positional bias inflates apparent rationality.
+
+**Protocol:** Each run uses a unique per-run seed for supplier list ordering, derived as `HMAC-SHA256(base_seed, "scenario_id|variant|run_index")` folded to [0, 2³¹). This ensures that across N=50 runs per cell, each supplier appears in each list position approximately equally often. The seed is stored in run metadata (`supplier_order_seed`) enabling exact replayability.
+
+**Verification:** Across all cells in the primary experiment, the optimal supplier occupies each list position (1st, 2nd, ..., nth) with approximately equal frequency: `{{RESULT: supplier_position_distribution}}`. The correlation between choice_is_correct and supplier_position is: r = `{{RESULT: position_choice_correlation}}` (expected ≈ 0 if positional bias is absent).
+
+*Supplier order randomization is implemented in `harness/runner.py` (`derive_seed()` function). The `--supplier-order-seed` and `--supplier-order-static` CLI flags enable reproducibility and controlled comparisons.*
