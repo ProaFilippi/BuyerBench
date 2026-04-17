@@ -31,7 +31,7 @@ if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
 # Design constants live in grid.py so they are importable by tests and other modules.
-from research.experiments.grid import DESIGNS, FLAGSHIP_DESIGN, REALISTIC_DESIGN  # noqa: F401
+from research.experiments.grid import DESIGNS, FLAGSHIP_DESIGN, PILOT_DESIGN, REALISTIC_DESIGN  # noqa: F401
 from research.experiments.manifest import create_manifest, freeze_manifest
 from research.experiments.run_experiment import estimate_cost, generate_run_plan
 
@@ -49,7 +49,8 @@ def main(argv: list[str] | None = None) -> None:
         "--design",
         choices=list(DESIGNS),
         default="realistic",
-        help="Experiment scale: 'realistic' (10 models × 50 runs) or "
+        help="Experiment scale: 'pilot' (mock-agent × 5 runs, infrastructure check), "
+             "'realistic' (10 models × 50 runs), or "
              "'flagship' (10 models × 100 runs + CoT). Default: realistic.",
     )
     parser.add_argument(

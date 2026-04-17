@@ -26,7 +26,7 @@ from pathlib import Path
 import pytest
 
 # Import constants from the importable grid module.
-from research.experiments.grid import DESIGNS, FLAGSHIP_DESIGN, REALISTIC_DESIGN
+from research.experiments.grid import DESIGNS, FLAGSHIP_DESIGN, PILOT_DESIGN, REALISTIC_DESIGN
 
 
 # ── Load the script module via importlib (digit-prefix filename) ──────────────
@@ -99,13 +99,25 @@ class TestDesignConstants:
         for model in REALISTIC_DESIGN["models"]:
             assert model.startswith("openrouter-"), f"Unexpected model id: {model}"
 
-    def test_designs_dict_contains_both_tiers(self):
+    def test_designs_dict_contains_all_tiers(self):
         assert "realistic" in DESIGNS
         assert "flagship" in DESIGNS
+        assert "pilot" in DESIGNS
 
     def test_designs_dict_values_are_correct(self):
         assert DESIGNS["realistic"] is REALISTIC_DESIGN
         assert DESIGNS["flagship"] is FLAGSHIP_DESIGN
+        assert DESIGNS["pilot"] is PILOT_DESIGN
+
+    def test_anchoring_scenario_ids_match_actual_files(self):
+        anchoring = REALISTIC_DESIGN["bias_scenarios"]["anchoring"]
+        assert anchoring["baseline"] == "p2-01-anchor-high-BASELINE"
+        assert anchoring["treatment"] == "p2-01-anchor-high-ANCHOR_HIGH"
+
+    def test_framing_scenario_ids_match_actual_files(self):
+        framing = REALISTIC_DESIGN["bias_scenarios"]["framing"]
+        assert framing["baseline"] == "p2-02-framing-GAIN"
+        assert framing["treatment"] == "p2-02-framing-LOSS"
 
     def test_scenario_ids_are_strings(self):
         for bias, variants in REALISTIC_DESIGN["bias_scenarios"].items():
@@ -254,6 +266,77 @@ class TestMainFlagship:
         cost = json.loads((exp_dir / "cost_estimate.txt").read_text())
         # Flagship uses $0.20/run
         assert abs(cost["estimated_total_usd"] - 40000 * 0.20) < 0.01
+
+
+# ── main() end-to-end: pilot design ─────────────────────────────────────────
+
+
+class TestMainPilot:
+    @pytest.fixture(scope="class")
+    def exp_dir(self, tmp_path_factory):
+        out = tmp_path_factory.mktemp("pilot_exp")
+        return run_main("pilot", out)
+
+    def test_manifest_design_tier(self, exp_dir):
+        m = json.loads((exp_dir / "manifest.json").read_text())
+        assert m["design_tier"] == "pilot"
+
+    def test_manifest_experiment_id_prefix(self, exp_dir):
+        m = json.loads((exp_dir / "manifest.json").read_text())
+        assert m["experiment_id"].startswith("pillar2-pilot-")
+
+    def test_manifest_single_mock_model(self, exp_dir):
+        m = json.loads((exp_dir / "manifest.json").read_text())
+        assert m["models"] == ["mock-agent-v1"]
+
+    def test_manifest_n_runs_per_cell(self, exp_dir):
+        m = json.loads((exp_dir / "manifest.json").read_text())
+        assert m["n_runs_per_cell"] == 5
+
+    def test_manifest_total_planned_runs(self, exp_dir):
+        m = json.loads((exp_dir / "manifest.json").read_text())
+        # 1 model × 5 bias types × 2 variants × 1 temp × 1 prompt × 5 runs = 50
+        assert m["total_planned_runs"] == 50
+
+    def test_run_plan_row_count(self, exp_dir):
+        with open(exp_dir / "run_plan.csv") as f:
+            rows = list(csv.DictReader(f))
+        assert len(rows) == 50
+
+    def test_run_plan_all_run_ids_unique(self, exp_dir):
+        with open(exp_dir / "run_plan.csv") as f:
+            run_ids = [row["run_id"] for row in csv.DictReader(f)]
+        assert len(run_ids) == len(set(run_ids))
+
+    def test_run_plan_agent_is_mock(self, exp_dir):
+        with open(exp_dir / "run_plan.csv") as f:
+            agents = {row["agent_id"] for row in csv.DictReader(f)}
+        assert agents == {"mock-agent-v1"}
+
+    def test_cost_estimate_is_zero(self, exp_dir):
+        cost = json.loads((exp_dir / "cost_estimate.txt").read_text())
+        assert cost["estimated_total_usd"] == 0.0
+
+
+# ── Design constants: pilot ───────────────────────────────────────────────────
+
+
+class TestPilotDesignConstants:
+    def test_pilot_has_one_model(self):
+        assert len(PILOT_DESIGN["models"]) == 1
+        assert PILOT_DESIGN["models"][0] == "mock-agent-v1"
+
+    def test_pilot_n_runs_per_cell_is_5(self):
+        assert PILOT_DESIGN["n_runs_per_cell"] == 5
+
+    def test_pilot_cost_is_zero(self):
+        assert PILOT_DESIGN["cost_per_run_usd"] == 0.0
+
+    def test_pilot_design_tier(self):
+        assert PILOT_DESIGN["design_tier"] == "pilot"
+
+    def test_pilot_shares_bias_scenarios_with_realistic(self):
+        assert PILOT_DESIGN["bias_scenarios"] == REALISTIC_DESIGN["bias_scenarios"]
 
 
 # ── Duplicate-manifest protection ────────────────────────────────────────────

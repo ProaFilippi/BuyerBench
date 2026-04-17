@@ -33,13 +33,13 @@ REALISTIC_DESIGN: dict = {
     ],
     "bias_scenarios": {
         "anchoring": {
-            "baseline": "p2-01-anchoring-BASELINE",
-            "treatment": "p2-01-anchoring-ANCHOR_HIGH",
+            "baseline": "p2-01-anchor-high-BASELINE",
+            "treatment": "p2-01-anchor-high-ANCHOR_HIGH",
         },
         "framing": {
             # GAIN is the reference variant; LOSS is the treatment.
-            "baseline": "p2-02-framing-FRAMING_GAIN",
-            "treatment": "p2-02-framing-FRAMING_LOSS",
+            "baseline": "p2-02-framing-GAIN",
+            "treatment": "p2-02-framing-LOSS",
         },
         "decoy": {
             "baseline": "p2-03-decoy-BASELINE",
@@ -74,9 +74,23 @@ FLAGSHIP_DESIGN: dict = {
     "cost_per_run_usd": 0.20,
 }
 
+# ── Pilot Design (infrastructure verification — mock agent, N=5 per cell) ─────
+
+PILOT_DESIGN: dict = {
+    **REALISTIC_DESIGN,
+    "design_tier": "pilot",
+    # Single mock agent: always available, zero cost, validates full pipeline.
+    "models": ["mock-agent-v1"],
+    "n_runs_per_cell": 5,
+    "temperatures": [0.7],
+    "prompt_versions": ["standard"],
+    "cost_per_run_usd": 0.00,
+}
+
 # ── Registry ──────────────────────────────────────────────────────────────────
 
 DESIGNS: dict[str, dict] = {
     "realistic": REALISTIC_DESIGN,
     "flagship": FLAGSHIP_DESIGN,
+    "pilot": PILOT_DESIGN,
 }

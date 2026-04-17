@@ -145,8 +145,21 @@ def _invoke_buyerbench(run_spec: dict, run_output_dir: Path) -> dict | None:
     if proc.returncode != 0:
         return None
 
-    result_path = run_output_dir / run_spec["agent_id"] / f"{run_spec['scenario_id']}.json"
-    if not result_path.exists():
+    # --n-runs 1 writes {scenario_id}-run000.json; bare {scenario_id}.json is
+    # the single-run (no --n-runs flag) convention.  Try both patterns.
+    agent_dir = run_output_dir / run_spec["agent_id"]
+    scenario_id = run_spec["scenario_id"]
+    candidates = [
+        agent_dir / f"{scenario_id}.json",
+        agent_dir / f"{scenario_id}-run000.json",
+    ]
+    result_path = next((p for p in candidates if p.exists()), None)
+    if result_path is None:
+        # Last resort: glob for any matching JSON in the agent directory
+        matches = list(agent_dir.glob(f"{scenario_id}*.json")) if agent_dir.exists() else []
+        result_path = matches[0] if matches else None
+
+    if result_path is None:
         return None
 
     try:
@@ -279,7 +292,9 @@ def run_experiment(
 
     # ── Dry-run mode ──────────────────────────────────────────────────────────
     if dry_run:
-        cost = estimate_cost(len(runs))
+        cost = estimate_cost(
+            len(runs), manifest.get("cost_per_run_usd", 0.15)
+        )
         sep = "=" * 62
         print(f"\n{sep}")
         print(f"  DRY RUN  —  Experiment: {session_id}")

@@ -241,9 +241,10 @@ class ExperimentManifest:
     """ISO-8601 UTC timestamp when the last run completed (or failed)."""
 
     def __post_init__(self) -> None:
-        if self.design_tier not in ("realistic", "flagship"):
+        if self.design_tier not in ("realistic", "flagship", "pilot"):
             raise ValueError(
-                f"design_tier must be 'realistic' or 'flagship', got '{self.design_tier}'"
+                f"design_tier must be 'realistic', 'flagship', or 'pilot', "
+                f"got '{self.design_tier}'"
             )
         if self.total_completed_runs > self.total_planned_runs and self.total_planned_runs > 0:
             raise ValueError(
