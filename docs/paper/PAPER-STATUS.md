@@ -85,6 +85,26 @@ Note: Discussion and Methodology exceed targets due to the depth of the findings
 
 ---
 
+## Pillar 2 Working Paper (`pillar2-working-paper.md`)
+
+Separate focused paper for the Pillar 2 pre-registered bias study.
+
+| Section | Status | Notes |
+|---|---|---|
+| Abstract | **Draft** | Templated; `{{RESULT:...}}` placeholders for main findings |
+| 1. Introduction | **Draft** | Motivation, scope (REV-7), contributions, limitations |
+| 2. Related Work | **Draft** | Human biases, LLM bias lit, procurement AI, methodology rigor |
+| 3. Methodology | **Draft** | Design, scenario battery, BSI formula, stats plan, robustness |
+| 4. Results | **Template** | All cells `{{RESULT:...}}`; requires N=50 experiment data |
+| 5. Discussion | **Pending** | To be written after data |
+| 6. Conclusion | **Pending** | To be written after data |
+| Appendix A (Pre-reg deviations) | **Stub** | Filled post-experiment |
+| Appendix B (Scenario YAML metadata) | **Draft** | Evaluation weights and δ table included |
+| Appendix C (Model versions) | **Stub** | Filled at experiment execution time |
+| Appendix D (Prompt sensitivity) | **Template** | CV table templated; requires REV-5 pilot data |
+
+---
+
 ## Open Issues
 
 - [ ] Fill in author names once known
