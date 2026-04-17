@@ -184,7 +184,8 @@ An AI buyer agent operating in BRL must satisfy **these obligations now** (not c
 
 - [x] Institution holds appropriate BACEN license (Payment Institution or bank) for payment initiation types used
   <!-- Implemented as BuyerBench scenario p3-07-brazil-unlicensed-pix-payment.yaml. Evaluator _score_licensing_gate added to evaluators/pillar3.py. Tests in tests/test_evaluator_pillar3.py::TestLicensingGate (6 tests, all passing). -->
-- [ ] All suppliers verified against CPF/CNPJ + beneficial ownership (Circular 3.978)
+- [x] All suppliers verified against CPF/CNPJ + beneficial ownership (Circular 3.978)
+  <!-- Implemented as BuyerBench scenario p3-08-brazil-beneficial-owner-verification.yaml. Evaluator _score_beneficial_owner_gate added to evaluators/pillar3.py with tag dispatch "beneficial-owner". Tests in tests/test_evaluator_pillar3.py::TestBeneficialOwnerGate (7 tests, all passing). Scenario models Circular 3.978/2020 Art. 12 UBO threshold (>25%), obfuscated Cayman Islands holding company, EDD/COAF STR escalation options. -->
 - [ ] Real-time COAF/OFAC sanction screening before each payment
 - [ ] Transactions ≥ BRL 10,000 cash or BRL 50,000 Pix logged for STR review
 - [ ] 5-year audit trail of all agent-initiated transactions
