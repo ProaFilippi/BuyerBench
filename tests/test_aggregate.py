@@ -490,3 +490,194 @@ class TestInferBiasCategory:
     def test_scarcity(self):
         from evaluators.aggregate import _infer_bias_category
         assert _infer_bias_category("p2-04-scarcity") == "scarcity"
+
+
+# ---------------------------------------------------------------------------
+# UPGRADE-5: cell-level aggregate output integration tests
+# ---------------------------------------------------------------------------
+
+class TestUpgrade5CellLevelAggregateOutput:
+    """Integration tests for UPGRADE-5: verify the run_scenario() → aggregate_cells()
+    pipeline produces correct cell-level statistics from multi-run experiments."""
+
+    @pytest.fixture
+    def p2_scenario(self, all_scenarios):
+        """Return the first Pillar 2 scenario with a variant_pair_id for pairing tests."""
+        return next(
+            s for s in all_scenarios
+            if "PILLAR2" in str(s.pillar) and s.variant_pair_id is not None
+        )
+
+    def test_n_runs_produces_one_cell(self, p2_scenario, mock_agent, tmp_path):
+        """N runs of the same scenario by the same agent must aggregate into exactly one cell."""
+        from harness.runner import run_scenario
+        from results.aggregate_cells import aggregate_cells
+
+        results = [
+            run_scenario(p2_scenario, mock_agent, output_dir=tmp_path, run_index=i)
+            for i in range(5)
+        ]
+        report = aggregate_cells(results)
+        assert report.n_cells == 1
+
+    def test_n_runs_reflected_in_cell_n_runs(self, p2_scenario, mock_agent, tmp_path):
+        """CellAggregate.n_runs must equal the number of runs submitted."""
+        from harness.runner import run_scenario
+        from results.aggregate_cells import aggregate_cells
+
+        results = [
+            run_scenario(p2_scenario, mock_agent, output_dir=tmp_path, run_index=i)
+            for i in range(7)
+        ]
+        report = aggregate_cells(results)
+        assert report.cells[0].n_runs == 7
+
+    def test_n_total_runs_matches_input(self, p2_scenario, mock_agent, tmp_path):
+        """CellAggregateReport.n_total_runs must equal the total number of results."""
+        from harness.runner import run_scenario
+        from results.aggregate_cells import aggregate_cells
+
+        N = 6
+        results = [
+            run_scenario(p2_scenario, mock_agent, output_dir=tmp_path, run_index=i)
+            for i in range(N)
+        ]
+        report = aggregate_cells(results)
+        assert report.n_total_runs == N
+
+    def test_cell_id_is_deterministic(self, p2_scenario, mock_agent, tmp_path):
+        """The cell_id for the same (agent, scenario, variant) must be identical across calls."""
+        from harness.runner import run_scenario
+        from results.aggregate_cells import aggregate_cells
+
+        results_a = [
+            run_scenario(p2_scenario, mock_agent, output_dir=tmp_path / "a", run_index=i)
+            for i in range(3)
+        ]
+        results_b = [
+            run_scenario(p2_scenario, mock_agent, output_dir=tmp_path / "b", run_index=i)
+            for i in range(3)
+        ]
+        id_a = aggregate_cells(results_a).cells[0].cell_id
+        id_b = aggregate_cells(results_b).cells[0].cell_id
+        assert id_a == id_b
+
+    def test_cell_contains_agent_id(self, p2_scenario, mock_agent, tmp_path):
+        """CellAggregate.agent_id must match the agent that produced the runs."""
+        from harness.runner import run_scenario
+        from results.aggregate_cells import aggregate_cells
+
+        results = [
+            run_scenario(p2_scenario, mock_agent, output_dir=tmp_path, run_index=i)
+            for i in range(3)
+        ]
+        cell = aggregate_cells(results).cells[0]
+        assert cell.agent_id == mock_agent.agent_id
+
+    def test_write_cell_aggregates_creates_file(self, p2_scenario, mock_agent, tmp_path):
+        """write_cell_aggregates() must create cell_aggregates.json in the output dir."""
+        import json
+        from harness.runner import run_scenario
+        from results.aggregate_cells import aggregate_cells, write_cell_aggregates
+
+        results = [
+            run_scenario(p2_scenario, mock_agent, output_dir=tmp_path, run_index=i)
+            for i in range(3)
+        ]
+        report = aggregate_cells(results)
+        out_path = write_cell_aggregates(report, tmp_path)
+        assert out_path.exists()
+
+    def test_cell_aggregates_json_is_valid(self, p2_scenario, mock_agent, tmp_path):
+        """cell_aggregates.json must be parseable and contain 'cells' and 'n_total_runs'."""
+        import json
+        from harness.runner import run_scenario
+        from results.aggregate_cells import aggregate_cells, write_cell_aggregates
+
+        results = [
+            run_scenario(p2_scenario, mock_agent, output_dir=tmp_path, run_index=i)
+            for i in range(4)
+        ]
+        report = aggregate_cells(results)
+        out_path = write_cell_aggregates(report, tmp_path)
+        data = json.loads(out_path.read_text())
+        assert "cells" in data
+        assert "n_total_runs" in data
+        assert data["n_total_runs"] == 4
+
+    def test_two_scenarios_produce_two_cells(self, all_scenarios, mock_agent, tmp_path):
+        """Running N runs each on two different scenarios must produce exactly 2 cells."""
+        from harness.runner import run_scenario
+        from results.aggregate_cells import aggregate_cells
+
+        p2_scenarios = [
+            s for s in all_scenarios
+            if "PILLAR2" in str(s.pillar) and s.variant_pair_id is not None
+        ][:2]
+        assert len(p2_scenarios) == 2, "Need at least 2 Pillar 2 paired scenarios"
+
+        results = []
+        for s in p2_scenarios:
+            for i in range(3):
+                results.append(
+                    run_scenario(s, mock_agent, output_dir=tmp_path, run_index=i)
+                )
+        report = aggregate_cells(results)
+        assert report.n_cells == 2
+
+    def test_n_valid_runs_excludes_errors(self, p2_scenario, mock_agent, tmp_path):
+        """n_valid_runs must be less than n_runs when some runs carry error_flag=True."""
+        from buyerbench.models import EvaluationResult
+        from harness.runner import run_scenario
+        from results.aggregate_cells import aggregate_cells
+
+        results = [
+            run_scenario(p2_scenario, mock_agent, output_dir=tmp_path, run_index=i)
+            for i in range(4)
+        ]
+        # Mark one result as an error
+        results[0].error_flag = True
+
+        report = aggregate_cells(results)
+        cell = report.cells[0]
+        assert cell.n_runs == 4
+        assert cell.n_valid_runs == 3
+
+    def test_mean_bsi_is_float_in_zero_one(self, p2_scenario, mock_agent, tmp_path):
+        """CellAggregate.mean_bsi must be a float in [0.0, 1.0]."""
+        from harness.runner import run_scenario
+        from results.aggregate_cells import aggregate_cells
+
+        results = [
+            run_scenario(p2_scenario, mock_agent, output_dir=tmp_path, run_index=i)
+            for i in range(5)
+        ]
+        cell = aggregate_cells(results).cells[0]
+        assert isinstance(cell.mean_bsi, float)
+        assert 0.0 <= cell.mean_bsi <= 1.0
+
+    def test_ci_lower_le_mean_le_upper(self, p2_scenario, mock_agent, tmp_path):
+        """95% CI must satisfy ci_lower_95 <= mean_bsi <= ci_upper_95."""
+        from harness.runner import run_scenario
+        from results.aggregate_cells import aggregate_cells
+
+        results = [
+            run_scenario(p2_scenario, mock_agent, output_dir=tmp_path, run_index=i)
+            for i in range(6)
+        ]
+        cell = aggregate_cells(results).cells[0]
+        assert cell.ci_lower_95 <= cell.mean_bsi <= cell.ci_upper_95
+
+    def test_aggregate_cells_from_dir_matches_in_memory(self, p2_scenario, mock_agent, tmp_path):
+        """aggregate_cells_from_dir() must produce the same n_cells as in-memory aggregation."""
+        from harness.runner import run_scenario
+        from results.aggregate_cells import aggregate_cells, aggregate_cells_from_dir
+
+        results = [
+            run_scenario(p2_scenario, mock_agent, output_dir=tmp_path, run_index=i)
+            for i in range(4)
+        ]
+        in_memory = aggregate_cells(results)
+        from_dir = aggregate_cells_from_dir(tmp_path)
+        assert from_dir.n_cells == in_memory.n_cells
+        assert from_dir.n_total_runs == in_memory.n_total_runs
