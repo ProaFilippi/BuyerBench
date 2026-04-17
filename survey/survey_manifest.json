@@ -1,0 +1,143 @@
+{
+  "created_at": "2026-04-17T16:39:19.698998+00:00",
+  "design": {
+    "n_subjects_target": 100,
+    "n_per_version": 50,
+    "n_bias_types": 5,
+    "n_scenarios_per_subject": 5,
+    "between_subjects_variants": true,
+    "within_subjects_bias_types": true
+  },
+  "bias_mapping": {
+    "anchoring": {
+      "baseline": "p2-01-anchor-high-BASELINE",
+      "treatment": "p2-01-anchor-high-ANCHOR_HIGH"
+    },
+    "framing": {
+      "baseline": "p2-02-framing-GAIN",
+      "treatment": "p2-02-framing-LOSS"
+    },
+    "decoy": {
+      "baseline": "p2-03-decoy-BASELINE",
+      "treatment": "p2-03-decoy-DECOY"
+    },
+    "scarcity": {
+      "baseline": "p2-04-scarcity-BASELINE",
+      "treatment": "p2-04-scarcity-SCARCITY"
+    },
+    "sunk_cost": {
+      "baseline": "p2-05-sunk-cost-BASELINE",
+      "treatment": "p2-05-sunk-cost-SUNK_COST"
+    }
+  },
+  "version_a_baseline": [
+    {
+      "position": 1,
+      "scenario_id": "p2-01-anchor-high-BASELINE",
+      "bias_type": "anchoring",
+      "variant": "BASELINE",
+      "variant_pair_id": "p2-01-anchoring",
+      "optimal_choice": "SupplierB"
+    },
+    {
+      "position": 2,
+      "scenario_id": "p2-02-framing-GAIN",
+      "bias_type": "framing",
+      "variant": "FRAMING_GAIN",
+      "variant_pair_id": "p2-02-framing",
+      "optimal_choice": "Contract Alpha"
+    },
+    {
+      "position": 3,
+      "scenario_id": "p2-03-decoy-BASELINE",
+      "bias_type": "decoy",
+      "variant": "BASELINE",
+      "variant_pair_id": "p2-03-decoy",
+      "optimal_choice": "SupplierAlpha"
+    },
+    {
+      "position": 4,
+      "scenario_id": "p2-04-scarcity-BASELINE",
+      "bias_type": "scarcity",
+      "variant": "BASELINE",
+      "variant_pair_id": "p2-04-scarcity",
+      "optimal_choice": "SupplierBeta"
+    },
+    {
+      "position": 5,
+      "scenario_id": "p2-05-sunk-cost-BASELINE",
+      "bias_type": "sunk-cost",
+      "variant": "BASELINE",
+      "variant_pair_id": "p2-05-sunk-cost",
+      "optimal_choice": "CarrierB"
+    }
+  ],
+  "version_b_treatment": [
+    {
+      "position": 1,
+      "scenario_id": "p2-01-anchor-high-ANCHOR_HIGH",
+      "bias_type": "anchoring",
+      "variant": "ANCHOR_HIGH",
+      "variant_pair_id": "p2-01-anchoring",
+      "optimal_choice": "SupplierB"
+    },
+    {
+      "position": 2,
+      "scenario_id": "p2-02-framing-LOSS",
+      "bias_type": "framing",
+      "variant": "FRAMING_LOSS",
+      "variant_pair_id": "p2-02-framing",
+      "optimal_choice": "Contract Alpha"
+    },
+    {
+      "position": 3,
+      "scenario_id": "p2-03-decoy-DECOY",
+      "bias_type": "decoy",
+      "variant": "DECOY",
+      "variant_pair_id": "p2-03-decoy",
+      "optimal_choice": "SupplierAlpha"
+    },
+    {
+      "position": 4,
+      "scenario_id": "p2-04-scarcity-SCARCITY",
+      "bias_type": "scarcity",
+      "variant": "SCARCITY",
+      "variant_pair_id": "p2-04-scarcity",
+      "optimal_choice": "SupplierBeta"
+    },
+    {
+      "position": 5,
+      "scenario_id": "p2-05-sunk-cost-SUNK_COST",
+      "bias_type": "sunk-cost",
+      "variant": "SUNK_COST",
+      "variant_pair_id": "p2-05-sunk-cost",
+      "optimal_choice": "CarrierB"
+    }
+  ],
+  "attention_checks": [
+    {
+      "position": 2,
+      "qid": "ATTN1",
+      "attn_id": "ATTN1",
+      "correct_choice": "Supplier X \u2014 $12.00 per unit"
+    },
+    {
+      "position": 5,
+      "qid": "ATTN2",
+      "attn_id": "ATTN2",
+      "correct_choice": "I confirm I have read each question"
+    }
+  ],
+  "attention_check_exclusion_rule": "Exclude subjects who fail \u22651 attention check (attention_check_passed=False in aggregated data).",
+  "prolific_csv_columns": {
+    "subject_id_col": "Participant id",
+    "scenario_col": "scenario_id",
+    "choice_col": "selected_choice",
+    "variant_col": "variant",
+    "variant_pair_id_col": "variant_pair_id",
+    "bias_category_col": "bias_category",
+    "optimal_choice_col": "optimal_choice",
+    "response_time_col": "response_time_ms",
+    "attention_check_col": "attention_check_passed"
+  }
+}

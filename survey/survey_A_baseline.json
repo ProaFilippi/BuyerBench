@@ -1,0 +1,428 @@
+{
+  "SurveyEntry": {
+    "SurveyID": "SV_BuyerBenchP2",
+    "SurveyName": "Procurement Decision Study \u2014 Version A",
+    "SurveyDescription": "Online survey study of procurement decision-making in organisations.",
+    "SurveyStatus": "Inactive",
+    "SurveyStartDate": "",
+    "SurveyExpirationDate": "",
+    "SurveyCreationDate": "2026-04-17T16:39:19.697980+00:00",
+    "CreatorID": "buyerbench",
+    "LastModified": "2026-04-17T16:39:19.697992+00:00",
+    "LastAccessed": "",
+    "LastActivated": "",
+    "Deleted": null
+  },
+  "SurveyElements": [
+    {
+      "SurveyID": "SV_BuyerBenchP2",
+      "Element": "BL",
+      "PrimaryAttribute": "Survey Blocks",
+      "SecondaryAttribute": null,
+      "Payload": {
+        "0": {
+          "Type": "Default",
+          "Description": "Procurement Vignettes",
+          "ID": "BL_default",
+          "BlockElements": [
+            {
+              "Type": "Question",
+              "QuestionID": "QID1"
+            },
+            {
+              "Type": "Question",
+              "QuestionID": "QID2"
+            },
+            {
+              "Type": "Question",
+              "QuestionID": "ATTN1"
+            },
+            {
+              "Type": "Question",
+              "QuestionID": "QID3"
+            },
+            {
+              "Type": "Question",
+              "QuestionID": "QID4"
+            },
+            {
+              "Type": "Question",
+              "QuestionID": "ATTN2"
+            },
+            {
+              "Type": "Question",
+              "QuestionID": "QID5"
+            }
+          ],
+          "Options": {
+            "BlockLocking": "false",
+            "RandomizeQuestions": "false"
+          }
+        }
+      }
+    },
+    {
+      "SurveyID": "SV_BuyerBenchP2",
+      "Element": "SQ",
+      "PrimaryAttribute": "QID1",
+      "SecondaryAttribute": "p2-01-anchor-high-BASELINE",
+      "Payload": {
+        "QuestionText": "<b>Industrial Component Sourcing \u2014 Select Lowest-Cost Compliant Supplier</b><br><br>You are a procurement manager reviewing supplier options for your organisation. Please read the information below carefully and select the supplier you would choose.<br><br><b>Scenario:</b><br>Briefing: You are the procurement manager at Meridian Industrial. Q2 maintenance orders have opened for Grade-8 hex bolt assemblies (1/2-13 x 2 inch, 10,000 units). The approved vendor list has been refreshed this quarter. Delivery is required within 5 business days. Project specifications require all suppliers to hold current ISO 9001 certification.<br><br>Suppliers:<br>  Name | Unit Price | Lead Time Days | Iso 9001 Certified<br>  --- | --- | --- | ---<br>  SupplierA | 58.0 | 3 | True<br>  SupplierB | 42.0 | 4 | True<br>  SupplierC | 38.0 | 8 | True<br>  SupplierD | 62.0 | 2 | False<br>  SupplierE | 51.0 | 3 | True<br><br><b>Requirements:</b> Supplier must hold current ISO 9001 certification; Delivery lead time must not exceed 5 business days; Select the supplier with the lowest unit price among qualifying suppliers<br><br><b>Which supplier would you select?</b>",
+        "DataExportTag": "QID1",
+        "QuestionType": "MC",
+        "Selector": "SAVR",
+        "SubSelector": "TX",
+        "Configuration": {
+          "QuestionDescriptionOption": "UseText"
+        },
+        "Choices": {
+          "1": {
+            "Display": "SupplierA"
+          },
+          "2": {
+            "Display": "SupplierB"
+          },
+          "3": {
+            "Display": "SupplierC"
+          },
+          "4": {
+            "Display": "SupplierD"
+          },
+          "5": {
+            "Display": "SupplierE"
+          }
+        },
+        "ChoiceOrder": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "Validation": {
+          "Settings": {
+            "ForceResponse": "ON",
+            "ForceResponseType": "ON",
+            "Type": "None"
+          }
+        },
+        "Language": [],
+        "NextChoiceId": 6,
+        "NextAnswerId": 1,
+        "_buyerbench": {
+          "scenario_id": "p2-01-anchor-high-BASELINE",
+          "variant": "BASELINE",
+          "variant_pair_id": "p2-01-anchoring",
+          "optimal_choice": "SupplierB",
+          "choices": [
+            "SupplierA",
+            "SupplierB",
+            "SupplierC",
+            "SupplierD",
+            "SupplierE"
+          ]
+        }
+      }
+    },
+    {
+      "SurveyID": "SV_BuyerBenchP2",
+      "Element": "SQ",
+      "PrimaryAttribute": "QID2",
+      "SecondaryAttribute": "p2-02-framing-GAIN",
+      "Payload": {
+        "QuestionText": "<b>Quarterly Managed Services Contract Selection \u2014 Q3 Budget Review</b><br><br>You are a procurement manager reviewing supplier options for your organisation. Please read the information below carefully and select the supplier you would choose.<br><br><b>Scenario:</b><br>Email Excerpt: From: Jennifer Mack, VP Finance To: Procurement Team Subject: Q3 Managed Services \u2014 Budget Confirmation<br>Following last quarter's $210k overrun on managed services, Finance has approved a renewed quarterly cap of $155k for this category. The new Alpha contract at $150k brings us well within target and frees up a $5k buffer for incidental charges. Please proceed with vendor selection by end of week.<br><br>Contract Options:<br>  Name | Vendor | Quarterly Cost | Sla Tier | Support Response Hours | Approved<br>  --- | --- | --- | --- | --- | ---<br>  Contract Alpha | AlphaVend Solutions | 150000.0 | Standard (99.5% uptime) | 8 | True<br>  Contract Beta | BetaServ Pro | 180000.0 | Premium (99.9% uptime) | 4 | True<br>Budget:<br>  \u2022 Approved Quarterly Budget: 155000.0<br><br><b>Requirements:</b> Selected contract must not exceed the approved quarterly budget of $155,000; Both vendors are approved and both SLA tiers are acceptable; Select on cost; SLA tier differences do not affect this procurement decision<br><br><b>Which contract would you select?</b>",
+        "DataExportTag": "QID2",
+        "QuestionType": "MC",
+        "Selector": "SAVR",
+        "SubSelector": "TX",
+        "Configuration": {
+          "QuestionDescriptionOption": "UseText"
+        },
+        "Choices": {
+          "1": {
+            "Display": "Contract Alpha"
+          },
+          "2": {
+            "Display": "Contract Beta"
+          }
+        },
+        "ChoiceOrder": [
+          1,
+          2
+        ],
+        "Validation": {
+          "Settings": {
+            "ForceResponse": "ON",
+            "ForceResponseType": "ON",
+            "Type": "None"
+          }
+        },
+        "Language": [],
+        "NextChoiceId": 3,
+        "NextAnswerId": 1,
+        "_buyerbench": {
+          "scenario_id": "p2-02-framing-GAIN",
+          "variant": "FRAMING_GAIN",
+          "variant_pair_id": "p2-02-framing",
+          "optimal_choice": "Contract Alpha",
+          "choices": [
+            "Contract Alpha",
+            "Contract Beta"
+          ]
+        }
+      }
+    },
+    {
+      "SurveyID": "SV_BuyerBenchP2",
+      "Element": "SQ",
+      "PrimaryAttribute": "ATTN1",
+      "SecondaryAttribute": "attention_check_ATTN1",
+      "Payload": {
+        "QuestionText": "<b>Attention check</b><br><br>This question is to confirm you are reading carefully.<br><br>Two suppliers are quoted for the same component:<br>\u2022 Supplier X: <b>$12.00</b> per unit<br>\u2022 Supplier Y: <b>$89.00</b> per unit<br><br>Please select the supplier with the <b>lower unit price</b>.",
+        "DataExportTag": "ATTN1",
+        "QuestionType": "MC",
+        "Selector": "SAVR",
+        "SubSelector": "TX",
+        "Configuration": {
+          "QuestionDescriptionOption": "UseText"
+        },
+        "Choices": {
+          "1": {
+            "Display": "Supplier X \u2014 $12.00 per unit"
+          },
+          "2": {
+            "Display": "Supplier Y \u2014 $89.00 per unit"
+          }
+        },
+        "ChoiceOrder": [
+          1,
+          2
+        ],
+        "Validation": {
+          "Settings": {
+            "ForceResponse": "ON",
+            "ForceResponseType": "ON",
+            "Type": "None"
+          }
+        },
+        "Language": [],
+        "NextChoiceId": 3,
+        "NextAnswerId": 1,
+        "_buyerbench": {
+          "scenario_id": "attention_check_ATTN1",
+          "variant": "ATTENTION_CHECK",
+          "variant_pair_id": null,
+          "optimal_choice": "Supplier X \u2014 $12.00 per unit",
+          "choices": [
+            "Supplier X \u2014 $12.00 per unit",
+            "Supplier Y \u2014 $89.00 per unit"
+          ],
+          "is_attention_check": true
+        }
+      }
+    },
+    {
+      "SurveyID": "SV_BuyerBenchP2",
+      "Element": "SQ",
+      "PrimaryAttribute": "QID3",
+      "SecondaryAttribute": "p2-03-decoy-BASELINE",
+      "Payload": {
+        "QuestionText": "<b>Component Supplier Selection \u2014 Standard Three-Attribute Evaluation</b><br><br>You are a procurement manager reviewing supplier options for your organisation. Please read the information below carefully and select the supplier you would choose.<br><br><b>Scenario:</b><br>Background: The procurement team is sourcing precision-machined components for the Q3 production run. Two vendors passed the initial RFP screening and have been added to the approved supplier list. Both have current COA documentation on file.<br><br>Scoring Model:<br>  \u2022 Quality Weight: 0.6<br>  \u2022 Delivery Reliability Weight: 0.3<br>  \u2022 Cost Weight: 0.1<br>  \u2022 Note: cost_score = (max_price - unit_price) / (max_price - min_price). Normalize cost within the presented supplier set only.<br><br>Suppliers:<br>  Name | Unit Price | Quality Score | Delivery Reliability | Approved<br>  --- | --- | --- | --- | ---<br>  SupplierAlpha | 46.0 | 0.92 | 0.88 | True<br>  SupplierBeta | 31.0 | 0.74 | 0.85 | True<br><br><b>Requirements:</b> Use weighted model: quality 60%, delivery reliability 30%, cost 10%; Normalize cost within the presented supplier set before scoring; Only approved suppliers are eligible<br><br><b>Which supplier would you select?</b>",
+        "DataExportTag": "QID3",
+        "QuestionType": "MC",
+        "Selector": "SAVR",
+        "SubSelector": "TX",
+        "Configuration": {
+          "QuestionDescriptionOption": "UseText"
+        },
+        "Choices": {
+          "1": {
+            "Display": "SupplierAlpha"
+          },
+          "2": {
+            "Display": "SupplierBeta"
+          }
+        },
+        "ChoiceOrder": [
+          1,
+          2
+        ],
+        "Validation": {
+          "Settings": {
+            "ForceResponse": "ON",
+            "ForceResponseType": "ON",
+            "Type": "None"
+          }
+        },
+        "Language": [],
+        "NextChoiceId": 3,
+        "NextAnswerId": 1,
+        "_buyerbench": {
+          "scenario_id": "p2-03-decoy-BASELINE",
+          "variant": "BASELINE",
+          "variant_pair_id": "p2-03-decoy",
+          "optimal_choice": "SupplierAlpha",
+          "choices": [
+            "SupplierAlpha",
+            "SupplierBeta"
+          ]
+        }
+      }
+    },
+    {
+      "SurveyID": "SV_BuyerBenchP2",
+      "Element": "SQ",
+      "PrimaryAttribute": "QID4",
+      "SecondaryAttribute": "p2-04-scarcity-BASELINE",
+      "Payload": {
+        "QuestionText": "<b>Hydraulic Fitting Supplier Selection \u2014 Q2 Production Run</b><br><br>You are a procurement manager reviewing supplier options for your organisation. Please read the information below carefully and select the supplier you would choose.<br><br><b>Scenario:</b><br>Background: The engineering team has cleared four vendors through the initial RFQ screening for Q2 hydraulic fitting supply. All four carry current technical data sheets and have passed supplier qualification audits. The procurement manager needs to select the primary supplier before the production schedule is finalized next week.<br><br>Scoring Model:<br>  \u2022 Quality Weight: 0.5<br>  \u2022 Delivery Reliability Weight: 0.3<br>  \u2022 Cost Weight: 0.2<br>  \u2022 Note: cost_score = (max_price - unit_price) / (max_price - min_price). Normalize cost within the full supplier set.<br><br>Suppliers:<br>  Name | Unit Price | Quality Score | Delivery Reliability | Approved<br>  --- | --- | --- | --- | ---<br>  SupplierAlpha | 72.0 | 0.68 | 0.65 | True<br>  SupplierBeta | 88.0 | 0.91 | 0.87 | True<br>  SupplierGamma | 95.0 | 0.94 | 0.92 | True<br>  SupplierDelta | 80.0 | 0.78 | 0.76 | True<br><br><b>Requirements:</b> Use weighted model: quality 50%, delivery reliability 30%, cost 20%; Normalize cost within the full supplier set; Only approved suppliers are eligible<br><br><b>Which supplier would you select?</b>",
+        "DataExportTag": "QID4",
+        "QuestionType": "MC",
+        "Selector": "SAVR",
+        "SubSelector": "TX",
+        "Configuration": {
+          "QuestionDescriptionOption": "UseText"
+        },
+        "Choices": {
+          "1": {
+            "Display": "SupplierAlpha"
+          },
+          "2": {
+            "Display": "SupplierBeta"
+          },
+          "3": {
+            "Display": "SupplierGamma"
+          },
+          "4": {
+            "Display": "SupplierDelta"
+          }
+        },
+        "ChoiceOrder": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "Validation": {
+          "Settings": {
+            "ForceResponse": "ON",
+            "ForceResponseType": "ON",
+            "Type": "None"
+          }
+        },
+        "Language": [],
+        "NextChoiceId": 5,
+        "NextAnswerId": 1,
+        "_buyerbench": {
+          "scenario_id": "p2-04-scarcity-BASELINE",
+          "variant": "BASELINE",
+          "variant_pair_id": "p2-04-scarcity",
+          "optimal_choice": "SupplierBeta",
+          "choices": [
+            "SupplierAlpha",
+            "SupplierBeta",
+            "SupplierGamma",
+            "SupplierDelta"
+          ]
+        }
+      }
+    },
+    {
+      "SurveyID": "SV_BuyerBenchP2",
+      "Element": "SQ",
+      "PrimaryAttribute": "ATTN2",
+      "SecondaryAttribute": "attention_check_ATTN2",
+      "Payload": {
+        "QuestionText": "<b>Attention confirmation</b><br><br>To confirm you have read each question carefully, please select <b>'I confirm I have read each question'</b> from the options below.",
+        "DataExportTag": "ATTN2",
+        "QuestionType": "MC",
+        "Selector": "SAVR",
+        "SubSelector": "TX",
+        "Configuration": {
+          "QuestionDescriptionOption": "UseText"
+        },
+        "Choices": {
+          "1": {
+            "Display": "I confirm I have read each question"
+          },
+          "2": {
+            "Display": "I have not read the questions carefully"
+          }
+        },
+        "ChoiceOrder": [
+          1,
+          2
+        ],
+        "Validation": {
+          "Settings": {
+            "ForceResponse": "ON",
+            "ForceResponseType": "ON",
+            "Type": "None"
+          }
+        },
+        "Language": [],
+        "NextChoiceId": 3,
+        "NextAnswerId": 1,
+        "_buyerbench": {
+          "scenario_id": "attention_check_ATTN2",
+          "variant": "ATTENTION_CHECK",
+          "variant_pair_id": null,
+          "optimal_choice": "I confirm I have read each question",
+          "choices": [
+            "I confirm I have read each question",
+            "I have not read the questions carefully"
+          ],
+          "is_attention_check": true
+        }
+      }
+    },
+    {
+      "SurveyID": "SV_BuyerBenchP2",
+      "Element": "SQ",
+      "PrimaryAttribute": "QID5",
+      "SecondaryAttribute": "p2-05-sunk-cost-BASELINE",
+      "Payload": {
+        "QuestionText": "<b>Logistics Provider Contract Selection \u2014 6-Month Agreement (Baseline)</b><br><br>You are a procurement manager reviewing supplier options for your organisation. Please read the information below carefully and select the supplier you would choose.<br><br><b>Scenario:</b><br>Background: The operations team has screened two logistics providers for the organization's 6-month outbound shipping contract. Both carriers have passed vendor qualification audits and hold current service-level agreements. The procurement manager must select the contract carrier before the new fiscal quarter begins.<br><br>Scoring Model:<br>  \u2022 Cost Weight: 0.4<br>  \u2022 Quality Weight: 0.4<br>  \u2022 Delivery Reliability Weight: 0.2<br>  \u2022 Note: cost_score = (max_monthly_rate - monthly_rate) / (max_monthly_rate - min_monthly_rate). Normalize cost within the full carrier set. quality_score field = on-time delivery rate. delivery_reliability field = network coverage rate.<br><br>Suppliers:<br>  Name | Unit Price | Quality Score | Delivery Reliability | Approved | Description<br>  --- | --- | --- | --- | --- | ---<br>  CarrierA | 22000 | 0.94 | 0.98 | True | Premium carrier. Monthly rate: $22,000. On-time delivery: 94%. Network coverage: 98%.<br>  CarrierB | 18000 | 0.91 | 0.95 | True | Standard carrier. Monthly rate: $18,000. On-time delivery: 91%. Network coverage: 95%.<br><br><b>Requirements:</b> Use weighted model: cost 40%, on-time delivery rate 40%, coverage 20%; Normalize cost (monthly rate) within the full carrier set; Only approved carriers are eligible<br><br><b>Which contract would you select?</b>",
+        "DataExportTag": "QID5",
+        "QuestionType": "MC",
+        "Selector": "SAVR",
+        "SubSelector": "TX",
+        "Configuration": {
+          "QuestionDescriptionOption": "UseText"
+        },
+        "Choices": {
+          "1": {
+            "Display": "CarrierA"
+          },
+          "2": {
+            "Display": "CarrierB"
+          }
+        },
+        "ChoiceOrder": [
+          1,
+          2
+        ],
+        "Validation": {
+          "Settings": {
+            "ForceResponse": "ON",
+            "ForceResponseType": "ON",
+            "Type": "None"
+          }
+        },
+        "Language": [],
+        "NextChoiceId": 3,
+        "NextAnswerId": 1,
+        "_buyerbench": {
+          "scenario_id": "p2-05-sunk-cost-BASELINE",
+          "variant": "BASELINE",
+          "variant_pair_id": "p2-05-sunk-cost",
+          "optimal_choice": "CarrierB",
+          "choices": [
+            "CarrierA",
+            "CarrierB"
+          ]
+        }
+      }
+    }
+  ]
+}

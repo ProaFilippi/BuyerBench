@@ -79,6 +79,380 @@ _SURVEY_PREAMBLE = (
     "Please read the information below carefully and select the supplier you would choose."
 )
 
+# ── Attention check questions ─────────────────────────────────────────────────
+
+ATTENTION_CHECK_QUESTIONS: list[dict[str, Any]] = [
+    {
+        "attn_id": "ATTN1",
+        "question_text": (
+            "<b>Attention check</b><br><br>"
+            "This question is to confirm you are reading carefully.<br><br>"
+            "Two suppliers are quoted for the same component:<br>"
+            "• Supplier X: <b>$12.00</b> per unit<br>"
+            "• Supplier Y: <b>$89.00</b> per unit<br><br>"
+            "Please select the supplier with the <b>lower unit price</b>."
+        ),
+        "choices": [
+            "Supplier X — $12.00 per unit",
+            "Supplier Y — $89.00 per unit",
+        ],
+        "correct_choice": "Supplier X — $12.00 per unit",
+    },
+    {
+        "attn_id": "ATTN2",
+        "question_text": (
+            "<b>Attention confirmation</b><br><br>"
+            "To confirm you have read each question carefully, "
+            "please select <b>'I confirm I have read each question'</b> "
+            "from the options below."
+        ),
+        "choices": [
+            "I confirm I have read each question",
+            "I have not read the questions carefully",
+        ],
+        "correct_choice": "I confirm I have read each question",
+    },
+]
+
+
+def _build_attn_check_element(
+    attn_check: dict[str, Any],
+    survey_id: str,
+    qid: str,
+) -> dict[str, Any]:
+    """Build a single Qualtrics SQ element for an attention check question."""
+    choices: dict[str, dict[str, str]] = {}
+    choice_order: list[int] = []
+    for ci, option in enumerate(attn_check["choices"], start=1):
+        choices[str(ci)] = {"Display": option}
+        choice_order.append(ci)
+
+    return {
+        "SurveyID": survey_id,
+        "Element": "SQ",
+        "PrimaryAttribute": qid,
+        "SecondaryAttribute": f"attention_check_{attn_check['attn_id']}",
+        "Payload": {
+            "QuestionText": attn_check["question_text"],
+            "DataExportTag": qid,
+            "QuestionType": "MC",
+            "Selector": "SAVR",
+            "SubSelector": "TX",
+            "Configuration": {"QuestionDescriptionOption": "UseText"},
+            "Choices": choices,
+            "ChoiceOrder": choice_order,
+            "Validation": {
+                "Settings": {
+                    "ForceResponse": "ON",
+                    "ForceResponseType": "ON",
+                    "Type": "None",
+                }
+            },
+            "Language": [],
+            "NextChoiceId": len(choices) + 1,
+            "NextAnswerId": 1,
+            "_buyerbench": {
+                "scenario_id": f"attention_check_{attn_check['attn_id']}",
+                "variant": "ATTENTION_CHECK",
+                "variant_pair_id": None,
+                "optimal_choice": attn_check["correct_choice"],
+                "choices": attn_check["choices"],
+                "is_attention_check": True,
+            },
+        },
+    }
+
+
+def export_scenarios_to_qualtrics_with_attention_checks(
+    scenarios: "list[Scenario]",
+    output_path: "str | Path",
+    *,
+    survey_name: str = "Procurement Decision Study",
+    attention_check_positions: "list[int] | None" = None,
+) -> "Path":
+    """Export scenarios as Qualtrics QSF with embedded attention checks.
+
+    Identical to :func:`export_scenarios_to_qualtrics` but interleaves
+    :data:`ATTENTION_CHECK_QUESTIONS` at the specified 0-indexed positions
+    within the final question sequence.
+
+    Args:
+        scenarios:                 Scenarios to include (one block each).
+        output_path:               Destination QSF JSON file path.
+        survey_name:               Survey name shown in Qualtrics.
+        attention_check_positions: 0-indexed positions in the *final* question
+                                   list at which to insert each attention check.
+                                   Must equal ``len(ATTENTION_CHECK_QUESTIONS)``.
+                                   Defaults to ``[2, 5]`` (after scenarios 2 and
+                                   4 in a 5-scenario survey, yielding order
+                                   S1 S2 ATTN1 S3 S4 ATTN2 S5).
+
+    Returns:
+        :class:`~pathlib.Path` of the written QSF file.
+    """
+    if attention_check_positions is None:
+        attention_check_positions = [2, 5]
+
+    if len(attention_check_positions) != len(ATTENTION_CHECK_QUESTIONS):
+        raise ValueError(
+            f"attention_check_positions must have {len(ATTENTION_CHECK_QUESTIONS)} entries, "
+            f"got {len(attention_check_positions)}"
+        )
+
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    survey_id = "SV_BuyerBenchP2"
+
+    # Build interleaved sequence of scenario vignettes + attention check markers
+    # marker: {"type": "attn", "attn_check": dict}
+    # scenario: {"type": "scenario", "scenario": Scenario}
+    interleaved: list[dict[str, Any]] = []
+    attn_positions_sorted = sorted(
+        zip(attention_check_positions, ATTENTION_CHECK_QUESTIONS),
+        key=lambda x: x[0],
+    )
+    attn_iter = iter(attn_positions_sorted)
+    next_attn = next(attn_iter, None)
+
+    scenario_qids: list[str] = []
+    attn_qids: list[str] = []
+    all_elements: list[dict[str, Any]] = []
+    block_refs: list[dict[str, str]] = []
+
+    final_idx = 0
+    scenario_iter = iter(enumerate(scenarios, start=1))
+
+    # Build final ordered list of (item_type, content)
+    ordered_items: list[tuple[str, Any]] = []
+    sc_list = list(scenarios)
+    attn_targets = list(zip(attention_check_positions, ATTENTION_CHECK_QUESTIONS))
+    attn_targets.sort(key=lambda x: x[0])
+
+    # Insert scenarios and attention checks by target index
+    sc_queue = list(sc_list)
+    attn_queue = list(attn_targets)  # (position, attn_check)
+    final_position = 0
+
+    while sc_queue or attn_queue:
+        # Check if we should insert an attention check at this position
+        while attn_queue and attn_queue[0][0] == final_position:
+            _, attn_check = attn_queue.pop(0)
+            ordered_items.append(("attn", attn_check))
+            final_position += 1
+        if sc_queue:
+            ordered_items.append(("scenario", sc_queue.pop(0)))
+            final_position += 1
+
+    # Flush remaining attention checks (positions beyond all scenarios)
+    for _, attn_check in attn_queue:
+        ordered_items.append(("attn", attn_check))
+
+    # Now build QSF elements
+    sc_idx = 0
+    attn_counter = 0
+    for item_type, content in ordered_items:
+        if item_type == "scenario":
+            sc_idx += 1
+            qid = f"QID{sc_idx}"
+            vignette = export_scenario_to_survey(content)
+            choices: dict[str, dict[str, str]] = {}
+            choice_order: list[int] = []
+            for ci, option in enumerate(vignette["choices"], start=1):
+                choices[str(ci)] = {"Display": option}
+                choice_order.append(ci)
+
+            question_text = (
+                f"<b>{vignette['title']}</b><br><br>"
+                f"{vignette['preamble']}<br><br>"
+                f"<b>Scenario:</b><br>"
+                f"{vignette['context_text'].replace(chr(10), '<br>')}<br><br>"
+            )
+            if vignette["constraints_text"]:
+                question_text += (
+                    f"<b>Requirements:</b> {vignette['constraints_text']}<br><br>"
+                )
+            question_text += f"<b>{vignette['question']}</b>"
+
+            elem = {
+                "SurveyID": survey_id,
+                "Element": "SQ",
+                "PrimaryAttribute": qid,
+                "SecondaryAttribute": content.id,
+                "Payload": {
+                    "QuestionText": question_text,
+                    "DataExportTag": qid,
+                    "QuestionType": "MC",
+                    "Selector": "SAVR",
+                    "SubSelector": "TX",
+                    "Configuration": {"QuestionDescriptionOption": "UseText"},
+                    "Choices": choices,
+                    "ChoiceOrder": choice_order,
+                    "Validation": {
+                        "Settings": {
+                            "ForceResponse": "ON",
+                            "ForceResponseType": "ON",
+                            "Type": "None",
+                        }
+                    },
+                    "Language": [],
+                    "NextChoiceId": len(choices) + 1,
+                    "NextAnswerId": 1,
+                    "_buyerbench": {
+                        "scenario_id": content.id,
+                        "variant": content.variant.value,
+                        "variant_pair_id": content.variant_pair_id,
+                        "optimal_choice": vignette["optimal_choice"],
+                        "choices": vignette["choices"],
+                    },
+                },
+            }
+            all_elements.append(elem)
+            block_refs.append({"Type": "Question", "QuestionID": qid})
+            scenario_qids.append(qid)
+        else:  # attn
+            attn_counter += 1
+            qid = f"ATTN{attn_counter}"
+            elem = _build_attn_check_element(content, survey_id, qid)
+            all_elements.append(elem)
+            block_refs.append({"Type": "Question", "QuestionID": qid})
+            attn_qids.append(qid)
+
+    block_element: dict[str, Any] = {
+        "SurveyID": survey_id,
+        "Element": "BL",
+        "PrimaryAttribute": "Survey Blocks",
+        "SecondaryAttribute": None,
+        "Payload": {
+            "0": {
+                "Type": "Default",
+                "Description": "Procurement Vignettes",
+                "ID": "BL_default",
+                "BlockElements": block_refs,
+                "Options": {"BlockLocking": "false", "RandomizeQuestions": "false"},
+            }
+        },
+    }
+
+    survey_entry: dict[str, Any] = {
+        "SurveyID": survey_id,
+        "SurveyName": survey_name,
+        "SurveyDescription": (
+            "Online survey study of procurement decision-making in organisations."
+        ),
+        "SurveyStatus": "Inactive",
+        "SurveyStartDate": "",
+        "SurveyExpirationDate": "",
+        "SurveyCreationDate": datetime.now(timezone.utc).isoformat(),
+        "CreatorID": "buyerbench",
+        "LastModified": datetime.now(timezone.utc).isoformat(),
+        "LastAccessed": "",
+        "LastActivated": "",
+        "Deleted": None,
+    }
+
+    qsf: dict[str, Any] = {
+        "SurveyEntry": survey_entry,
+        "SurveyElements": [block_element] + all_elements,
+    }
+
+    output_path.write_text(json.dumps(qsf, indent=2))
+    return output_path
+
+
+def generate_survey_manifest(
+    version_a_scenarios: "list[Scenario]",
+    version_b_scenarios: "list[Scenario]",
+    *,
+    bias_mapping: "dict[str, dict[str, str]] | None" = None,
+    attention_check_positions: "list[int] | None" = None,
+    n_subjects_target: int = 100,
+    n_per_version: int = 50,
+) -> dict[str, Any]:
+    """Build the survey manifest dict for result parsing.
+
+    The manifest records which scenario IDs appear in each survey version, the
+    attention check positions, and column conventions for parsing Prolific CSV
+    exports via :func:`parse_prolific_csv`.
+
+    Args:
+        version_a_scenarios:       Scenarios in Version A (BASELINE).
+        version_b_scenarios:       Scenarios in Version B (TREATMENT).
+        bias_mapping:              ``{bias_type: {baseline: id, treatment: id}}``.
+        attention_check_positions: Positions (0-indexed in final question list)
+                                   where attention checks are inserted.
+        n_subjects_target:         Total subjects planned.
+        n_per_version:             Subjects per survey version.
+
+    Returns:
+        Dict ready for ``json.dumps``.
+    """
+    if attention_check_positions is None:
+        attention_check_positions = [2, 5]
+
+    def _scenario_entry(sc: "Scenario", position: int) -> dict[str, Any]:
+        return {
+            "position": position,
+            "scenario_id": sc.id,
+            "bias_type": (
+                "-".join(sc.variant_pair_id.split("-")[2:])
+                if sc.variant_pair_id and len(sc.variant_pair_id.split("-")) >= 3
+                else None
+            ),
+            "variant": sc.variant.value,
+            "variant_pair_id": sc.variant_pair_id,
+            "optimal_choice": next(iter(sc.expected_optimal.values()), None),
+        }
+
+    version_a_entries = [
+        _scenario_entry(sc, i + 1) for i, sc in enumerate(version_a_scenarios)
+    ]
+    version_b_entries = [
+        _scenario_entry(sc, i + 1) for i, sc in enumerate(version_b_scenarios)
+    ]
+    attn_entries = [
+        {
+            "position": pos,
+            "qid": f"ATTN{i + 1}",
+            "attn_id": aq["attn_id"],
+            "correct_choice": aq["correct_choice"],
+        }
+        for i, (pos, aq) in enumerate(
+            sorted(zip(attention_check_positions, ATTENTION_CHECK_QUESTIONS), key=lambda x: x[0])
+        )
+    ]
+
+    return {
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "design": {
+            "n_subjects_target": n_subjects_target,
+            "n_per_version": n_per_version,
+            "n_bias_types": len(version_a_scenarios),
+            "n_scenarios_per_subject": len(version_a_scenarios),
+            "between_subjects_variants": True,
+            "within_subjects_bias_types": True,
+        },
+        "bias_mapping": bias_mapping or {},
+        "version_a_baseline": version_a_entries,
+        "version_b_treatment": version_b_entries,
+        "attention_checks": attn_entries,
+        "attention_check_exclusion_rule": (
+            "Exclude subjects who fail ≥1 attention check "
+            "(attention_check_passed=False in aggregated data)."
+        ),
+        "prolific_csv_columns": {
+            "subject_id_col": "Participant id",
+            "scenario_col": "scenario_id",
+            "choice_col": "selected_choice",
+            "variant_col": "variant",
+            "variant_pair_id_col": "variant_pair_id",
+            "bias_category_col": "bias_category",
+            "optimal_choice_col": "optimal_choice",
+            "response_time_col": "response_time_ms",
+            "attention_check_col": "attention_check_passed",
+        },
+    }
+
 
 def _format_context_plain(context: dict[str, Any]) -> list[str]:
     """Render context dict as plain human-readable text (no markdown fences).
