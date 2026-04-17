@@ -44,9 +44,9 @@ class TestLoadScenario:
 
 class TestLoadAllScenarios:
     def test_loads_exactly_eighteen_scenarios(self):
-        # REV-4 added 6 hard scenarios: 29 + 6 = 35
+        # p3-07 (BACEN licensing gate) added: 35 + 1 = 36
         scenarios = load_all_scenarios(str(SCENARIOS_ROOT))
-        assert len(scenarios) == 35
+        assert len(scenarios) == 36
 
     def test_all_pillars_represented(self):
         scenarios = load_all_scenarios(str(SCENARIOS_ROOT))

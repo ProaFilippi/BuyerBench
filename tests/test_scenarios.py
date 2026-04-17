@@ -39,8 +39,8 @@ def scenario_pairs():
 
 class TestSuiteCompleteness:
     def test_total_scenario_count(self, all_scenarios):
-        # REV-4 added 6 hard-difficulty scenarios (p2-09, p2-10, p2-11): 29 + 6 = 35
-        assert len(all_scenarios) == 35
+        # p3-07 (BACEN licensing gate) added: 35 + 1 = 36
+        assert len(all_scenarios) == 36
 
     def test_pillar1_count(self, all_scenarios):
         p1 = [s for s in all_scenarios if s.pillar == Pillar.PILLAR1]
@@ -53,7 +53,8 @@ class TestSuiteCompleteness:
 
     def test_pillar3_count(self, all_scenarios):
         p3 = [s for s in all_scenarios if s.pillar == Pillar.PILLAR3]
-        assert len(p3) == 6
+        # p3-07 (BACEN licensing gate) added
+        assert len(p3) == 7
 
     def test_ids_are_unique(self, all_scenarios):
         ids = [s.id for s in all_scenarios]

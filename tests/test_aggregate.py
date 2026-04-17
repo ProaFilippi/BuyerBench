@@ -41,8 +41,8 @@ def suite_results(all_scenarios, mock_agent, tmp_path_factory):
 
 class TestRunSuiteBasics:
     def test_returns_18_results(self, suite_results):
-        # REV-4 added 6 hard scenarios: 29 + 6 = 35
-        assert len(suite_results) == 35
+        # p3-07 (BACEN licensing gate) added: 35 + 1 = 36
+        assert len(suite_results) == 36
 
     def test_all_results_are_evaluation_results(self, suite_results):
         for r in suite_results:
@@ -83,8 +83,8 @@ class TestRunSuiteBasics:
 
         assert "agent_id" in summary
         assert "total_scenarios" in summary
-        # REV-4 added 6 hard scenarios: 29 + 6 = 35
-        assert summary["total_scenarios"] == 35
+        # p3-07 (BACEN licensing gate) added: 35 + 1 = 36
+        assert summary["total_scenarios"] == 36
 
 
 class TestMockAgentScores:
@@ -116,7 +116,8 @@ class TestMockAgentScores:
 
     def test_all_pillar3_scores_above_threshold(self, suite_results):
         p3_results = [r for r in suite_results if r.pillar_scores[0].pillar == Pillar.PILLAR3]
-        assert len(p3_results) == 6
+        # p3-07 (BACEN licensing gate) added
+        assert len(p3_results) == 7
 
         for r in p3_results:
             score = r.pillar_scores[0].score
