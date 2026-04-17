@@ -278,6 +278,188 @@ class TestRunMetadataPropagation:
         assert result0.run_id != result1.run_id
 
 
+# ---------------------------------------------------------------------------
+# UPGRADE-4: JSON file logging tests (run_index, temperature, timestamp, tokens)
+# ---------------------------------------------------------------------------
+
+class TestUpgrade4RunMetadataLogging:
+    """Verify that all four UPGRADE-4 metadata fields are present and correct in the
+    written JSON file after run_scenario() completes."""
+
+    @pytest.fixture
+    def scenario(self, all_scenarios):
+        return all_scenarios[0]
+
+    def test_run_index_present_in_json(self, scenario, mock_agent, tmp_path):
+        """run_index must appear as a top-level key in the output JSON file."""
+        from harness.runner import run_scenario
+        import json
+
+        run_scenario(scenario, mock_agent, output_dir=tmp_path, run_index=0)
+        json_file = tmp_path / mock_agent.agent_id / f"{scenario.id}-run000.json"
+        data = json.loads(json_file.read_text())
+        assert "run_index" in data
+
+    def test_run_index_matches_parameter(self, scenario, mock_agent, tmp_path):
+        """The run_index stored in JSON must equal the run_index argument passed to run_scenario()."""
+        from harness.runner import run_scenario
+        import json
+
+        run_scenario(scenario, mock_agent, output_dir=tmp_path, run_index=5)
+        json_file = tmp_path / mock_agent.agent_id / f"{scenario.id}-run005.json"
+        data = json.loads(json_file.read_text())
+        assert data["run_index"] == 5
+
+    def test_temperature_field_present_in_json(self, scenario, mock_agent, tmp_path):
+        """temperature must appear as a top-level key in the output JSON file."""
+        from harness.runner import run_scenario
+        import json
+
+        run_scenario(scenario, mock_agent, output_dir=tmp_path)
+        agent_dir = tmp_path / mock_agent.agent_id
+        json_file = sorted(agent_dir.glob("*.json"))[0]
+        data = json.loads(json_file.read_text())
+        assert "temperature" in data
+
+    def test_temperature_value_propagated_when_set(self, scenario, tmp_path):
+        """When AgentResponse carries temperature=0.7, the JSON file must record 0.7."""
+        from buyerbench.models import AgentResponse
+        from evaluators.aggregate import run_evaluation
+        from harness.runner import run_scenario
+        import json
+
+        # Construct a response with an explicit temperature
+        response = AgentResponse(
+            scenario_id=scenario.id,
+            agent_id="test-agent-temp",
+            decisions=scenario.expected_optimal,
+            raw_output="",
+            temperature=0.7,
+        )
+        result = run_evaluation(scenario, response)
+        result.run_index = 0
+        result.run_id = "abcd1234abcd1234"
+
+        dest = tmp_path / response.agent_id
+        dest.mkdir(parents=True, exist_ok=True)
+        (dest / f"{scenario.id}-run000.json").write_text(result.model_dump_json(indent=2))
+
+        data = json.loads((dest / f"{scenario.id}-run000.json").read_text())
+        assert data["temperature"] == pytest.approx(0.7)
+
+    def test_timestamp_present_in_json(self, scenario, mock_agent, tmp_path):
+        """timestamp must appear as a top-level key in the output JSON file."""
+        from harness.runner import run_scenario
+        import json
+
+        run_scenario(scenario, mock_agent, output_dir=tmp_path)
+        agent_dir = tmp_path / mock_agent.agent_id
+        json_file = sorted(agent_dir.glob("*.json"))[0]
+        data = json.loads(json_file.read_text())
+        assert "timestamp" in data
+
+    def test_timestamp_is_iso_format_string(self, scenario, mock_agent, tmp_path):
+        """timestamp in JSON must be an ISO 8601 string, not None or a numeric epoch."""
+        from harness.runner import run_scenario
+        from datetime import datetime
+        import json
+
+        run_scenario(scenario, mock_agent, output_dir=tmp_path)
+        agent_dir = tmp_path / mock_agent.agent_id
+        json_file = sorted(agent_dir.glob("*.json"))[0]
+        data = json.loads(json_file.read_text())
+        ts = data["timestamp"]
+        assert isinstance(ts, str), f"Expected string, got {type(ts)}: {ts}"
+        # Must parse as a datetime without error
+        parsed = datetime.fromisoformat(ts)
+        assert parsed is not None
+
+    def test_timestamp_is_utc(self, scenario, mock_agent, tmp_path):
+        """timestamp in JSON must include a UTC timezone indicator (+00:00 or Z)."""
+        from harness.runner import run_scenario
+        import json
+
+        run_scenario(scenario, mock_agent, output_dir=tmp_path)
+        agent_dir = tmp_path / mock_agent.agent_id
+        json_file = sorted(agent_dir.glob("*.json"))[0]
+        data = json.loads(json_file.read_text())
+        ts = data["timestamp"]
+        assert "+00:00" in ts or ts.endswith("Z"), f"Expected UTC offset in: {ts}"
+
+    def test_token_count_input_present_in_json(self, scenario, mock_agent, tmp_path):
+        """token_count_input must appear as a top-level key in the output JSON file."""
+        from harness.runner import run_scenario
+        import json
+
+        run_scenario(scenario, mock_agent, output_dir=tmp_path)
+        agent_dir = tmp_path / mock_agent.agent_id
+        json_file = sorted(agent_dir.glob("*.json"))[0]
+        data = json.loads(json_file.read_text())
+        assert "token_count_input" in data
+
+    def test_token_count_output_present_in_json(self, scenario, mock_agent, tmp_path):
+        """token_count_output must appear as a top-level key in the output JSON file."""
+        from harness.runner import run_scenario
+        import json
+
+        run_scenario(scenario, mock_agent, output_dir=tmp_path)
+        agent_dir = tmp_path / mock_agent.agent_id
+        json_file = sorted(agent_dir.glob("*.json"))[0]
+        data = json.loads(json_file.read_text())
+        assert "token_count_output" in data
+
+    def test_token_counts_default_zero_for_cli_and_mock_agents(self, scenario, mock_agent, tmp_path):
+        """CLI/mock agents cannot introspect subprocess token usage; defaults must be 0."""
+        from harness.runner import run_scenario
+        import json
+
+        run_scenario(scenario, mock_agent, output_dir=tmp_path)
+        agent_dir = tmp_path / mock_agent.agent_id
+        json_file = sorted(agent_dir.glob("*.json"))[0]
+        data = json.loads(json_file.read_text())
+        assert data["token_count_input"] == 0
+        assert data["token_count_output"] == 0
+
+    def test_token_counts_propagated_when_nonzero(self, scenario, tmp_path):
+        """When AgentResponse carries non-zero token counts, JSON must record them."""
+        from buyerbench.models import AgentResponse
+        from evaluators.aggregate import run_evaluation
+        import json
+
+        response = AgentResponse(
+            scenario_id=scenario.id,
+            agent_id="test-agent-tokens",
+            decisions=scenario.expected_optimal,
+            raw_output="",
+            token_count_input=512,
+            token_count_output=128,
+        )
+        result = run_evaluation(scenario, response)
+        result.run_index = 0
+        result.run_id = "dead1234beef5678"
+
+        dest = tmp_path / response.agent_id
+        dest.mkdir(parents=True, exist_ok=True)
+        json_path = dest / f"{scenario.id}-run000.json"
+        json_path.write_text(result.model_dump_json(indent=2))
+
+        data = json.loads(json_path.read_text())
+        assert data["token_count_input"] == 512
+        assert data["token_count_output"] == 128
+
+    def test_all_four_upgrade4_field_groups_in_json(self, scenario, mock_agent, tmp_path):
+        """All four UPGRADE-4 field categories (run_index, temperature, timestamp, tokens)
+        must be present in every JSON result file."""
+        from harness.runner import run_scenario
+        import json
+
+        run_scenario(scenario, mock_agent, output_dir=tmp_path, run_index=2)
+        json_file = tmp_path / mock_agent.agent_id / f"{scenario.id}-run002.json"
+        data = json.loads(json_file.read_text())
+        for field in ("run_index", "temperature", "timestamp", "token_count_input", "token_count_output"):
+            assert field in data, f"UPGRADE-4 field '{field}' missing from JSON output"
+
+
 class TestInferBiasCategory:
     """Unit tests for the _infer_bias_category helper."""
 
