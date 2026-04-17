@@ -6,11 +6,17 @@ Covers:
 - load_gate1_result: returns gate1 sub-dict when file is valid
 - check_gate1: SystemExit(1) when gate1.proceed is False
 - check_gate1: no exit when gate1.proceed is True
+- load_gate2_result: FileNotFoundError when robustness_pilot.json absent
+- load_gate2_result: returns dict when file is valid
+- check_gate2: SystemExit(1) when overall_recommendation is not PROCEED
+- check_gate2: no exit when overall_recommendation is PROCEED
 - CLI: --mock --dry-run end-to-end (manifest, run_plan, cost, design_tier)
-- CLI: --skip-gate1 --dry-run end-to-end (no pilot-dir required)
+- CLI: --skip-gate1 --skip-gate2 --dry-run end-to-end
 - CLI: missing --pilot-dir without --skip-gate1 or --mock raises SystemExit
 - CLI: --pilot-dir with cleared gate proceeds to manifest creation
 - CLI: --pilot-dir with failed gate raises SystemExit(1)
+- CLI: failed gate2 raises SystemExit(1)
+- CLI: --skip-gate2 bypasses gate2 check
 - Mock run: manifest design_tier == "realistic", models == ["mock-agent-v1"]
 - Mock run: n_runs_per_cell == 50, total_planned_runs == 500
 - Mock run: run_plan row count == 500, all run_ids unique, 12-char
@@ -225,6 +231,7 @@ class TestSkipGate1DryRun:
         out = tmp_path_factory.mktemp("full_skip_gate1")
         _script.main([
             "--skip-gate1",
+            "--skip-gate2",
             "--dry-run",
             "--no-pin-versions",
             "--output-dir", str(out),
@@ -246,7 +253,7 @@ class TestSkipGate1DryRun:
         assert all(mod.startswith("openrouter-") for mod in m["models"])
 
 
-# ── CLI: --pilot-dir with cleared gate ───────────────────────────────────────
+# ── CLI: --pilot-dir with cleared gate ────────────────────────────────────────
 
 
 class TestPilotDirClearedGate:
@@ -261,6 +268,7 @@ class TestPilotDirClearedGate:
         _script.main([
             "--pilot-dir", str(pilot_dir),
             "--skip-gate1",  # use skip-gate1 + pilot-dir together to avoid real gate check
+            "--skip-gate2",
             "--dry-run",
             "--no-pin-versions",
             "--output-dir", str(out),
@@ -275,3 +283,137 @@ class TestPilotDirClearedGate:
     def test_design_tier_is_realistic(self, exp_dir):
         m = json.loads((exp_dir / "manifest.json").read_text())
         assert m["design_tier"] == "realistic"
+
+
+# ── load_gate2_result ─────────────────────────────────────────────────────────
+
+
+def _make_robustness_json(tmp_path: Path, overall_recommendation: str = "PROCEED") -> Path:
+    """Write a minimal robustness_pilot.json to *tmp_path* and return the dir."""
+    data = {
+        "n_runs": 5,
+        "cv_threshold": 0.50,
+        "phrasings": ["robustness_a", "robustness_b", "robustness_c"],
+        "per_scenario": {
+            "p2-01-anchoring": {
+                "phrasings": 3,
+                "per_phrasing_mean_bsi": {
+                    "robustness_a": 0.2, "robustness_b": 0.18, "robustness_c": 0.22,
+                },
+                "mean_of_means": 0.20,
+                "std_of_means": 0.02,
+                "cv": 0.10,
+                "cv_threshold": 0.50,
+                "robust": True,
+                "recommendation": "PROCEED",
+            }
+        },
+        "scenarios_passing": 1 if overall_recommendation == "PROCEED" else 0,
+        "scenarios_failing": 0 if overall_recommendation == "PROCEED" else 1,
+        "scenarios_to_redesign": [] if overall_recommendation == "PROCEED" else ["p2-01-anchoring"],
+        "overall_recommendation": overall_recommendation,
+    }
+    pilot_file = tmp_path / "robustness_pilot.json"
+    pilot_file.write_text(json.dumps(data), encoding="utf-8")
+    return tmp_path
+
+
+class TestLoadGate2Result:
+    def test_raises_file_not_found_when_no_robustness_json(self, tmp_path):
+        with pytest.raises(FileNotFoundError, match="robustness_pilot.json"):
+            _script.load_gate2_result(tmp_path)
+
+    def test_returns_dict_when_file_valid(self, tmp_path):
+        _make_robustness_json(tmp_path)
+        result = _script.load_gate2_result(tmp_path)
+        assert isinstance(result, dict)
+
+    def test_returns_proceed_recommendation(self, tmp_path):
+        _make_robustness_json(tmp_path, "PROCEED")
+        result = _script.load_gate2_result(tmp_path)
+        assert result["overall_recommendation"] == "PROCEED"
+
+    def test_returns_redesign_recommendation(self, tmp_path):
+        _make_robustness_json(tmp_path, "REDESIGN")
+        result = _script.load_gate2_result(tmp_path)
+        assert result["overall_recommendation"] == "REDESIGN"
+
+
+# ── check_gate2 ───────────────────────────────────────────────────────────────
+
+
+class TestCheckGate2:
+    def test_exits_when_gate2_not_passed(self, tmp_path):
+        _make_robustness_json(tmp_path, "REDESIGN")
+        with pytest.raises(SystemExit) as exc_info:
+            _script.check_gate2(tmp_path)
+        assert exc_info.value.code == 1
+
+    def test_no_exit_when_gate2_passed(self, tmp_path):
+        _make_robustness_json(tmp_path, "PROCEED")
+        _script.check_gate2(tmp_path)  # should not raise
+
+    def test_exits_on_missing_file(self, tmp_path):
+        empty = tmp_path / "empty"
+        empty.mkdir()
+        with pytest.raises((SystemExit, FileNotFoundError)):
+            _script.check_gate2(empty)
+
+
+# ── CLI: Gate 2 enforcement ────────────────────────────────────────────────────
+
+
+class TestGate2CLIEnforcement:
+    def test_failed_gate2_raises_system_exit(self, tmp_path):
+        robustness_dir = tmp_path / "robustness"
+        robustness_dir.mkdir()
+        _make_robustness_json(robustness_dir, "REDESIGN")
+        out = tmp_path / "output"
+        out.mkdir()
+        with pytest.raises(SystemExit) as exc_info:
+            _script.main([
+                "--skip-gate1",
+                "--robustness-dir", str(robustness_dir),
+                "--dry-run",
+                "--no-pin-versions",
+                "--output-dir", str(out),
+            ])
+        assert exc_info.value.code == 1
+
+    def test_passed_gate2_proceeds(self, tmp_path):
+        robustness_dir = tmp_path / "robustness"
+        robustness_dir.mkdir()
+        _make_robustness_json(robustness_dir, "PROCEED")
+        out = tmp_path / "output"
+        out.mkdir()
+        _script.main([
+            "--skip-gate1",
+            "--robustness-dir", str(robustness_dir),
+            "--dry-run",
+            "--no-pin-versions",
+            "--output-dir", str(out),
+        ])
+        assert any(d.is_dir() for d in out.iterdir())
+
+    def test_skip_gate2_bypasses_check(self, tmp_path):
+        out = tmp_path / "output"
+        out.mkdir()
+        _script.main([
+            "--skip-gate1",
+            "--skip-gate2",
+            "--dry-run",
+            "--no-pin-versions",
+            "--output-dir", str(out),
+        ])
+        assert any(d.is_dir() for d in out.iterdir())
+
+    def test_mock_implies_skip_gate2(self, tmp_path):
+        out = tmp_path / "output"
+        out.mkdir()
+        _script.main([
+            "--mock",
+            "--dry-run",
+            "--no-pin-versions",
+            "--output-dir", str(out),
+        ])
+        assert any(d.is_dir() for d in out.iterdir())
