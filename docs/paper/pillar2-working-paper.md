@@ -39,9 +39,9 @@ related:
 
 Large language models are increasingly deployed as buyer agents that execute supplier selection and procurement decisions autonomously. Whether these agents make economically rational decisions — or whether they are susceptible to the same cognitive biases documented in human decision-makers — is an open empirical question with direct consequences for procurement outcomes. We present a pre-registered, multi-model benchmark study measuring behavioral bias susceptibility across five canonical bias types (anchoring, framing, decoy, scarcity, and sunk cost) in ten frontier LLMs operating on structured procurement selection tasks. Using the Bias Susceptibility Index (BSI) — the probability of a bias-induced decision change weighted by its economic cost — we evaluate each model across N=50 independent runs per (model × bias type × variant) cell (5,000 total runs), providing the first stochasticity-aware, within-model estimate of procurement decision bias in LLMs. We test four pre-registered confirmatory hypotheses (H1: bias universality; H3: decoy reliability; H5: framing asymmetry; H7: stochastic variance proportionality), applying Benjamini-Hochberg false discovery rate correction at q=0.05. *Optimality is defined relative to each scenario's stated evaluation weights; we test internal rationality, not external optimality.* Preliminary infrastructure validation with N=1 pilot data confirms the measurement pipeline is valid; full results will be reported at the pre-specified N=50.
 
-**[TIER-A]** At N=50 per cell: `{{RESULT: X}}/10` models show BSI > 0.10 on at least one bias type (BH-corrected p < 0.05). The decoy effect produces BSI higher than the cross-bias mean (H3 Dunnett: d = `{{RESULT: h3_dunnett_d}}`, p = `{{RESULT: h3_dunnett_p}}`). Within-cell variance is positively correlated with mean BSI across cells (H7: β₁ = `{{RESULT: H7_beta}}`, p = `{{RESULT: H7_p}}`), consistent with the pre-specified boundary-response interpretive frame for H7 (mechanism not directly tested).
+*Pre-registered confirmatory results (N=50 per cell, BH-FDR q=0.05):* `{{RESULT: X}}/10` models show BSI > 0.10 on at least one bias type (BH-corrected p < 0.05). The decoy effect produces BSI higher than the cross-bias mean (H3 Dunnett: d = `{{RESULT: h3_dunnett_d}}`, p = `{{RESULT: h3_dunnett_p}}`). Within-cell variance is positively correlated with mean BSI across cells (H7: β₁ = `{{RESULT: H7_beta}}`, p = `{{RESULT: H7_p}}`), consistent with the pre-specified boundary-response interpretive frame for H7; the underlying mechanism is not directly tested by this design.
 
-**[TIER-B]** Descriptively, among the five bias types, the decoy effect shows the highest mean BSI (`{{RESULT: mean_BSI_decoy}}`), followed by `{{RESULT: second_highest_bias_type}}` (N=10 models; cross-bias ranking is descriptive, not pre-registered).
+*Descriptively, in an exploratory analysis of N=10 models,* among the five bias types the decoy effect shows the highest mean BSI (`{{RESULT: mean_BSI_decoy}}`), followed by `{{RESULT: second_highest_bias_type}}` (cross-bias ranking is descriptive, not pre-registered).
 
 ---
 
@@ -201,7 +201,9 @@ Weights: $w_{mbv} = n_{\text{valid}}$ per cell. Standard errors: clustered at th
 
 **Exploratory analyses (descriptive only; no inferential claims):**
 
-- H2 (Capability-Bias Tradeoff): Spearman $\rho$ between Pillar 1 score and mean BSI across 10 models. OLS scatter is descriptive (N=10 is below inference threshold).
+- H2 (Capability-Bias Tradeoff): Spearman $\rho$ between Pillar 1 score and mean BSI across 10 models. H2 is pre-registered as negative direction (higher capability → less bias), but is exploratory; both a negative and a positive direction (per @hagendorff2023human) are theoretically motivated. OLS scatter is descriptive (N=10 is below inference threshold; Spearman ρ at N=10 achieves approximately 40% power for ρ=0.5 — results interpreted descriptively regardless of direction).
+- H4 (Anchor Magnitude): BSI_ANCHOR_HIGH > BSI_ANCHOR_LOW requires a low-anchor variant (scenario p2-01b), not yet implemented. This hypothesis is deferred to the flagship expansion (Section 5.5); it does not enter the current confirmatory or exploratory analysis.
+- H6 (Sunk Cost–Capability Correlation): Spearman ρ between Pillar 1 score and p2-05 BSI specifically (pre-specified counter-direction to H2; sunk-cost effects may be amplified in higher-capability models that better simulate stakeholder relationships). Descriptive; N=10.
 - H8 (CoT × Bias Type): ANOVA on BSI across `standard` / `cot` / `expert_role` prompt versions. Available from CoT experiment (design tier: `cot_experiment`).
 - H9 (Bias Profiles): Cronbach's α on [BSI_anchor, BSI_frame, BSI_decoy, BSI_scar, BSI_sunk] across 10 models. Hierarchical clustering.
 
@@ -223,12 +225,9 @@ Weights: $w_{mbv} = n_{\text{valid}}$ per cell. Standard errors: clustered at th
 
 > **Data requirement:** All `{{RESULT:...}}` placeholders require data from the N=50 pre-registered experiment (`buyerbench-pillar2-realistic-v1`). Values from the N=1 pilot or infrastructure validation runs (mock-agent-v1) must not be substituted.
 
-> **Claim tiers (N.2):** Each subsection is labeled with its claim tier:
-> - **[TIER-A]** Fully defensible: N≥50, BH-FDR corrected, confirmatory hypotheses only
-> - **[TIER-B]** Suggestive: descriptive patterns, N=10 models, no p-values, hedged language required
-> - **[TIER-C]** Speculative: future work only; must NOT appear in Results or Conclusions
+> **Claim hierarchy:** Confirmatory results (H1, H3, H5, H7) are based on N=50 per cell with BH-FDR correction at q=0.05. Cross-model descriptive patterns (N=10 models) are labeled explicitly as exploratory and carry no inferential p-values. No mechanistic explanations are asserted; mechanism language is restricted to pre-specified interpretive frames noted as such.
 
-### 4.1 Sample Quality and Descriptive Statistics [TIER-A: execution gate | TIER-B: per-model descriptives]
+### 4.1 Sample Quality and Descriptive Statistics
 
 **Table 3. Experiment execution summary**
 
@@ -245,7 +244,7 @@ Weights: $w_{mbv} = n_{\text{valid}}$ per cell. Standard errors: clustered at th
 
 *Infrastructure verdict (Gate 1):* `{{RESULT: gate1_verdict}}` — proceed to confirmatory analysis if error rate < 5% and ≥2 models show mean BSI > 0.05 on at least one bias type.
 
-**Table 4. Per-model descriptive statistics** [TIER-B — descriptive only]
+**Table 4. Per-model descriptive statistics** *(Exploratory; N=10 models; no inferential claims.)*
 
 | Model | n_valid_total | Mean BSI (all types) | BSI types > 0.10 | Included in aggregate |
 |---|---|---|---|---|
@@ -260,7 +259,7 @@ Weights: $w_{mbv} = n_{\text{valid}}$ per cell. Standard errors: clustered at th
 | cohere/command-r-plus | `{{RESULT: cohere_n}}` | `{{RESULT: cohere_mean_bsi}}` | `{{RESULT: cohere_n_sig_types}}` | `{{RESULT: cohere_included}}` |
 | 01-ai/yi-large | `{{RESULT: yi_n}}` | `{{RESULT: yi_mean_bsi}}` | `{{RESULT: yi_n_sig_types}}` | `{{RESULT: yi_included}}` |
 
-### 4.2 H1 — Bias Universality [TIER-A]
+### 4.2 H1 — Bias Universality
 
 **Hypothesis:** LLM agents exhibit non-trivial bias susceptibility (BSI > 0.10 with 95% CI excluding zero) for at least one bias type in at least 5 of 10 tested models (BH-FDR q < 0.05).
 
@@ -278,7 +277,7 @@ Weights: $w_{mbv} = n_{\text{valid}}$ per cell. Standard errors: clustered at th
 
 *If H1 is not confirmed (BSI ≈ 0 across all bias types at N=50):* The primary finding is "domain structure (explicit scoring rubrics, constrained supplier comparison) suppresses behavioral bias susceptibility in LLM procurement agents." This outcome is pre-specified as a valid scientific contribution; see Section 5.1 for the "robust rationality" framing.
 
-### 4.3 H3 — Decoy Effect Reliability and H5 — Framing Asymmetry [TIER-A]
+### 4.3 H3 — Decoy Effect Reliability and H5 — Framing Asymmetry
 
 **H3:** The decoy bias type produces BSI > 0 and BSI higher than the cross-bias mean.
 
@@ -300,7 +299,7 @@ Weights: $w_{mbv} = n_{\text{valid}}$ per cell. Standard errors: clustered at th
 | FRAMING_GAIN | `{{RESULT: gain_bsi_ci}}` | — | — | — | — |
 | FRAMING_LOSS | `{{RESULT: loss_bsi_ci}}` | `{{RESULT: h5_delta}}` | t = `{{RESULT: h5_t}}` | `{{RESULT: h5_p}}` | `{{RESULT: H5_verdict}}` |
 
-### 4.4 H7 — Stochastic Variance Structure [TIER-A]
+### 4.4 H7 — Stochastic Variance Structure
 
 **Hypothesis:** Within-cell standard deviation (`std_bsi`) is positively correlated with mean BSI across cells, consistent with a decision-boundary mechanism where biased agents hover near a supplier-switching threshold.
 
@@ -316,7 +315,7 @@ Weights: $w_{mbv} = n_{\text{valid}}$ per cell. Standard errors: clustered at th
 
 *If η²_residual > 0.70:* "Within-cell stochastic variance accounts for the majority of observed BSI variation. Reported mean BSI estimates carry wide uncertainty; results should be interpreted cautiously as exploratory even at N=50."
 
-### 4.5 Primary Regression and Variance Decomposition [TIER-A]
+### 4.5 Primary Regression and Variance Decomposition
 
 **Level 1 WLS regression results** (cell-level; weights = n_valid_runs; HC3 clustered SE at model level):
 
@@ -339,23 +338,23 @@ Weights: $w_{mbv} = n_{\text{valid}}$ per cell. Standard errors: clustered at th
 | Treatment | `{{RESULT: ss_treatment}}` | `{{RESULT: eta2_treatment}}` | Treatment-condition variance |
 | Residual | `{{RESULT: ss_residual}}` | `{{RESULT: eta2_res}}` | Stochastic + unexplained |
 
-### 4.6 Exploratory Cross-Model Patterns [TIER-B]
+### 4.6 Exploratory Cross-Model Patterns
 
-> **Note [TIER-B]:** The following analyses involve N=10 model-level observations. OLS coefficients and standard errors are reported for descriptive purposes only. No p-values on cross-model comparisons should be interpreted as inferential evidence. The phrase "significantly" is used here in the colloquial (not statistical) sense. All claims in this subsection must be hedged with "descriptive pattern, N=10."
+> **Note:** The following analyses involve N=10 model-level observations. OLS coefficients and standard errors are reported for descriptive purposes only. No p-values on cross-model comparisons should be interpreted as inferential evidence (N=10 is below the inference threshold for cross-model regression; see Section 3.4). All claims in this subsection are descriptive patterns, not confirmatory findings.
 
 **Figure 1: BSI Heatmap** (model × bias type). `{{RESULT: heatmap_figure_path}}` — `{{RESULT: heatmap_description}}`
 
-**H2 (Capability-Bias Tradeoff) — descriptive:** Spearman rank correlation between Pillar 1 composite score and mean BSI across 10 models: ρ = `{{RESULT: h2_rho}}`. [TIER-B] This descriptive pattern is consistent with / not consistent with `{{RESULT: h2_direction_description}}`. As noted in Section 2.2, both a negative (higher capability → less bias) and positive (higher capability → more bias, per @hagendorff2023human) correlation are theoretically motivated; neither direction constitutes a pre-specified confirmatory prediction.
+**H2 (Capability-Bias Tradeoff) — exploratory descriptive pattern:** Spearman rank correlation between Pillar 1 composite score and mean BSI across 10 models: ρ = `{{RESULT: h2_rho}}`. In this descriptive analysis of N=10 models, the pattern is `{{RESULT: h2_direction_description}}`. H2 is pre-registered as negative direction (higher capability → less bias), but is exploratory; a positive direction (higher capability → more bias) has also been reported by @hagendorff2023human on cognitive reflection tasks. The result is interpreted descriptively regardless of direction. Statistical power for Spearman ρ at N=10 is approximately 40% for ρ=0.5 (one-tailed, α=0.05); this correlation cannot be treated as reliable confirmatory evidence in either direction.
 
-**H9 (Bias Profiles) — descriptive:** Cronbach's α on the 5-dimension BSI vector across 10 models: α = `{{RESULT: h9_alpha}}`. [TIER-B] A value `{{RESULT: h9_alpha_interpretation}}` (< 0.50 suggests bias-specific rather than general susceptibility; > 0.70 suggests a general susceptibility factor). `{{RESULT: h9_cluster_description}}`
+**H9 (Bias Profiles) — exploratory descriptive pattern:** Cronbach's α on the 5-dimension BSI vector across 10 models: α = `{{RESULT: h9_alpha}}`. In this descriptive analysis of N=10 models, a value `{{RESULT: h9_alpha_interpretation}}` (< 0.50 suggests bias-specific rather than general susceptibility; > 0.70 suggests a general susceptibility factor). `{{RESULT: h9_cluster_description}}`
 
 ### 4.7 Robustness Checks
 
-**Prompt sensitivity (REV-5):** [TIER-A: pre-specified gate — go/no-go criterion, not an interpretive claim] `{{RESULT: prompt_cv_table}}` — Overall verdict: `{{RESULT: prompt_rev5_verdict}}`. Scenarios flagged for CV > 0.50: `{{RESULT: flagged_scenarios_list}}`.
+**Prompt sensitivity (REV-5):** *Pre-specified go/no-go gate (not an interpretive claim):* `{{RESULT: prompt_cv_table}}` — Overall verdict: `{{RESULT: prompt_rev5_verdict}}`. Scenarios flagged for CV > 0.50: `{{RESULT: flagged_scenarios_list}}`.
 
-**Temperature robustness (T=0.0):** At T=0.0, mean BSI across all cells: `{{RESULT: T0_mean_bsi}}` (vs. T=0.7: `{{RESULT: T07_mean_bsi}}`). [TIER-B] This `{{RESULT: T0_verdict_description}}` (is consistent with / contradicts) the primary T=0.7 findings. `{{RESULT: T0_qualification_if_needed}}`
+**Temperature robustness (T=0.0):** At T=0.0, mean BSI across all cells: `{{RESULT: T0_mean_bsi}}` (vs. T=0.7: `{{RESULT: T07_mean_bsi}}`). In a descriptive comparison, this `{{RESULT: T0_verdict_description}}` (is consistent with / contradicts) the primary T=0.7 findings. `{{RESULT: T0_qualification_if_needed}}`
 
-**Human benchmark calibration (H10) — descriptive:** Human meta-analytic benchmarks (external literature) vs. BuyerBench LLM estimates [TIER-B]:
+**Human benchmark calibration (H10) — exploratory descriptive comparison:** Human meta-analytic benchmarks (external literature) vs. BuyerBench LLM estimates; this comparison is illustrative, not a formal between-group test (see Section 5.1):
 
 | Bias Type | Human d (meta-analytic) | LLM BSI (this study) | LLM d (approx.) | Comparison |
 |---|---|---|---|---|
@@ -367,7 +366,7 @@ Weights: $w_{mbv} = n_{\text{valid}}$ per cell. Standard errors: clustered at th
 
 *Note: LLM Cohen's d is approximated from BSI estimates under the assumption that BSI ≈ P(bias-susceptible response). Direct comparison to human d requires a common scaling assumption; this comparison is illustrative and does not constitute a formal test. A human comparison arm (Phase 4, IRB pending) will enable a proper between-group Welch t-test.*
 
-### 4.8 Hard-Difficulty Ceiling Scenarios (p2-09 through p2-11) [TIER-B]
+### 4.8 Hard-Difficulty Ceiling Scenarios (p2-09 through p2-11)
 
 > **Data requirement:** Results from hard-difficulty scenarios (p2-09 compound, p2-10 anchor-hard, p2-11 scarcity-hard) require the same N=50 pre-registered experiment. These scenarios were added per REV-4 (ceiling effect mitigation) and are reported separately from the primary confirmatory analysis. All values are `{{RESULT:...}}` placeholders.
 
@@ -382,6 +381,80 @@ Weights: $w_{mbv} = n_{\text{valid}}$ per cell. Standard errors: clustered at th
 **Ceiling-effect verdict:** `{{RESULT: ceiling_gate_verdict}}` (Gate criterion: ≥7/10 models show mean BSI < 0.05 on all primary bias types → trigger hard-scenario pivot). `{{RESULT: ceiling_gate_description}}`
 
 *Ceiling-effect detection pipeline implemented in `research/analysis/ceiling_effect.py` (`detect_ceiling_effect()`, `gate1_decision()`). Analysis script: `research/scripts/03_analyze_ceiling_effect.py`.*
+
+---
+
+## 5. Discussion
+
+### 5.1 Interpretation of Confirmatory Hypothesis Verdicts
+
+**H1 (Bias Universality):** The primary finding of this study depends on the H1 verdict at N=50.
+
+*If H1 is confirmed* (≥5/10 models show BH-corrected BSI > 0.10 on ≥1 bias type): LLM-based procurement agents exhibit non-trivial and statistically reliable behavioral bias susceptibility in structured supplier selection tasks. The per-confirmed-bias-type results (Table 5) identify which bias categories are most reliably detectable at N=50, providing actionable targets for mitigation in deployed systems (Section 5.2). The confirmatory result indicates that explicit evaluation rubrics — contrary to the suppression prediction — do not fully eliminate bias effects at the decision stage.
+
+*If H1 is not confirmed* (BSI ≈ 0 across all bias types at N=50): The primary finding pivots to "domain structure suppresses behavioral bias susceptibility in LLM procurement agents." This pre-specified null outcome is a valid scientific contribution: explicit multi-attribute scoring rubrics, stated evaluation weights, and constrained choice sets may together constitute an effective implicit debiasing structure. The finding would position structured procurement prompting as evidence that well-designed task formatting substantially mitigates the bias effects documented in unstructured LLM scenarios [@hagendorff2023human; @echterhoff2024anchoring]. In either scenario, the N=50 protocol provides distributional estimates that distinguish genuine robustness from single-run measurement luck.
+
+**H3 (Decoy Effect):** `{{RESULT: H3_verdict}}`. Pre-registered direction: decoy BSI > 0 and > cross-bias mean. The decoy effect is among the most structurally robust biases in human research (d ≈ 0.4), driven by relative-advantage salience rather than absolute utility comparisons. It was predicted to transfer to the structured procurement context because it operates through comparative evaluation — a process LLMs inherently perform. A confirmed H3 with BSI substantially below the human d ≈ 0.4 benchmark would be consistent with structured-rubric suppression while demonstrating that bias effects are not eliminated entirely.
+
+**H5 (Framing Asymmetry):** `{{RESULT: H5_verdict}}`. Pre-registered direction: loss-frame BSI > gain-frame BSI (loss aversion prediction). Human prospect theory predicts approximately 60% reversal rates under equivalent gain/loss framings [@tversky1981framing]. A directionally consistent but attenuated H5 result would suggest that LLMs encode a loss-aversion asymmetry — possibly from training data reflecting human survey responses — without exhibiting the full magnitude of human loss aversion.
+
+**H7 (Stochastic Variance Structure):** `{{RESULT: H7_verdict}}`. The pre-specified interpretive frame for a confirmed H7 is a boundary-response mechanism — agents near a supplier-switching threshold exhibit high BSI variance as small perturbations in model sampling push the decision across the boundary stochastically. This interpretation is theoretically motivated and pre-registered as an interpretive frame, but the mechanism is not directly tested by this design; the variance-BSI correlation is consistent with multiple generative processes. A confirmed H7 should be described as "consistent with a boundary-response interpretation" and not as mechanistic confirmation.
+
+**H1–H7 joint interpretation:** The confirmatory hypotheses form a coherent theoretical profile. A pattern where H3 and H5 are confirmed with H7 confirmed would collectively suggest that LLM procurement agents exhibit systematic (not random) bias patterns structurally analogous to human behavioral economics findings, at attenuated magnitudes. A pattern where only H7 is confirmed but H1/H3/H5 are not would suggest high-variance rational decision-making near scoring thresholds — closer to threshold sensitivity than systematic irrationality.
+
+### 5.2 Implications for Deployed Buyer Agent Systems
+
+The BSI estimates from this study have direct implications for procurement automation deployments.
+
+**If BSI > 0.10 on any bias type:** A mean BSI of 0.10 at N=50 means the model changes from an optimal to a suboptimal decision in approximately 10% of runs (weighted by economic cost). At procurement scale — a system executing 10,000 supplier selection decisions per year — 10% susceptibility to an anchor bias translates to approximately 1,000 non-optimal decisions attributable to anchor effects alone. The directional nature of documented biases enables adversarial exploitation: a vendor with knowledge of an agent's bias susceptibility profile could craft prompts to systematically favor their submission (e.g., injecting a high anchor as a market reference price, or adding a scarcity signal to a high-margin offering).
+
+**Mitigation pathways:** The CoT and expert-role robustness checks (Appendix D.3) provide empirical estimates of whether prompt-level debiasing reduces BSI. If Δ(cot − standard) < 0 on confirmed bias types, CoT prompting is a viable mitigation. If CoT does not reduce BSI, prompt-layer debiasing is insufficient — requiring application-level logic (screening for manipulation signals, multi-agent cross-checking, explicit anchor detection) or model-level fine-tuning on debiased procurement examples.
+
+**If BSI ≈ 0 across all bias types (robust rationality outcome):** This outcome would suggest that structured procurement prompting — with explicit evaluation rubrics, stated weights, and constrained option sets — is itself a debiasing protocol. The implication for system design is that task structure, not model capability tier, may be the dominant driver of decision quality. The design of the prompt scaffold (explicit weights, constrained comparison format, JSON output instruction) may be doing more debiasing work than the model's raw capability level.
+
+**Cross-model capability gradient (H2, descriptive pattern):** In an exploratory analysis of N=10 models, the Spearman ρ between Pillar 1 capability score and mean BSI is `{{RESULT: h2_rho}}`. The statistical power of Spearman ρ at N=10 is approximately 40% for ρ=0.5 (one-tailed, α=0.05), so this correlation cannot be treated as reliable evidence for or against a capability-bias tradeoff. A descriptive negative correlation, if present, would be consistent with (but not confirmation of) the hypothesis that capability improvements provide incidental debiasing; an absence of correlation would suggest that capability and debiasing are orthogonal properties that must be addressed separately.
+
+### 5.3 Pipeline Scope Limitation
+
+The key external validity limitation of this study is the *decision-module scope*. We evaluate only the final selection stage of the LLM buyer agent pipeline — the judgment produced when an agent receives a structured, pre-formatted set of supplier options with explicit attributes and must select among them.
+
+Real deployed buyer agents include upstream pipeline components not evaluated here:
+
+1. **Supplier discovery and retrieval:** Deployed agents query supplier databases and assemble the comparison set. This retrieval stage introduces its own selection biases and may interact with the final-selection bias documented here. An agent susceptible to anchoring at the selection stage may also anchor on the first vendor retrieved, potentially amplifying the measured BSI.
+
+2. **Quote collection and API interactions:** Real procurement agents interact with vendor APIs and receive information in stages rather than as a complete pre-formatted set. The multi-turn information acquisition process introduces temporal sequencing effects not captured in a single-shot selection prompt.
+
+3. **Multi-turn negotiation:** Procurement decisions are often outcomes of multi-round exchanges. Bias susceptibility in multi-turn negotiation likely exhibits different properties — including commitment escalation that compounds sunk-cost effects across rounds — compared to the single-shot design evaluated here.
+
+The isolation of the decision stage enables clean identification of the bias signal at the decision point. However, it means the BSI estimates represent a *lower bound* on actual deployment bias susceptibility if upstream stages amplify bias exposure, and may represent an *upper bound* if upstream context hedging suppresses susceptibility relative to the isolated prompt condition. Future work should extend this design to evaluate bias susceptibility across the full pipeline using multi-turn evaluation protocols consistent with AgentBench [@liu2023agentbench] and WebArena [@zhou2023webarena].
+
+### 5.4 Pre-Registration Deviations
+
+All deviations from the OSF pre-registration (`buyerbench-pillar2-realistic-v1`) are documented in Appendix A. For each deviation, the reason and direction (conservative — making H0 rejection harder — or liberal) are reported. No deviations have been identified at the time of working paper preparation; Appendix A will be completed following data collection and prior to final submission.
+
+### 5.5 Future Work
+
+**Flagship expansion (3 additional bias types):** Three additional bias types — default/status quo bias, loss aversion via endowment tasks, and weak axiom of revealed preference (WARP) violations — are planned for the flagship design (N=50 per cell, ~24,000 total runs). Default bias (disproportionate selection of pre-marked "default" suppliers) is particularly relevant for portal-based procurement deployments.
+
+**Human comparison arm:** The H10 comparison table (Section 4.7) benchmarks LLM BSI against human meta-analytic d values illustratively. A proper between-group test requires a human subject arm: Prolific participants completing identical structured supplier selection tasks under BASELINE/TREATMENT variant conditions. IRB application is in preparation; this arm is planned for the flagship study.
+
+**Other procurement domains:** The current findings should not be generalized beyond supplier selection tasks. Contract negotiation, invoice approval, budget allocation, and sourcing strategy each have structural features that may amplify or suppress specific bias types. Anchoring effects, for example, are likely amplified in contract negotiation (initial price anchors across multi-round exchanges) relative to the constrained comparison format evaluated here.
+
+**Multi-agent cross-checking:** If BSI > 0 is confirmed, multi-agent architectures where two independent LLMs evaluate the same supplier set and reconcile disagreements may provide mitigation. The adversarial collaboration literature finds cross-checking substantially reduces bias susceptibility in human pairs; whether this extends to LLM pairs is an open empirical question.
+
+**Post-cutoff scenario generation:** To address the training-data confound (Section 1.2), scenarios for the flagship study should be generated after the registered models' knowledge cutoffs, using supplier identities, price ranges, and context elements not plausible in training corpora. This provides a weaker but useful confound mitigation compared to full contamination testing.
+
+---
+
+## 6. Conclusion
+
+This paper presents the first pre-registered, stochasticity-controlled, multi-model measurement of behavioral bias susceptibility in LLM-based procurement agents. We evaluate ten frontier LLMs across five canonical bias types — anchoring, framing, decoy, scarcity, and sunk cost — using the Bias Susceptibility Index (BSI), a metric that weights bias-induced decision changes by their economic cost and estimates their frequency from N=50 independent runs per (model × bias type × variant) cell.
+
+The pre-registration, BH-FDR correction at q=0.05, and N=50 per cell design address three key methodological limitations in prior LLM bias research: single-run measurement masking stochastic variation, absence of pre-registration enabling researcher degrees of freedom, and multiple comparison inflation. The result is a measurement infrastructure capable of distinguishing genuine behavioral robustness (BSI ≈ 0 at N=50) from measurement luck (BSI = 0 at N=1), and statistically reliable bias (BH-corrected p < 0.05) from false positives.
+
+`{{RESULT: conclusion_primary_finding}}` — at N=50 per cell, `{{RESULT: conclusion_model_count}}` of 10 tested models show statistically reliable bias susceptibility on at least one pre-registered bias type (BH-FDR q < 0.05). Whether this constitutes evidence that LLMs exhibit systematic procurement decision biases, or that the structured procurement context substantially suppresses human-documented bias effects, both outcomes carry direct implications for the design of deployed buyer agent systems.
+
+The BuyerBench framework, pre-registration document, evaluation code, and scenario YAML files are open-source (MIT License) and available at `https://github.com/[org]/BuyerBench`. All run records from the pre-registered experiment will be made publicly available at the time of final submission.
 
 ---
 

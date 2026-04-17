@@ -96,8 +96,8 @@ Separate focused paper for the Pillar 2 pre-registered bias study.
 | 2. Related Work | **Draft** | Human biases, LLM bias lit, procurement AI, methodology rigor |
 | 3. Methodology | **Draft** | Design, scenario battery, BSI formula, stats plan, robustness; H4/H6 gap noted for Week 8 |
 | 4. Results | **Template** | All cells `{{RESULT:...}}`; tier labels audited (Week 7); Section 4.8 (hard-difficulty) added; requires N=50 experiment data |
-| 5. Discussion | **Pending** | To be written (Week 8); Section 5.3 (pipeline scope limitations) is a referenced-but-missing forward ref |
-| 6. Conclusion | **Pending** | To be written (Week 8) |
+| 5. Discussion | **Draft** | Written Week 8: 5.1 H1–H7 verdict interpretation (incl. robust rationality pivot), 5.2 deployment implications (incl. power analysis for H2), 5.3 pipeline scope limitations, 5.4 pre-reg deviations, 5.5 future work |
+| 6. Conclusion | **Draft** | Written Week 8; templated on result placeholders; ready for data |
 | Appendix A (Pre-reg deviations) | **Stub** | Filled post-experiment |
 | Appendix B (Pre-registration document) | **Draft** | Full condensed pre-reg: metadata, design, sampling, variables, analysis plan, H1–H10 table, registered model set |
 | Appendix C (Scenario YAML metadata) | **Draft** | Evaluation weights and δ table included |
@@ -118,12 +118,19 @@ Separate focused paper for the Pillar 2 pre-registered bias study.
 
 ### Pillar 2 Working Paper — Week 8 Priority Issues (from Week 7 review)
 
-- [ ] **P0** Write Section 5 (Discussion): 5.1 H1–H7 verdict interpretation, 5.2 deployment implications, 5.3 pipeline scope limitations, 5.4 pre-reg deviations, 5.5 future work
-- [ ] **P0** Write Section 6 (Conclusion)
-- [ ] **P0** Strip all `[TIER-X]` labels from result text; replace with in-text hedges before submission
-- [ ] **P1** Add H4 deferred-to-flagship note in Section 3.4 (requires p2-01b low-anchor variant, not yet implemented)
-- [ ] **P1** Add H6 (Sunk Cost–Capability correlation) to Section 3.4 exploratory list
-- [ ] **P1** Reconcile H2 direction: Appendix B.7 says "negative direction" but Section 4.6 says "neither direction pre-specified"
-- [ ] **P1** Verify all BibTeX keys in `references.bib`: `@binz2023using`, `@scherrer2024moral`, `@loken2017measurement`, `@opensciencecollaboration2015`
-- [ ] **P2** Add power analysis for Spearman ρ at N=10 to Discussion (ρ=0.5 gives ~40% power — must be stated)
-- [ ] **P2** Register pre-registration on OSF; fill in OSF URL and commit hash in Appendix B.1
+- [x] **P0** Write Section 5 (Discussion): 5.1 H1–H7 verdict interpretation, 5.2 deployment implications, 5.3 pipeline scope limitations, 5.4 pre-reg deviations, 5.5 future work (2026-04-17)
+- [x] **P0** Write Section 6 (Conclusion) (2026-04-17)
+- [x] **P0** Strip all `[TIER-X]` labels from result text; replaced with in-text hedges throughout Sections 4, Abstract (2026-04-17)
+- [x] **P1** Add H4 deferred-to-flagship note in Section 3.4 (2026-04-17)
+- [x] **P1** Add H6 (Sunk Cost–Capability correlation) to Section 3.4 exploratory list (2026-04-17)
+- [x] **P1** Reconcile H2 direction: updated Section 3.4 and 4.6 to reflect pre-reg says "negative direction" but both directions theoretically motivated; result interpreted descriptively (2026-04-17)
+- [x] **P1** Verified BibTeX keys; added 10 missing entries to `references.bib`: `@tversky1974judgment`, `@ariely2003coherent`, `@simonson1989choice`, `@thaler1980toward`, `@loken2017measurement`, `@simmons2011false`, `@opensciencecollaboration2015`, `@greenwald1976within`, `@binz2023using`, `@camerer1999effects` (2026-04-17)
+- [x] **P2** Power analysis for Spearman ρ at N=10 stated in Sections 3.4 and 5.2 (~40% power for ρ=0.5) (2026-04-17)
+- [ ] **P2** Register pre-registration on OSF; fill in OSF URL and commit hash in Appendix B.1 (manual step — requires OSF account)
+- [ ] **P2** Finalize author list; replace `[Author list TBD]` placeholder
+- [ ] **P2** Make GitHub repository public; replace `[org]` placeholder
+
+### Remaining Gate-Blocked Items (require N=50 experiment data)
+
+- [ ] Replace all `{{RESULT:...}}` placeholders with actual data
+- [ ] Verify `@echterhoff2024anchoring` arXiv ID (currently placeholder `arXiv:2402.xxxxx`)
