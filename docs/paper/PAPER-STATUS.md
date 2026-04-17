@@ -140,6 +140,7 @@ Separate focused paper for the Pillar 2 pre-registered bias study.
 | IRB submission | **Pending** | Manual step — requires PI/co-PI with active CITI training and institutional IRB portal access |
 | IRB approval | **Pending** | ~2–8 weeks after submission (Exempt category anticipated) |
 | Prolific study activation | **Pending** | Blocked until IRB approval |
+| **Flagship paper outline** | **Draft** | `docs/paper/pillar2-flagship-paper-outline.md` — full 8-bias outline with human arm sections, WARP, H8/H10 confirmatory specs, all result cells as `{{RESULT:...}}` placeholders (2026-04-17) |
 
 ---
 
