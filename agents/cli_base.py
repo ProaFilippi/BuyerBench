@@ -41,11 +41,13 @@ class CLIAgent(BaseAgent):
         dry_run: bool = False,
         system_prompt: str = "",
         prompt_version: str = "standard",
+        temperature: float | None = None,
     ) -> None:
         self.timeout = timeout
         self.dry_run = dry_run
         self.system_prompt = system_prompt
         self.prompt_version = prompt_version
+        self.temperature = temperature
 
     @abstractmethod
     def run_cli(self, prompt: str) -> str:
@@ -67,6 +69,7 @@ class CLIAgent(BaseAgent):
                 reasoning_trace="[dry-run: CLI not invoked]",
                 raw_output="",
                 latency_ms=0.0,
+                temperature=self.temperature,
             )
 
         start = time.monotonic()
@@ -82,6 +85,7 @@ class CLIAgent(BaseAgent):
             reasoning_trace="",
             raw_output=raw_output,
             latency_ms=latency_ms,
+            temperature=self.temperature,
         )
 
     def _invoke_subprocess(self, cmd: list[str], input_text: str | None = None) -> str:

@@ -58,10 +58,11 @@ class CodexAgent(CLIAgent):
         dry_run: bool = False,
         mcp_config_path: str | None = None,
         system_prompt: str = "",
+        temperature: float | None = None,
     ) -> None:
         if mode not in self.MODES:
             raise ValueError(f"mode must be one of {self.MODES!r}, got {mode!r}")
-        super().__init__(timeout=timeout, dry_run=dry_run, system_prompt=system_prompt)
+        super().__init__(timeout=timeout, dry_run=dry_run, system_prompt=system_prompt, temperature=temperature)
         self.mode = mode
         self.cli_path = cli_path
         self.mcp_config_path = mcp_config_path
@@ -82,6 +83,9 @@ class CodexAgent(CLIAgent):
     def _build_command(self, prompt: str) -> list[str]:
         """Construct the ``codex`` invocation for the current mode."""
         cmd = [self.cli_path]
+
+        if self.temperature is not None:
+            cmd += ["--temperature", str(self.temperature)]
 
         if self.mode == "baseline":
             pass  # No extra flags

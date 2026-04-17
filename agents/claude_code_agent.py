@@ -58,10 +58,11 @@ class ClaudeCodeAgent(CLIAgent):
         dry_run: bool = False,
         mcp_config_path: str | None = None,
         system_prompt: str = "",
+        temperature: float | None = None,
     ) -> None:
         if mode not in self.MODES:
             raise ValueError(f"mode must be one of {self.MODES!r}, got {mode!r}")
-        super().__init__(timeout=timeout, dry_run=dry_run, system_prompt=system_prompt)
+        super().__init__(timeout=timeout, dry_run=dry_run, system_prompt=system_prompt, temperature=temperature)
         self.mode = mode
         self.cli_path = cli_path
         self.mcp_config_path = mcp_config_path
@@ -83,7 +84,12 @@ class ClaudeCodeAgent(CLIAgent):
         """Construct the ``claude`` invocation for the current mode."""
         # --print  → non-interactive; output goes to stdout
         # --message → the user turn content
-        cmd = [self.cli_path, "--print", "--message", prompt]
+        cmd = [self.cli_path, "--print"]
+
+        if self.temperature is not None:
+            cmd += ["--temperature", str(self.temperature)]
+
+        cmd += ["--message", prompt]
 
         if self.mode == "baseline":
             # No tools; keep the invocation as clean as possible

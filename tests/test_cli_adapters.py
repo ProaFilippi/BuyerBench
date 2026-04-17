@@ -446,3 +446,150 @@ class TestMockMCPServer:
             pass
         # After __exit__, server should be stopped
         assert server._server is None
+
+
+# ---------------------------------------------------------------------------
+# UPGRADE-3: Temperature parameter support
+# ---------------------------------------------------------------------------
+
+class TestTemperatureParameterSupport:
+    """UPGRADE-3: Temperature flows from constructor → command → AgentResponse."""
+
+    def test_claude_temperature_stored(self):
+        from agents.claude_code_agent import ClaudeCodeAgent
+        agent = ClaudeCodeAgent(mode="baseline", temperature=0.7)
+        assert agent.temperature == 0.7
+
+    def test_claude_temperature_none_by_default(self):
+        from agents.claude_code_agent import ClaudeCodeAgent
+        agent = ClaudeCodeAgent(mode="baseline")
+        assert agent.temperature is None
+
+    def test_claude_temperature_flag_in_command(self):
+        from agents.claude_code_agent import ClaudeCodeAgent
+        agent = ClaudeCodeAgent(mode="baseline", temperature=0.7)
+        cmd = agent._build_command("test prompt")
+        assert "--temperature" in cmd
+        idx = cmd.index("--temperature")
+        assert cmd[idx + 1] == "0.7"
+
+    def test_claude_no_temperature_flag_when_none(self):
+        from agents.claude_code_agent import ClaudeCodeAgent
+        agent = ClaudeCodeAgent(mode="baseline")
+        cmd = agent._build_command("test prompt")
+        assert "--temperature" not in cmd
+
+    def test_claude_temperature_zero_included(self):
+        from agents.claude_code_agent import ClaudeCodeAgent
+        agent = ClaudeCodeAgent(mode="baseline", temperature=0.0)
+        cmd = agent._build_command("test prompt")
+        assert "--temperature" in cmd
+        assert "0.0" in cmd
+
+    def test_claude_temperature_in_agent_response(self):
+        from agents.claude_code_agent import ClaudeCodeAgent
+        agent = ClaudeCodeAgent(mode="baseline", temperature=0.5)
+        with patch("subprocess.run", return_value=_MOCK_RUN_RESULT):
+            response = agent.respond(_make_scenario())
+        assert response.temperature == 0.5
+
+    def test_claude_temperature_none_in_agent_response(self):
+        from agents.claude_code_agent import ClaudeCodeAgent
+        agent = ClaudeCodeAgent(mode="baseline")
+        with patch("subprocess.run", return_value=_MOCK_RUN_RESULT):
+            response = agent.respond(_make_scenario())
+        assert response.temperature is None
+
+    def test_claude_temperature_in_dry_run_response(self):
+        from agents.claude_code_agent import ClaudeCodeAgent
+        agent = ClaudeCodeAgent(mode="baseline", temperature=0.3, dry_run=True)
+        response = agent.respond(_make_scenario())
+        assert response.temperature == 0.3
+
+    def test_codex_temperature_stored(self):
+        from agents.codex_agent import CodexAgent
+        agent = CodexAgent(mode="baseline", temperature=0.9)
+        assert agent.temperature == 0.9
+
+    def test_codex_temperature_flag_in_command(self):
+        from agents.codex_agent import CodexAgent
+        agent = CodexAgent(mode="baseline", temperature=0.9)
+        cmd = agent._build_command("test prompt")
+        assert "--temperature" in cmd
+        idx = cmd.index("--temperature")
+        assert cmd[idx + 1] == "0.9"
+
+    def test_codex_no_temperature_flag_when_none(self):
+        from agents.codex_agent import CodexAgent
+        agent = CodexAgent(mode="baseline")
+        cmd = agent._build_command("test prompt")
+        assert "--temperature" not in cmd
+
+    def test_gemini_temperature_stored(self):
+        from agents.gemini_agent import GeminiAgent
+        agent = GeminiAgent(mode="baseline", temperature=0.2)
+        assert agent.temperature == 0.2
+
+    def test_gemini_temperature_flag_in_command(self):
+        from agents.gemini_agent import GeminiAgent
+        agent = GeminiAgent(mode="baseline", temperature=0.2)
+        cmd = agent._build_command("test prompt")
+        assert "--temperature" in cmd
+        idx = cmd.index("--temperature")
+        assert cmd[idx + 1] == "0.2"
+
+    def test_gemini_no_temperature_flag_when_none(self):
+        from agents.gemini_agent import GeminiAgent
+        agent = GeminiAgent(mode="baseline")
+        cmd = agent._build_command("test prompt")
+        assert "--temperature" not in cmd
+
+    def test_gemini_temperature_before_prompt_flag(self):
+        from agents.gemini_agent import GeminiAgent
+        agent = GeminiAgent(mode="baseline", temperature=0.4)
+        cmd = agent._build_command("test prompt")
+        temp_idx = cmd.index("--temperature")
+        prompt_idx = cmd.index("--prompt")
+        assert temp_idx < prompt_idx
+
+    def test_registry_passes_temperature_to_claude(self):
+        from agents.claude_code_agent import ClaudeCodeAgent
+        from agents.registry import get_agent
+        agent = get_agent("claude-code-baseline", {"temperature": 0.7})
+        assert isinstance(agent, ClaudeCodeAgent)
+        assert agent.temperature == 0.7
+
+    def test_registry_passes_temperature_to_codex(self):
+        from agents.codex_agent import CodexAgent
+        from agents.registry import get_agent
+        agent = get_agent("codex-baseline", {"temperature": 0.3})
+        assert isinstance(agent, CodexAgent)
+        assert agent.temperature == 0.3
+
+    def test_registry_passes_temperature_to_gemini(self):
+        from agents.gemini_agent import GeminiAgent
+        from agents.registry import get_agent
+        agent = get_agent("gemini-baseline", {"temperature": 0.0})
+        assert isinstance(agent, GeminiAgent)
+        assert agent.temperature == 0.0
+
+    def test_registry_temperature_none_when_not_in_config(self):
+        from agents.registry import get_agent
+        agent = get_agent("claude-code-baseline", {})
+        assert agent.temperature is None
+
+    def test_registry_family_cfg_temperature_fallback(self):
+        from agents.claude_code_agent import ClaudeCodeAgent
+        from agents.registry import get_agent
+        agent = get_agent("claude-code-baseline", {"claude_code": {"temperature": 0.6}})
+        assert isinstance(agent, ClaudeCodeAgent)
+        assert agent.temperature == 0.6
+
+    def test_top_level_temperature_overrides_family_cfg(self):
+        from agents.claude_code_agent import ClaudeCodeAgent
+        from agents.registry import get_agent
+        agent = get_agent("claude-code-baseline", {
+            "temperature": 0.1,
+            "claude_code": {"temperature": 0.9},
+        })
+        assert agent.temperature == 0.1

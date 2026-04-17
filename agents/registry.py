@@ -149,6 +149,9 @@ def get_agent(
         "dry_run": config.get("dry_run", False),
         "system_prompt": skill_prompt,
     }
+    temperature = config.get("temperature", family_cfg.get("temperature", None))
+    if temperature is not None:
+        kwargs["temperature"] = temperature
     if cli_path := family_cfg.get("cli_path"):
         kwargs["cli_path"] = cli_path
     if mcp_cfg := family_cfg.get("mcp_config_path"):
