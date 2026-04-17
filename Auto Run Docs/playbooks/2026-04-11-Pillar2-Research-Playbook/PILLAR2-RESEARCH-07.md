@@ -188,7 +188,8 @@
 
 **Month 2 — Analysis & Writing**
 
-- [ ] Week 5: Run `research/analysis/regression.py` — primary mixed-effects model + variance decomposition
+- [x] Week 5: Run `research/analysis/regression.py` — primary mixed-effects model + variance decomposition
+  - **Implementation:** Implemented `research/scripts/03_run_regressions.py` — the previously TODO-stub script that wires the full regression pipeline. The script: (1) loads `runs.jsonl` from an experiment directory via `load_runs_jsonl()` with malformed-line tolerance; (2) normalises `variant` to uppercase at the boundary in `build_regression_dataframe()` (JSONL stores "baseline" but `regression.py` expects "BASELINE"); (3) filters error rows and null-BSI rows; (4) calls `run_primary_regression()` (statsmodels MixedLM when available, pure-Python WLS fallback otherwise); (5) applies BH-FDR correction on all primary p-values and annotates `p_value_bh` / `significant_bh` onto each coefficient; (6) calls `run_variance_decomposition()` for the ANOVA SS partition; (7) optionally calls `run_capability_regression()` when `--p1-scores` JSON file is provided; (8) writes `regression_results.json` with keys `primary`, `bh_correction`, `variance_decomposition`, `capability`, `summary`. Supports `--dry-run`, `--output`, `--p1-scores` flags. Smoke-tested on 450-record mock experiment: 0 errors, fallback WLS used (statsmodels not installed in this environment), output written. Created `tests/test_run_regressions.py` with 35 tests across 4 classes covering: JSONL loading, DataFrame normalisation, pipeline output schema, and full CLI end-to-end with custom output path and P1 scores. All 2,382 tests pass (2026-04-17).
 - [ ] Week 5: Generate all figures (Figures 1–4)
 - [ ] Week 6: Write Sections 1–4 of working paper. All result claims templated from actual data.
 - [ ] Week 6: Write Appendix B (pre-registration) and Appendix D (robustness checks)
