@@ -491,3 +491,120 @@ class TestRunRobustnessPilot:
             output_dir=new_dir,
         )
         assert (new_dir / "robustness_pilot.json").exists()
+
+
+# ── Section 5: No-BASELINE pair (framing-style GAIN vs LOSS) ─────────────────
+
+
+def _make_framing_pair() -> tuple[Scenario, Scenario]:
+    """Framing pair with no BASELINE variant — mirrors p2-02-framing (GAIN vs LOSS)."""
+    gain = make_p2_scenario(
+        id="p2-framing-GAIN",
+        variant=ScenarioVariant.FRAMING_GAIN,
+        variant_pair_id="p2-02-framing",
+        expected_optimal={"supplier": "SupplierB"},
+    )
+    loss = make_p2_scenario(
+        id="p2-framing-LOSS",
+        variant=ScenarioVariant.FRAMING_LOSS,
+        variant_pair_id="p2-02-framing",
+        expected_optimal={"supplier": "SupplierB"},
+    )
+    return gain, loss
+
+
+class TestNoBaselineFramingPair:
+    """run_robustness_pilot works when neither scenario is BASELINE (framing pairs)."""
+
+    def test_framing_pair_produces_result(self):
+        pair = _make_framing_pair()
+        result = run_robustness_pilot(
+            scenario_pairs=[pair],
+            phrasings=_make_stable_phrasings(),
+            n_runs=2,
+        )
+        assert "overall_recommendation" in result
+        assert result["overall_recommendation"] in ("PROCEED", "REDESIGN")
+
+    def test_framing_pair_keyed_by_variant_pair_id(self):
+        pair = _make_framing_pair()
+        result = run_robustness_pilot(
+            scenario_pairs=[pair],
+            phrasings=_make_stable_phrasings(),
+            n_runs=2,
+        )
+        assert "p2-02-framing" in result["per_scenario"]
+
+    def test_framing_pair_stable_agents_proceed(self):
+        """Agents consistently picking the same supplier → CV=0 → PROCEED."""
+        pair = _make_framing_pair()
+        result = run_robustness_pilot(
+            scenario_pairs=[pair],
+            phrasings=_make_stable_phrasings(),
+            n_runs=3,
+        )
+        assert result["overall_recommendation"] == "PROCEED"
+        report = result["per_scenario"]["p2-02-framing"]
+        assert report["cv"] == 0.0
+
+    def test_framing_pair_counts_correctly(self):
+        pair = _make_framing_pair()
+        result = run_robustness_pilot(
+            scenario_pairs=[pair],
+            phrasings=_make_stable_phrasings(),
+            n_runs=2,
+        )
+        assert result["scenarios_passing"] + result["scenarios_failing"] == 1
+
+
+# ── Section 6: CLI integration — no-BASELINE pair selection fix ───────────────
+
+
+class TestCLINoBaselinePairSelection:
+    """CLI robustness-pilot command selects framing pairs (no BASELINE variant)."""
+
+    def test_framing_pair_included_when_requested(self, tmp_path):
+        from click.testing import CliRunner
+        from buyerbench.__main__ import cli
+
+        runner = CliRunner()
+        result = runner.invoke(
+            cli,
+            [
+                "robustness-pilot",
+                "--agent", "mock-agent-v1",
+                "--pair-id", "p2-02-framing",
+                "--n-runs", "1",
+                "--output-dir", str(tmp_path),
+            ],
+            catch_exceptions=False,
+        )
+        assert result.exit_code == 0, result.output
+        out_file = tmp_path / "robustness_pilot.json"
+        assert out_file.exists()
+        data = json.loads(out_file.read_text())
+        assert "p2-02-framing" in data["per_scenario"]
+
+    def test_two_pairs_one_no_baseline(self, tmp_path):
+        """p2-01-anchoring (has BASELINE) and p2-02-framing (no BASELINE) both selected."""
+        from click.testing import CliRunner
+        from buyerbench.__main__ import cli
+
+        runner = CliRunner()
+        result = runner.invoke(
+            cli,
+            [
+                "robustness-pilot",
+                "--agent", "mock-agent-v1",
+                "--pair-id", "p2-01-anchoring",
+                "--pair-id", "p2-02-framing",
+                "--n-runs", "1",
+                "--output-dir", str(tmp_path),
+            ],
+            catch_exceptions=False,
+        )
+        assert result.exit_code == 0, result.output
+        data = json.loads((tmp_path / "robustness_pilot.json").read_text())
+        assert "p2-01-anchoring" in data["per_scenario"]
+        assert "p2-02-framing" in data["per_scenario"]
+        assert data["scenarios_passing"] + data["scenarios_failing"] == 2

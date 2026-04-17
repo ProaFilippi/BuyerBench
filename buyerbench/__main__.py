@@ -1976,10 +1976,14 @@ def robustness_pilot_cmd(
         if pair_ids and pid not in pair_ids:
             continue
         # Separate baseline from variant(s); use first non-baseline as the variant.
+        # For pairs with no BASELINE (e.g. framing: GAIN vs LOSS), use the first
+        # two variants — BSI measures inconsistency, so ordering is symmetric.
         baselines = [s for s in scenarios if s.variant.value == "BASELINE"]
         variants = [s for s in scenarios if s.variant.value != "BASELINE"]
         if baselines and variants:
             selected_pairs.append((baselines[0], variants[0]))
+        elif len(variants) >= 2:
+            selected_pairs.append((variants[0], variants[1]))
 
     if not selected_pairs:
         console.print(
