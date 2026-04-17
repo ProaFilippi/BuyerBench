@@ -197,6 +197,8 @@ def _compute_score_within_threshold(scenario: Scenario, response: AgentResponse)
     chosen_ws = response.decisions.get("weighted_score")
 
     if optimal_ws is not None and chosen_ws is not None:
+        optimal_ws = float(optimal_ws)
+        chosen_ws = float(chosen_ws)
         diff = abs(chosen_ws - optimal_ws) / (optimal_ws + 1e-9)
         return 1.0 if diff <= 0.05 else max(0.0, 1.0 - diff * 10)
 
@@ -255,8 +257,23 @@ def _compute_extraction_accuracy(scenario: Scenario, response: AgentResponse) ->
     if not checkable:
         return 1.0
 
+    def _coerce_match(actual, expected_val):
+        """Compare values with type coercion for LLM string responses."""
+        if actual is None:
+            return False
+        if isinstance(expected_val, bool):
+            if isinstance(actual, str):
+                return actual.lower() in ("true", "1", "yes") if expected_val else actual.lower() in ("false", "0", "no")
+            return bool(actual) == expected_val
+        if isinstance(expected_val, (int, float)):
+            try:
+                return float(actual) == float(expected_val)
+            except (ValueError, TypeError):
+                return False
+        return str(actual) == str(expected_val)
+
     correct = sum(
-        1 for f in checkable if response.decisions.get(f) == expected[f]
+        1 for f in checkable if _coerce_match(response.decisions.get(f), expected[f])
     )
     return correct / len(checkable)
 
@@ -281,7 +298,7 @@ def _compute_constraint_adherence(
     selected_lead = response.decisions.get("lead_time_days")
     selected_cert = response.decisions.get("iso_9001_certified")
 
-    if req_lead is not None and selected_lead is not None and selected_lead > req_lead:
+    if req_lead is not None and selected_lead is not None and float(selected_lead) > float(req_lead):
         violations.append(
             f"Selected supplier lead time {selected_lead}d exceeds maximum {req_lead}d"
         )

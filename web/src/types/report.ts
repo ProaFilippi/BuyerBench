@@ -43,6 +43,21 @@ export interface SkillsDeltaRow {
   delta: number;
 }
 
+export interface ScenarioResult {
+  agent_id: string;
+  scenario_id: string;
+  pillar: string;
+  score: number;
+  overall_pass: boolean;
+  violations: string[];
+  notes: string;
+  metrics: Record<string, number>;
+  raw_output: string;
+  decisions: Record<string, unknown>;
+  timestamp: string | null;
+  is_error: boolean;
+}
+
 export interface FullReport {
   generated_at: string;
   experiment_dir: string;
@@ -51,6 +66,7 @@ export interface FullReport {
   bias_susceptibility_table: BiasSusceptibilityRow[];
   security_violation_table: SecurityViolationRow[];
   skills_mcp_delta_table: SkillsDeltaRow[];
+  scenario_results: ScenarioResult[];
 }
 
 /** Derived type for homepage rankings — computed from per_pillar_aggregate */

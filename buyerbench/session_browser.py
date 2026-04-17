@@ -154,16 +154,17 @@ def browse_sessions() -> None:
             Panel(
                 f"[bold]Experiment:[/bold] {exp_label}\n"
                 f"[bold]Config:[/bold]     {selected_path}\n\n"
-                f"  [bold cyan][r][/bold cyan]  Re-run as-is\n"
-                f"  [bold cyan][m][/bold cyan]  Modify (edit in wizard)\n"
-                f"  [bold cyan][v][/bold cyan]  View config (YAML)\n"
-                f"  [bold cyan][b][/bold cyan]  Back",
+                "  [bold cyan]\\[1][/bold cyan]  Re-run as-is\n"
+                "  [bold cyan]\\[2][/bold cyan]  Modify (edit in wizard)\n"
+                "  [bold cyan]\\[3][/bold cyan]  View config (YAML)\n"
+                "  [bold cyan]\\[4][/bold cyan]  Back",
                 title="[bold white]Session Actions[/bold white]",
                 border_style="cyan",
             )
         )
 
-        action = Prompt.ask("Action", choices=["r", "m", "v", "b"], show_choices=False)
+        action = Prompt.ask("Action", choices=["1", "2", "3", "4"], show_choices=False)
+        action = {"1": "r", "2": "m", "3": "v", "4": "b"}[action]
 
         if action == "r":
             console.print(f"\n[dim]Re-running session: {selected_path}[/dim]\n")

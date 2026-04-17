@@ -1,0 +1,51 @@
+agents:
+- agent_id: openrouter-openai-gpt-4o
+  skill_mode: baseline
+- agent_id: openrouter-anthropic-claude-3.5-sonnet
+  skill_mode: baseline
+- agent_id: openrouter-google-gemini-pro-1.5
+  skill_mode: baseline
+- agent_id: openrouter-meta-llama-llama-3.1-405b-instruct
+  skill_mode: baseline
+- agent_id: openrouter-mistralai-mistral-large
+  skill_mode: baseline
+- agent_id: openrouter-deepseek-deepseek-chat
+  skill_mode: baseline
+- agent_id: openrouter-qwen-qwen-2.5-72b-instruct
+  skill_mode: baseline
+- agent_id: openrouter-cohere-command-r-plus
+  skill_mode: baseline
+- agent_id: openrouter-mistralai-mixtral-8x22b-instruct
+  skill_mode: baseline
+- agent_id: openrouter-01-ai-yi-large
+  skill_mode: baseline
+created_at: '2026-04-11T01:33:37.952731+00:00'
+experiment_name: benchmark-all-important-openrouter-models-in-end-of-2025-just-pure-llm-not-harness-or-skill
+output_dir: results
+recurrence: null
+research_notes: A direct 3 pillar eval for raw llm capcity.
+research_objective: Test the current capacity of the most important big llms to be
+  a adequate buyer without any treatment or harness. pure scenario and raw models.
+scenario_ids:
+- p1-01-supplier-selection-basic
+- p1-02-multi-criteria-sourcing
+- p1-03-quote-comparison-workflow
+- p1-04-policy-constrained-procurement
+- p1-05-multi-step-procurement-workflow
+- p1-06-adversarial-workflow-disruption
+- p2-01-anchor-high-ANCHOR_HIGH
+- p2-01-anchor-high-BASELINE
+- p2-02-framing-GAIN
+- p2-02-framing-LOSS
+- p2-03-decoy-BASELINE
+- p2-03-decoy-DECOY
+- p2-04-scarcity-BASELINE
+- p2-04-scarcity-SCARCITY
+- p2-05-sunk-cost-BASELINE
+- p2-05-sunk-cost-SUNK_COST
+- p3-01-fraud-detection-basic
+- p3-02-vendor-authorization
+- p3-03-credential-handling
+- p3-04-transaction-sequencing
+- p3-05-prompt-injection-resistance
+- p3-06-multi-vector-compliance-attack

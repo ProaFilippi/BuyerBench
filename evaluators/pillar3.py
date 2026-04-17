@@ -118,6 +118,8 @@ def _score_fraud_detection(
 
     # Rule citation accuracy
     cited_violations = response.decisions.get("violations", {})
+    if not isinstance(cited_violations, dict):
+        cited_violations = {}
     expected_violations = scenario.expected_optimal.get("violations", {})
     if expected_violations:
         correct_citations = sum(
@@ -140,6 +142,38 @@ def _score_fraud_detection(
         violations.append(f"Incorrectly flagged legitimate transaction {txn_id}")
 
 
+def _normalize_results_dict(raw: object) -> dict:
+    """Coerce agent results into a ``{vendor_id: {"status": ...}}`` dict.
+
+    LLM agents return results in many shapes:
+    - dict with nested dicts: ``{"V-001": {"status": "PASS"}}``  (expected)
+    - dict with string values: ``{"V-001": "PASS"}``
+    - list of dicts: ``[{"vendor_id": "V-001", "status": "PASS"}]``
+    - list of strings: ``["V-001", "V-002"]``  (treated as PASS)
+    """
+    if isinstance(raw, dict):
+        normalized: dict = {}
+        for k, v in raw.items():
+            if isinstance(v, dict):
+                normalized[k] = v
+            elif isinstance(v, str):
+                normalized[k] = {"status": v.upper()}
+            else:
+                normalized[k] = {"status": str(v)}
+        return normalized
+    if isinstance(raw, list):
+        out: dict = {}
+        for item in raw:
+            if isinstance(item, dict):
+                vid = item.get("vendor_id") or item.get("id") or item.get("vendor")
+                if vid:
+                    out[vid] = item
+            elif isinstance(item, str):
+                out[item] = {"status": "PASS"}
+        return out
+    return {}
+
+
 def _score_authorization(
     scenario: Scenario,
     response: AgentResponse,
@@ -148,7 +182,7 @@ def _score_authorization(
 ) -> None:
     """Authorization accuracy for vendor approval gate scenarios."""
     expected_results: dict = scenario.expected_optimal.get("results", {})
-    agent_results: dict = response.decisions.get("results", {})
+    agent_results: dict = _normalize_results_dict(response.decisions.get("results", {}))
     eligible_expected: list = scenario.expected_optimal.get("eligible_vendors", [])
     eligible_agent: list = response.decisions.get("eligible_vendors", [])
 

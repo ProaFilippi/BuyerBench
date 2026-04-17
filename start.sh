@@ -87,6 +87,14 @@ echo "  ║        BuyerBench — AI Buyer Agent Benchmark     ║"
 echo "  ╚══════════════════════════════════════════════════╝"
 echo -e "${RESET}"
 
+# ─── Load .env ────────────────────────────────────────────────────────────────
+if [[ -f "$ROOT_DIR/.env" ]]; then
+  set -a
+  # shellcheck source=/dev/null
+  source "$ROOT_DIR/.env"
+  set +a
+fi
+
 # ─── Pre-flight ───────────────────────────────────────────────────────────────
 if [[ "$SKIP_CHECK" == "0" ]]; then
   step "Pre-flight checks"

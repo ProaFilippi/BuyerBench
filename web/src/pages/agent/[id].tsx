@@ -5,6 +5,7 @@ import AgentHeader from '@/components/AgentHeader';
 import BiasTable from '@/components/BiasTable';
 import SecurityTable from '@/components/SecurityTable';
 import DeltaTable from '@/components/DeltaTable';
+import ScenarioResultsTable from '@/components/ScenarioResultsTable';
 import {
   loadReport,
   computeAgentSummaries,
@@ -12,12 +13,14 @@ import {
   getBiasRowsForAgent,
   getSecurityRowsForAgent,
   getDeltaRowsForAgent,
+  getScenarioResultsForAgent,
 } from '@/lib/loadReport';
 import type {
   AgentSummary,
   BiasSusceptibilityRow,
   SecurityViolationRow,
   SkillsDeltaRow,
+  ScenarioResult,
 } from '@/types/report';
 
 interface Props {
@@ -26,6 +29,7 @@ interface Props {
   biasRows: BiasSusceptibilityRow[];
   securityRows: SecurityViolationRow[];
   deltaRows: SkillsDeltaRow[];
+  scenarioResults: ScenarioResult[];
   generatedAt: string;
 }
 
@@ -50,6 +54,7 @@ export const getStaticProps: GetStaticProps<Props> = async ({ params }) => {
       biasRows: getBiasRowsForAgent(report, agentId),
       securityRows: getSecurityRowsForAgent(report, agentId),
       deltaRows: getDeltaRowsForAgent(report, agentId),
+      scenarioResults: getScenarioResultsForAgent(report, agentId),
       generatedAt: report.generated_at,
     },
   };
@@ -101,6 +106,7 @@ export default function AgentPage({
   biasRows,
   securityRows,
   deltaRows,
+  scenarioResults,
   generatedAt,
 }: InferGetStaticPropsType<typeof getStaticProps>) {
   return (
@@ -112,6 +118,18 @@ export default function AgentPage({
 
         <AgentHeader agentId={agentId} summary={summary ?? undefined} />
 
+
+        {/* Scenario Results Section */}
+        <section style={sectionStyle}>
+          <div className="brutal-box" style={{ padding: '1.5rem' }}>
+            <p style={sectionTitleStyle}>SCENARIO RESULTS</p>
+            <div style={separatorStyle} />
+            <p style={explainerStyle}>
+              Per-scenario scores, violations, and full agent output. Click a row to inspect decisions and raw LLM output.
+            </p>
+            <ScenarioResultsTable rows={scenarioResults} />
+          </div>
+        </section>
 
         {/* Bias Section */}
         <section style={sectionStyle}>

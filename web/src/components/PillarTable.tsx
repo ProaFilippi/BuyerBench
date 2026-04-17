@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import Link from 'next/link';
 import ScoreBar from './ScoreBar';
 import MetricRow from './MetricRow';
 import type { PillarAggregate, MetricRow as MetricRowData } from '@/types/report';
@@ -92,7 +93,13 @@ export default function PillarTable({ rows, metrics, accentColor }: PillarTableP
                       minWidth: '200px',
                     }}
                   >
-                    {formatAgentId(row.agent_id)}
+                    <Link
+                      href={`/agent/${row.agent_id}`}
+                      style={{ color: 'var(--fg)', textDecoration: 'underline', textDecorationStyle: 'wavy' }}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {formatAgentId(row.agent_id)}
+                    </Link>
                   </td>
                   <td style={{ ...tdStyle, minWidth: '180px' }}>
                     <ScoreBar score={row.mean_score} color={accentColor} />

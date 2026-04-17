@@ -160,8 +160,8 @@ class TestBrowseSessions:
 
         from rich.prompt import Prompt
 
-        # Select session 1, then choose [b] back
-        responses = iter(["1", "b"])
+        # Select session 1, then choose [4] back
+        responses = iter(["1", "4"])
         monkeypatch.setattr(Prompt, "ask", staticmethod(lambda *a, **kw: next(responses)))
 
         result = browse_sessions()
@@ -174,7 +174,7 @@ class TestBrowseSessions:
         from rich.prompt import Prompt
 
         # Select session 1 → view → back
-        responses = iter(["1", "v", "b"])
+        responses = iter(["1", "3", "4"])
         monkeypatch.setattr(Prompt, "ask", staticmethod(lambda *a, **kw: next(responses)))
 
         result = browse_sessions()
@@ -186,7 +186,7 @@ class TestBrowseSessions:
 
         from rich.prompt import Prompt
 
-        responses = iter(["1", "r"])
+        responses = iter(["1", "1"])
         monkeypatch.setattr(Prompt, "ask", staticmethod(lambda *a, **kw: next(responses)))
 
         captured_args = []
@@ -209,7 +209,7 @@ class TestBrowseSessions:
         from rich.prompt import Prompt
         import buyerbench.selector as sel_mod
 
-        responses = iter(["1", "m"])
+        responses = iter(["1", "2"])
         monkeypatch.setattr(Prompt, "ask", staticmethod(lambda *a, **kw: next(responses)))
 
         received_prefill = []
