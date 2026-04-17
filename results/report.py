@@ -329,6 +329,14 @@ def generate_full_report(experiment_dir: str) -> dict:
                 "the economic judgment call when structured options are presented \u2014 "
                 "not the full agent pipeline."
             ),
+            # N.2: claim tier hierarchy — every result statement must be labeled A, B, or C.
+            "claim_tier_hierarchy": (
+                "Tier A (FULLY DEFENSIBLE): N\u226550 per cell, BH-FDR correction, pre-registration; "
+                "confirmatory hypotheses H1/H3/H5/H7 only. "
+                "Tier B (SUGGESTIVE): descriptive patterns, N=10 models, no p-values. "
+                "Tier C (SPECULATIVE): future work only, never in Results or Conclusions. "
+                "Gate 4: no Tier C claims in main text before submission."
+            ),
         },
         "per_pillar_aggregate": per_pillar_aggregate,
         "per_metric_breakdown": dict(per_metric_breakdown),
@@ -376,6 +384,14 @@ def render_full_report_markdown(report: dict) -> str:
         "not the full agent pipeline."
     )
 
+    _N2_CLAIM_TIERS = (
+        "> **N.2 — CLAIM TIER GATE (apply before submission):** "
+        "Every result statement must be labeled Tier A (fully defensible: N≥50, BH-FDR, "
+        "pre-registered), Tier B (suggestive: descriptive pattern, N=10), or "
+        "Tier C (speculative: future work only). "
+        "**No Tier C claims may appear in Results or Conclusions.**"
+    )
+
     lines = [
         "# BuyerBench Full Experiment Report",
         "",
@@ -385,6 +401,8 @@ def render_full_report_markdown(report: dict) -> str:
         _EXPLORATORY_WARN,
         "",
         _REV7_PIPELINE_SCOPE,
+        "",
+        _N2_CLAIM_TIERS,
         "",
     ]
 

@@ -92,3 +92,11 @@ class SummaryReport(BaseModel):
         "the economic judgment call when structured options are presented \u2014 "
         "not the full agent pipeline."
     )
+    # N.2: claim tier hierarchy — every result statement must be labeled A, B, or C.
+    claim_tier_hierarchy: str = (
+        "Tier A (FULLY DEFENSIBLE): N\u226550 per cell, BH-FDR correction, pre-registration; "
+        "confirmatory hypotheses H1/H3/H5/H7 only. "
+        "Tier B (SUGGESTIVE): descriptive patterns, N=10 models, no p-values. "
+        "Tier C (SPECULATIVE): future work only, never in Results or Conclusions. "
+        "Gate 4: no Tier C claims in main text before submission."
+    )

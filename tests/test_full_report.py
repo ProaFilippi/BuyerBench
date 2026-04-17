@@ -629,3 +629,113 @@ class TestRev7PipelineScope:
         assert "exploratory_only_label" in notes
         assert "cross_model_regression_scope" in notes
         assert "pipeline_scope" in notes
+
+
+class TestN2ClaimTierHierarchy:
+    """N.2: Claim tier hierarchy must be present in methodology_notes, schemas, and Markdown.
+
+    Every result statement must be labeled Tier A (fully defensible), Tier B (suggestive),
+    or Tier C (speculative / future work). No Tier C claims may appear in Results or Conclusions.
+    """
+
+    def test_claim_tier_hierarchy_in_methodology_notes(self, experiment_dir):
+        """generate_full_report must include claim_tier_hierarchy in methodology_notes."""
+        report = generate_full_report(str(experiment_dir))
+        assert "claim_tier_hierarchy" in report["methodology_notes"]
+
+    def test_claim_tier_hierarchy_present_for_empty_dir(self, tmp_path):
+        """claim_tier_hierarchy must be present even with no result files."""
+        (tmp_path / "pillar1").mkdir()
+        report = generate_full_report(str(tmp_path))
+        assert "claim_tier_hierarchy" in report["methodology_notes"]
+
+    def test_claim_tier_hierarchy_mentions_tier_a(self, experiment_dir):
+        """claim_tier_hierarchy must describe Tier A claims."""
+        report = generate_full_report(str(experiment_dir))
+        value = report["methodology_notes"]["claim_tier_hierarchy"]
+        assert "tier a" in value.lower() or "tier_a" in value.lower()
+
+    def test_claim_tier_hierarchy_mentions_tier_b(self, experiment_dir):
+        """claim_tier_hierarchy must describe Tier B claims."""
+        report = generate_full_report(str(experiment_dir))
+        value = report["methodology_notes"]["claim_tier_hierarchy"]
+        assert "tier b" in value.lower() or "tier_b" in value.lower()
+
+    def test_claim_tier_hierarchy_mentions_tier_c(self, experiment_dir):
+        """claim_tier_hierarchy must describe Tier C claims."""
+        report = generate_full_report(str(experiment_dir))
+        value = report["methodology_notes"]["claim_tier_hierarchy"]
+        assert "tier c" in value.lower() or "tier_c" in value.lower()
+
+    def test_claim_tier_hierarchy_mentions_gate4(self, experiment_dir):
+        """claim_tier_hierarchy must reference the Gate 4 submission check."""
+        report = generate_full_report(str(experiment_dir))
+        value = report["methodology_notes"]["claim_tier_hierarchy"]
+        assert "gate" in value.lower() or "submission" in value.lower()
+
+    def test_markdown_header_contains_n2_claim_tiers(self, experiment_dir):
+        """Markdown header must include the N.2 claim tier blockquote."""
+        report = generate_full_report(str(experiment_dir))
+        md = render_full_report_markdown(report)
+        sec1_idx = md.index("## 1. Per-Pillar Aggregate Scores")
+        header_body = md[:sec1_idx]
+        assert "N.2" in header_body
+
+    def test_markdown_n2_note_mentions_tier_c_restriction(self, experiment_dir):
+        """The N.2 blockquote must state Tier C claims are forbidden from Results."""
+        report = generate_full_report(str(experiment_dir))
+        md = render_full_report_markdown(report)
+        assert "tier c" in md.lower()
+
+    def test_methodology_notes_has_five_keys(self, experiment_dir):
+        """methodology_notes must contain all five keys after N.2."""
+        report = generate_full_report(str(experiment_dir))
+        notes = report["methodology_notes"]
+        assert "pillar2_rationality_scope" in notes
+        assert "exploratory_only_label" in notes
+        assert "cross_model_regression_scope" in notes
+        assert "pipeline_scope" in notes
+        assert "claim_tier_hierarchy" in notes
+
+    def test_summary_report_schema_has_claim_tier_hierarchy(self):
+        """SummaryReport must carry claim_tier_hierarchy as a default field."""
+        from results.schemas import SummaryReport
+        report = SummaryReport(agent_id="test", total_scenarios=0, overall_pass_rate=0.0)
+        assert hasattr(report, "claim_tier_hierarchy")
+        assert isinstance(report.claim_tier_hierarchy, str)
+        assert len(report.claim_tier_hierarchy) > 0
+
+    def test_claim_tiers_in_aggregate_bias_report_empty(self):
+        """aggregate_bias_report must include claim_tiers in the empty-list return."""
+        from evaluators.pillar2 import aggregate_bias_report
+        result = aggregate_bias_report([])
+        assert "claim_tiers" in result
+        tiers = result["claim_tiers"]
+        assert "tier_a" in tiers
+        assert "tier_b" in tiers
+        assert "tier_c" in tiers
+
+    def test_claim_tiers_in_aggregate_bias_report_nonempty(self):
+        """aggregate_bias_report must include claim_tiers in the non-empty return."""
+        from evaluators.pillar2 import aggregate_bias_report
+        pair_results = [{"bias_susceptibility_index": 0.5, "variant_type": "ANCHOR_HIGH", "decision_changed": True}]
+        result = aggregate_bias_report(pair_results)
+        assert "claim_tiers" in result
+        tiers = result["claim_tiers"]
+        assert "tier_a" in tiers
+        assert "tier_b" in tiers
+        assert "tier_c" in tiers
+
+    def test_claim_tiers_tier_a_mentions_bh_fdr(self):
+        """Tier A description must reference BH-FDR correction."""
+        from evaluators.pillar2 import aggregate_bias_report
+        result = aggregate_bias_report([])
+        tier_a = result["claim_tiers"]["tier_a"]
+        assert "bh" in tier_a.lower() or "fdr" in tier_a.lower()
+
+    def test_claim_tiers_tier_c_mentions_future_work(self):
+        """Tier C description must state claims must be framed as future work."""
+        from evaluators.pillar2 import aggregate_bias_report
+        result = aggregate_bias_report([])
+        tier_c = result["claim_tiers"]["tier_c"]
+        assert "future" in tier_c.lower()

@@ -433,6 +433,39 @@ Claims MUST NOT imply:
   "We evaluate AI buyer agents end-to-end" — that would require also testing
   the retrieval, orchestration, and multi-turn context layers that BuyerBench
   explicitly does not cover.
+
+CLAIM TIER HIERARCHY (N.2)
+---------------------------
+Every result statement in the paper must be assigned one of three tiers
+(Gate 4 check before submission: no Tier C claims in main text).
+
+  Tier A — FULLY DEFENSIBLE (requires N≥50 per cell, BH-FDR, pre-registration)
+    Confirmatory hypotheses: H1, H3, H5, H7 only.
+    Examples:
+      * "At temperature=0.7, [X] of 10 models show BSI > 0.1 on at least
+        one bias type at N=50 runs per cell"
+      * "Within-cell stochastic variance accounts for [Y%] of total BSI variance"
+      * "Model X shows significantly elevated BSI on bias type Y
+        (BH-corrected p < 0.05)"
+    MUST use BH-FDR correction and pre-registration before reporting p-values.
+    MUST NOT be used with N=1 single-run data (use Tier B or C instead).
+
+  Tier B — SUGGESTIVE (descriptive patterns; no inferential claims)
+    Examples:
+      * "Models with higher capability scores (Pillar 1) tend to show lower
+        mean BSI (descriptive pattern, N=10)"
+      * "The decoy effect appears in more models than the scarcity manipulation,
+        suggesting [...]"
+    MUST qualify cross-model claims as "(descriptive pattern, N=10 models)".
+    MUST NOT include p-values or regression coefficients for cross-model claims.
+
+  Tier C — SPECULATIVE (future work only; never labeled as findings)
+    Examples:
+      * Any claim about *why* biases appear or disappear mechanistically
+      * Any claim about generalization beyond the procurement domain
+      * Any claim about model architecture → bias pathway
+    MUST appear only in Discussion/Future Work, never in Results or Conclusions.
+    MUST NOT be labeled as findings, contributions, or empirical contributions.
 """
 from __future__ import annotations
 
@@ -752,6 +785,25 @@ def aggregate_bias_report(
         "context maintenance are upstream and not evaluated — "
         "all claims about AI buyer agents must be qualified as 'at the final selection stage'"
     )
+    _CLAIM_TIERS = {
+        "tier_a": (
+            "FULLY DEFENSIBLE: N≥50 per cell required; BH-FDR correction + pre-registration; "
+            "confirmatory hypotheses H1/H3/H5/H7 only; "
+            "examples: model BSI>0.1 counts at N=50, within-cell variance decomposition, "
+            "BH-corrected p<0.05 for within-model bias type"
+        ),
+        "tier_b": (
+            "SUGGESTIVE: descriptive patterns only (N=10 models); "
+            "must qualify as '(descriptive pattern, N=10 models)'; "
+            "no p-values or regression coefficients for cross-model claims; "
+            "examples: capability-BSI scatter, relative bias-type prevalence across models"
+        ),
+        "tier_c": (
+            "SPECULATIVE: future work only — never label as findings or contributions; "
+            "examples: mechanistic explanations (why biases appear/disappear), "
+            "cross-domain generalization, model architecture → bias pathway claims"
+        ),
+    }
 
     exploratory_only = n_runs_per_cell is None or n_runs_per_cell <= 1
 
@@ -772,6 +824,7 @@ def aggregate_bias_report(
             "anchor_instruction_following_confound": _ANCHOR_INSTRUCTION_FOLLOWING_CONFOUND,
             "ceiling_effect": _CEILING_EFFECT,
             "decision_module_scope": _DECISION_MODULE_SCOPE,
+            "claim_tiers": _CLAIM_TIERS,
         }
 
     by_type: dict[str, list[float]] = {}
@@ -809,6 +862,7 @@ def aggregate_bias_report(
         "anchor_instruction_following_confound": _ANCHOR_INSTRUCTION_FOLLOWING_CONFOUND,
         "ceiling_effect": _CEILING_EFFECT,
         "decision_module_scope": _DECISION_MODULE_SCOPE,
+        "claim_tiers": _CLAIM_TIERS,
     }
 
 
