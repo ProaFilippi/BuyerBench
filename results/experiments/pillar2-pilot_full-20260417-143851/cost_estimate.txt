@@ -1,0 +1,6 @@
+{
+  "n_runs": 300,
+  "cost_per_run_usd": 0.0,
+  "estimated_total_usd": 0.0,
+  "note": "Estimate assumes $0.15/run average; actual cost varies by model."
+}

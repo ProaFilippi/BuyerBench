@@ -1,0 +1,2 @@
+session_id,agent_id,scenario_id,run_index,run_id,supplier_order_seed,pillar,variant,variant_pair_id,bias_category,score,overall_pass,temperature,prompt_version,token_count_input,token_count_output,api_cost_usd,error_flag,model_version,latency_ms,timestamp
+session-20260417-094244,mock-agent-v1,p2-05-sunk-cost-SUNK_COST,0,73b00370b1ec726c,1918290023,PILLAR2,SUNK_COST,p2-05-sunk-cost,sunk_cost,1.0,True,,standard,0,0,,False,,0.0036250003176974133,2026-04-17T14:42:44.802718+00:00

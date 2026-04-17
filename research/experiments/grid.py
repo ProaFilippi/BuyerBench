@@ -12,6 +12,12 @@ realistic
 flagship
     Same models / biases, but 100 runs per cell, 2 temperatures (0.7 + 0.0),
     and 2 prompt versions (standard + cot) = 40,000 total runs.
+pilot_full
+    Same 10 real models as realistic, but N=30 per cell (3,000 total runs ≈ $450).
+    Run before the full realistic design to detect ceiling effects and validate
+    statistical power at reduced cost.  Section O.1 Day 9–10.
+pilot
+    1 mock agent × 5 runs per cell = 50 total runs (infrastructure validation only).
 """
 from __future__ import annotations
 
@@ -74,6 +80,18 @@ FLAGSHIP_DESIGN: dict = {
     "cost_per_run_usd": 0.20,
 }
 
+# ── Pilot Full Design (N=30 per cell; real models; ceiling-effect check) ──────
+
+PILOT_FULL_DESIGN: dict = {
+    **REALISTIC_DESIGN,
+    "design_tier": "pilot_full",
+    # N=30 gives enough power to detect a ceiling effect at lower cost (~$450)
+    # while still allowing the Day 10 go/no-go gate decision before the full
+    # N=50 realistic run (~$750).  Section O.1 Day 9–10.
+    "n_runs_per_cell": 30,
+    "cost_per_run_usd": 0.15,  # 10 × 5 × 2 × 30 = 3,000 runs ≈ $450
+}
+
 # ── Pilot Design (infrastructure verification — mock agent, N=5 per cell) ─────
 
 PILOT_DESIGN: dict = {
@@ -92,5 +110,6 @@ PILOT_DESIGN: dict = {
 DESIGNS: dict[str, dict] = {
     "realistic": REALISTIC_DESIGN,
     "flagship": FLAGSHIP_DESIGN,
+    "pilot_full": PILOT_FULL_DESIGN,
     "pilot": PILOT_DESIGN,
 }

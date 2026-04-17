@@ -102,11 +102,14 @@ class TestDesignConstants:
     def test_designs_dict_contains_all_tiers(self):
         assert "realistic" in DESIGNS
         assert "flagship" in DESIGNS
+        assert "pilot_full" in DESIGNS
         assert "pilot" in DESIGNS
 
     def test_designs_dict_values_are_correct(self):
+        from research.experiments.grid import PILOT_FULL_DESIGN
         assert DESIGNS["realistic"] is REALISTIC_DESIGN
         assert DESIGNS["flagship"] is FLAGSHIP_DESIGN
+        assert DESIGNS["pilot_full"] is PILOT_FULL_DESIGN
         assert DESIGNS["pilot"] is PILOT_DESIGN
 
     def test_anchoring_scenario_ids_match_actual_files(self):

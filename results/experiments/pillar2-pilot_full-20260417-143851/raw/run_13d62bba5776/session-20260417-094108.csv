@@ -1,0 +1,2 @@
+session_id,agent_id,scenario_id,run_index,run_id,supplier_order_seed,pillar,variant,variant_pair_id,bias_category,score,overall_pass,temperature,prompt_version,token_count_input,token_count_output,api_cost_usd,error_flag,model_version,latency_ms,timestamp
+session-20260417-094108,mock-agent-v1,p2-03-decoy-DECOY,0,ebddd25c78c08da2,2134238112,PILLAR2,DECOY,p2-03-decoy,decoy,1.0,True,,standard,0,0,,False,,0.0018589998944662511,2026-04-17T14:41:08.218436+00:00

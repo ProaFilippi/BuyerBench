@@ -182,7 +182,7 @@ class ExperimentManifest:
     """Unique experiment identifier, e.g. 'pillar2-realistic-20260416-120000'."""
 
     design_tier: str
-    """Experiment scale: 'realistic' (10 models × 50 runs) or 'flagship' (10 × 100 + CoT)."""
+    """Experiment scale: 'realistic' (N=50), 'flagship' (N=100+CoT), 'pilot_full' (N=30), or 'pilot' (mock)."""
 
     n_models: int
     """Number of distinct model / agent IDs in the grid."""
@@ -240,10 +240,12 @@ class ExperimentManifest:
     end_time_utc: Optional[str] = None
     """ISO-8601 UTC timestamp when the last run completed (or failed)."""
 
+    _VALID_TIERS = frozenset({"realistic", "flagship", "pilot_full", "pilot"})
+
     def __post_init__(self) -> None:
-        if self.design_tier not in ("realistic", "flagship", "pilot"):
+        if self.design_tier not in self._VALID_TIERS:
             raise ValueError(
-                f"design_tier must be 'realistic', 'flagship', or 'pilot', "
+                f"design_tier must be one of {sorted(self._VALID_TIERS)}, "
                 f"got '{self.design_tier}'"
             )
         if self.total_completed_runs > self.total_planned_runs and self.total_planned_runs > 0:
