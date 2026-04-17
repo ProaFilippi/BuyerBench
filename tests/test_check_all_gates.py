@@ -19,6 +19,9 @@ Covers:
 - check_gate3: PASS when gate3.proceed=True
 - check_gate3: FAIL when gate3.proceed=False
 - check_gate3: robust_rationality_pivot propagated
+- Gate3Integration: analyze_gate3 (08_run_flagship) -> check_gate3 (09_check_all_gates) round-trip PASS
+- Gate3Integration: round-trip FAIL (robust_rationality_pivot preserved)
+- Gate3Integration: round-trip for exactly-at-threshold model count (proceed=False)
 - build_gate4_checklist: returns list of 8 items
 - build_gate4_checklist: all items have label, instruction, note
 - build_gate4_checklist: OSF preregistration item present
@@ -51,6 +54,7 @@ import pytest
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent
 _SCRIPT_PATH = _REPO_ROOT / "research" / "scripts" / "09_check_all_gates.py"
+_FLAGSHIP_PATH = _REPO_ROOT / "research" / "scripts" / "08_run_flagship.py"
 
 
 def _load_script():
@@ -60,7 +64,15 @@ def _load_script():
     return mod
 
 
+def _load_flagship():
+    spec = importlib.util.spec_from_file_location("run_flagship", _FLAGSHIP_PATH)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
 _script = _load_script()
+_flagship = _load_flagship()
 
 GATE2_CV_THRESHOLD = _script.GATE2_CV_THRESHOLD
 GateStatus = _script.GateStatus
@@ -560,3 +572,105 @@ class TestCLI:
         except SystemExit as e:
             # PENDING should NOT exit with 1
             assert e.code != 1
+
+
+# ── Gate 3 cross-module integration ───────────────────────────────────────────
+
+
+def _make_cells_json(*, n_qualifying_models: int, bias_types_per_model: int = 2) -> dict:
+    """Build a synthetic cells.json with the requested number of qualifying models.
+
+    Each qualifying model gets ``bias_types_per_model`` treatment cells with
+    ci_lower_95 = 0.30 (clearly above the GATE3_BSI_CI_FLOOR=0.0 threshold).
+    """
+    cells = []
+    for m_idx in range(max(n_qualifying_models, 1)):
+        model_id = f"openrouter-model-{m_idx}"
+        for b_idx in range(bias_types_per_model):
+            bias_cat = f"bias_type_{b_idx}"
+            # treatment cell: qualifies
+            cells.append({
+                "cell_id": f"{model_id}-{bias_cat}-treatment",
+                "agent_id": model_id,
+                "scenario_id": f"p2-0{b_idx + 1}-{bias_cat}-ANCHOR_HIGH",
+                "variant": "ANCHOR_HIGH",
+                "bias_category": bias_cat,
+                "n_runs": 50,
+                "mean_bsi": 0.35,
+                "ci_lower_95": 0.30 if m_idx < n_qualifying_models else -0.10,
+                "ci_upper_95": 0.55,
+            })
+            # baseline cell: never qualifies
+            cells.append({
+                "cell_id": f"{model_id}-{bias_cat}-BASELINE",
+                "agent_id": model_id,
+                "scenario_id": f"p2-0{b_idx + 1}-{bias_cat}-BASELINE",
+                "variant": "BASELINE",
+                "bias_category": bias_cat,
+                "n_runs": 50,
+                "mean_bsi": 0.0,
+                "ci_lower_95": -0.05,
+                "ci_upper_95": 0.05,
+            })
+    return {"cells": cells}
+
+
+class TestGate3CrossModuleIntegration:
+    """Verify the write→read pipeline: analyze_gate3 (08_run_flagship) →
+    check_gate3 (09_check_all_gates).  These two functions live in separate
+    scripts and share no imports; the only contract is the gate3.json schema.
+    """
+
+    def test_roundtrip_pass_when_enough_models_qualify(self, tmp_path):
+        # Write cells.json with 4 qualifying models (Gate 3 threshold = 3)
+        cells = _make_cells_json(n_qualifying_models=4)
+        (tmp_path / "cells.json").write_text(json.dumps(cells))
+
+        # WRITER: analyze_gate3 from 08_run_flagship writes gate3.json
+        _flagship.analyze_gate3(tmp_path)
+        assert (tmp_path / "gate3.json").exists()
+
+        # READER: check_gate3 from 09_check_all_gates reads gate3.json
+        result = check_gate3(tmp_path)
+        assert result["status"] == GateStatus.PASS
+        assert result["proceed"] is True
+
+    def test_roundtrip_fail_below_threshold(self, tmp_path):
+        # Write cells.json with only 2 qualifying models (below threshold of 3)
+        cells = _make_cells_json(n_qualifying_models=2)
+        (tmp_path / "cells.json").write_text(json.dumps(cells))
+
+        _flagship.analyze_gate3(tmp_path)
+        result = check_gate3(tmp_path)
+        assert result["status"] == GateStatus.FAIL
+        assert result["proceed"] is False
+        assert result["robust_rationality_pivot"] is False
+
+    def test_roundtrip_robust_rationality_pivot_when_no_signal(self, tmp_path):
+        # Zero qualifying models → robust_rationality_pivot should be True
+        cells = _make_cells_json(n_qualifying_models=0, bias_types_per_model=0)
+        (tmp_path / "cells.json").write_text(json.dumps({"cells": []}))
+
+        _flagship.analyze_gate3(tmp_path)
+        result = check_gate3(tmp_path)
+        assert result["status"] == GateStatus.FAIL
+        assert result["robust_rationality_pivot"] is True
+
+    def test_roundtrip_n_models_with_bias_propagated(self, tmp_path):
+        cells = _make_cells_json(n_qualifying_models=5)
+        (tmp_path / "cells.json").write_text(json.dumps(cells))
+
+        _flagship.analyze_gate3(tmp_path)
+        result = check_gate3(tmp_path)
+        assert result["n_models_with_bias"] == 5
+
+    def test_roundtrip_gate3_json_has_correct_schema(self, tmp_path):
+        cells = _make_cells_json(n_qualifying_models=3)
+        (tmp_path / "cells.json").write_text(json.dumps(cells))
+
+        gate3 = _flagship.analyze_gate3(tmp_path)
+        assert "proceed" in gate3
+        assert "n_models_with_bias" in gate3
+        assert "robust_rationality_pivot" in gate3
+        assert "recommendation" in gate3
+        assert "criterion_detail" in gate3
