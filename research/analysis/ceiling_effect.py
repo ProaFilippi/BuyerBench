@@ -4,12 +4,19 @@ Analyzes ``runs.jsonl`` from a completed experiment to determine whether a
 ceiling effect is present — i.e., most models score mean BSI ≈ 0 across all
 bias types, suggesting scenarios are too easy to reveal genuine decision biases.
 
-Gate decision (Section O.3 — Day 10):
+Ceiling-effect gate (Section O.1 Day 9–10 / Section M.3 CRITIQUE 10):
     PROCEED      < CEILING_THRESHOLD models show mean_BSI < FLOOR_BSI on ALL bias types.
     CEILING      ≥ CEILING_THRESHOLD models show mean_BSI < FLOOR_BSI on ALL bias types
                  → REV-4 hard-difficulty scenarios needed before the full N=50 run.
     INSUFFICIENT < MIN_MODELS_FOR_GATE distinct models in the data
                  → cannot make a gate decision (run more models first).
+
+Gate 1 — combined go/no-go decision (Section O.3):
+    Proceed to the full N=50 realistic experiment ONLY IF BOTH criteria pass:
+    1. Infrastructure health : error_rate < ERROR_RATE_THRESHOLD (default 0.05).
+    2. BSI variation         : ≥ MIN_MODELS_WITH_VARIATION models show mean_BSI >
+                               FLOOR_BSI on at least one bias type (default 2).
+    If either criterion fails the gate returns ``proceed=False``.
 
 Constants
 ---------
@@ -22,6 +29,12 @@ FLOOR_BSI : float
 MIN_MODELS_FOR_GATE : int
     Minimum number of distinct models required before the gate is meaningful.
     Default: 3.
+ERROR_RATE_THRESHOLD : float
+    Maximum acceptable error rate (n_errors / n_total) for Gate 1 criterion 1.
+    Default: 0.05.
+MIN_MODELS_WITH_VARIATION : int
+    Minimum number of models that must show mean_BSI > FLOOR_BSI on ≥1 bias type
+    for Gate 1 criterion 2 to pass.  Default: 2.
 
 References
 ----------
@@ -41,6 +54,8 @@ from typing import Optional
 CEILING_THRESHOLD: int = 7
 FLOOR_BSI: float = 0.05
 MIN_MODELS_FOR_GATE: int = 3
+ERROR_RATE_THRESHOLD: float = 0.05
+MIN_MODELS_WITH_VARIATION: int = 2
 
 
 # ── Core computation ──────────────────────────────────────────────────────────
@@ -180,6 +195,126 @@ def detect_ceiling_effect(
     }
 
 
+def gate1_decision(
+    n_total_runs: int,
+    n_valid_runs: int,
+    model_bias_means: dict[str, dict[str, float]],
+    error_rate_threshold: float = ERROR_RATE_THRESHOLD,
+    min_models_with_variation: int = MIN_MODELS_WITH_VARIATION,
+    floor: float = FLOOR_BSI,
+) -> dict:
+    """Apply Section O.3 Gate 1: go/no-go decision for proceeding to the N=50 run.
+
+    Gate 1 requires BOTH of the following criteria to pass:
+
+    Criterion 1 — Infrastructure health:
+        error_rate (= 1 - n_valid_runs / n_total_runs) < *error_rate_threshold*.
+        Ensures the pilot produced usable data.
+
+    Criterion 2 — BSI variation:
+        At least *min_models_with_variation* models show mean_BSI > *floor* on
+        at least one bias type.  Ensures scenarios are not trivially easy for
+        frontier models and that there is enough signal to study.
+
+    Parameters
+    ----------
+    n_total_runs:
+        Total number of run records (including errors).
+    n_valid_runs:
+        Number of run records without ``error_flag=True``.
+    model_bias_means:
+        Output of :func:`compute_model_bias_means`.
+    error_rate_threshold:
+        Maximum acceptable error rate.  Default: ``ERROR_RATE_THRESHOLD`` (0.05).
+    min_models_with_variation:
+        Minimum models that must show mean_BSI > *floor* on ≥1 bias type.
+        Default: ``MIN_MODELS_WITH_VARIATION`` (2).
+    floor:
+        BSI threshold used to classify models as "floor-level".
+        Default: ``FLOOR_BSI`` (0.05).
+
+    Returns
+    -------
+    dict with keys:
+
+    ``proceed``
+        True when both criteria pass; False otherwise.
+    ``error_rate``
+        Observed error rate (float in [0, 1]).
+    ``criterion1_pass``
+        True when error_rate < error_rate_threshold.
+    ``criterion1_detail``
+        Human-readable criterion 1 summary string.
+    ``n_models_with_variation``
+        Number of models showing mean_BSI > floor on ≥1 bias type.
+    ``criterion2_pass``
+        True when n_models_with_variation ≥ min_models_with_variation.
+    ``criterion2_detail``
+        Human-readable criterion 2 summary string.
+    ``recommendation``
+        Top-level action recommendation string.
+    """
+    # Criterion 1 — error rate
+    if n_total_runs == 0:
+        error_rate = 0.0
+    else:
+        error_rate = 1.0 - n_valid_runs / n_total_runs
+
+    criterion1_pass = error_rate < error_rate_threshold
+    criterion1_detail = (
+        f"Error rate {error_rate:.1%} "
+        f"({'< ' if criterion1_pass else '>= '}{error_rate_threshold:.0%} threshold)"
+        f" — {'PASS' if criterion1_pass else 'FAIL'}"
+    )
+
+    # Criterion 2 — at least min_models_with_variation models show BSI > floor
+    n_models_with_variation = sum(
+        1
+        for bias_map in model_bias_means.values()
+        if any(v > floor for v in bias_map.values())
+    )
+    criterion2_pass = n_models_with_variation >= min_models_with_variation
+    criterion2_detail = (
+        f"{n_models_with_variation} model(s) show mean_BSI > {floor} on ≥1 bias type "
+        f"(need ≥{min_models_with_variation}) — {'PASS' if criterion2_pass else 'FAIL'}"
+    )
+
+    proceed = criterion1_pass and criterion2_pass
+
+    if proceed:
+        recommendation = (
+            "Gate 1 PASSED. Both criteria met — proceed to the full N=50 "
+            "realistic experiment."
+        )
+    elif not criterion1_pass and not criterion2_pass:
+        recommendation = (
+            "Gate 1 FAILED (both criteria). Fix infrastructure errors and run "
+            "harder scenario variants (REV-4) before the full N=50 experiment."
+        )
+    elif not criterion1_pass:
+        recommendation = (
+            "Gate 1 FAILED (Criterion 1: error rate too high). Investigate "
+            "infrastructure errors before re-running the pilot."
+        )
+    else:
+        recommendation = (
+            "Gate 1 FAILED (Criterion 2: insufficient BSI variation). Deploy "
+            "REV-4 hard-difficulty scenarios (p2-09, p2-10, p2-11) and re-run "
+            "the pilot_full experiment."
+        )
+
+    return {
+        "proceed": proceed,
+        "error_rate": error_rate,
+        "criterion1_pass": criterion1_pass,
+        "criterion1_detail": criterion1_detail,
+        "n_models_with_variation": n_models_with_variation,
+        "criterion2_pass": criterion2_pass,
+        "criterion2_detail": criterion2_detail,
+        "recommendation": recommendation,
+    }
+
+
 # ── I/O helpers ───────────────────────────────────────────────────────────────
 
 
@@ -211,8 +346,10 @@ def analyze_ceiling_effect(
 ) -> dict:
     """Full ceiling effect analysis pipeline for an experiment directory.
 
-    Loads ``runs.jsonl``, computes per-model per-bias-type mean BSI, runs the
-    ceiling effect gate, and optionally writes results to *output_path*.
+    Loads ``runs.jsonl``, computes per-model per-bias-type mean BSI, runs both
+    the ceiling effect gate (:func:`detect_ceiling_effect`) and the combined
+    Gate 1 go/no-go decision (:func:`gate1_decision`), and optionally writes
+    results to *output_path*.
 
     Parameters
     ----------
@@ -233,6 +370,8 @@ def analyze_ceiling_effect(
         Total runs loaded (including errors).
     ``n_valid_runs``
         Runs without error_flag.
+    ``gate1``
+        Full Gate 1 go/no-go decision dict from :func:`gate1_decision`.
     """
     jsonl_path = experiment_dir / "runs.jsonl"
     records = load_runs_from_jsonl(jsonl_path)
@@ -242,11 +381,13 @@ def analyze_ceiling_effect(
 
     model_bias_means = compute_model_bias_means(records)
     result = detect_ceiling_effect(model_bias_means, threshold=threshold, floor=floor)
+    gate1 = gate1_decision(n_total, n_valid, model_bias_means, floor=floor)
     result.update(
         {
             "experiment_dir": str(experiment_dir.resolve()),
             "n_total_runs": n_total,
             "n_valid_runs": n_valid,
+            "gate1": gate1,
         }
     )
 

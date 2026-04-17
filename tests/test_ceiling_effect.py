@@ -1,13 +1,16 @@
 """Tests for research/analysis/ceiling_effect.py.
 
 Covers:
-- Constants: CEILING_THRESHOLD, FLOOR_BSI, MIN_MODELS_FOR_GATE
+- Constants: CEILING_THRESHOLD, FLOOR_BSI, MIN_MODELS_FOR_GATE,
+  ERROR_RATE_THRESHOLD, MIN_MODELS_WITH_VARIATION
 - compute_model_bias_means: empty, single model, multi-model, error exclusion
 - detect_ceiling_effect: PROCEED, CEILING, INSUFFICIENT gate decisions
 - detect_ceiling_effect: per_model breakdown, all_floor flags
 - detect_ceiling_effect: custom threshold/floor parameters
 - detect_ceiling_effect: exactly-at-threshold boundary (≥, not >)
-- analyze_ceiling_effect: loads from runs.jsonl, writes output JSON
+- gate1_decision: proceed/hold, criterion1 (error rate), criterion2 (variation)
+- gate1_decision: edge cases (zero runs, custom thresholds, partial failures)
+- analyze_ceiling_effect: loads from runs.jsonl, writes output JSON, gate1 field
 - analyze_ceiling_effect: empty jsonl → INSUFFICIENT
 - load_runs_from_jsonl: malformed lines skipped silently
 """
@@ -21,11 +24,14 @@ import pytest
 
 from research.analysis.ceiling_effect import (
     CEILING_THRESHOLD,
+    ERROR_RATE_THRESHOLD,
     FLOOR_BSI,
     MIN_MODELS_FOR_GATE,
+    MIN_MODELS_WITH_VARIATION,
     analyze_ceiling_effect,
     compute_model_bias_means,
     detect_ceiling_effect,
+    gate1_decision,
     load_runs_from_jsonl,
 )
 
@@ -42,6 +48,12 @@ class TestConstants:
 
     def test_min_models_for_gate_is_three(self):
         assert MIN_MODELS_FOR_GATE == 3
+
+    def test_error_rate_threshold_is_0_05(self):
+        assert abs(ERROR_RATE_THRESHOLD - 0.05) < 1e-9
+
+    def test_min_models_with_variation_is_two(self):
+        assert MIN_MODELS_WITH_VARIATION == 2
 
 
 # ── compute_model_bias_means ──────────────────────────────────────────────────
@@ -342,3 +354,124 @@ class TestAnalyzeCeilingEffect:
         _write_runs_jsonl(tmp_path / "runs.jsonl", records)
         result = analyze_ceiling_effect(tmp_path, threshold=7)
         assert result["gate"] == "PROCEED"
+
+    def test_gate1_key_present_in_result(self, tmp_path):
+        _write_runs_jsonl(tmp_path / "runs.jsonl", self._ten_floor_records())
+        result = analyze_ceiling_effect(tmp_path)
+        assert "gate1" in result
+
+    def test_gate1_is_dict(self, tmp_path):
+        _write_runs_jsonl(tmp_path / "runs.jsonl", self._ten_floor_records())
+        result = analyze_ceiling_effect(tmp_path)
+        assert isinstance(result["gate1"], dict)
+
+    def test_gate1_proceed_false_on_floor_data(self, tmp_path):
+        # All-floor data → Gate 1 Criterion 2 fails (no variation)
+        _write_runs_jsonl(tmp_path / "runs.jsonl", self._ten_floor_records())
+        result = analyze_ceiling_effect(tmp_path)
+        assert result["gate1"]["proceed"] is False
+
+
+# ── gate1_decision ─────────────────────────────────────────────────────────────
+
+
+def _varied_model_bias_means():
+    """5 floor models, 5 with BSI=0.3 on anchoring → criterion 2 passes."""
+    bias_types = ["anchoring", "framing"]
+    result = {}
+    for i in range(5):
+        result[f"floor-{i:02d}"] = {b: 0.0 for b in bias_types}
+    for i in range(5):
+        result[f"high-{i:02d}"] = {"anchoring": 0.3, "framing": 0.0}
+    return result
+
+
+class TestGate1Decision:
+    def test_both_criteria_pass_returns_proceed(self):
+        mbm = _varied_model_bias_means()
+        result = gate1_decision(100, 97, mbm)
+        assert result["proceed"] is True
+
+    def test_high_error_rate_fails_criterion1(self):
+        mbm = _varied_model_bias_means()
+        # 10 errors out of 100 → rate=0.10 > 0.05 threshold
+        result = gate1_decision(100, 90, mbm)
+        assert result["criterion1_pass"] is False
+        assert result["proceed"] is False
+
+    def test_no_variation_fails_criterion2(self):
+        # All models at BSI=0 → no variation
+        mbm = {f"model-{i:02d}": {"anchoring": 0.0} for i in range(10)}
+        result = gate1_decision(100, 97, mbm)
+        assert result["criterion2_pass"] is False
+        assert result["proceed"] is False
+
+    def test_both_criteria_fail_returns_both_failed_recommendation(self):
+        mbm = {f"model-{i:02d}": {"anchoring": 0.0} for i in range(10)}
+        result = gate1_decision(100, 80, mbm)  # error_rate=0.20
+        assert result["proceed"] is False
+        assert "both" in result["recommendation"].lower()
+
+    def test_error_rate_computed_correctly(self):
+        mbm = _varied_model_bias_means()
+        result = gate1_decision(200, 190, mbm)
+        assert abs(result["error_rate"] - 0.05) < 1e-9
+
+    def test_zero_total_runs_yields_zero_error_rate(self):
+        result = gate1_decision(0, 0, {})
+        assert result["error_rate"] == 0.0
+        assert result["criterion1_pass"] is True
+
+    def test_n_models_with_variation_counted_correctly(self):
+        mbm = _varied_model_bias_means()
+        # high-00..04 each have anchoring=0.3 > 0.05 → 5 models with variation
+        result = gate1_decision(100, 97, mbm)
+        assert result["n_models_with_variation"] == 5
+
+    def test_exactly_two_models_with_variation_passes_criterion2(self):
+        mbm = {f"floor-{i:02d}": {"anchoring": 0.0} for i in range(8)}
+        mbm["high-00"] = {"anchoring": 0.1}
+        mbm["high-01"] = {"anchoring": 0.2}
+        result = gate1_decision(100, 97, mbm)
+        assert result["criterion2_pass"] is True
+
+    def test_one_model_with_variation_fails_criterion2(self):
+        mbm = {f"floor-{i:02d}": {"anchoring": 0.0} for i in range(9)}
+        mbm["high-00"] = {"anchoring": 0.3}
+        result = gate1_decision(100, 97, mbm)
+        assert result["criterion2_pass"] is False
+
+    def test_custom_error_rate_threshold(self):
+        mbm = _varied_model_bias_means()
+        # error_rate=0.10, custom threshold=0.20 → passes
+        result = gate1_decision(100, 90, mbm, error_rate_threshold=0.20)
+        assert result["criterion1_pass"] is True
+
+    def test_custom_min_models_with_variation(self):
+        # Only 5 models with variation; require 6 → fails
+        mbm = _varied_model_bias_means()
+        result = gate1_decision(100, 97, mbm, min_models_with_variation=6)
+        assert result["criterion2_pass"] is False
+
+    def test_recommendation_is_non_empty_string(self):
+        result = gate1_decision(100, 97, _varied_model_bias_means())
+        assert isinstance(result["recommendation"], str)
+        assert result["recommendation"]
+
+    def test_criterion_detail_strings_present(self):
+        result = gate1_decision(100, 97, _varied_model_bias_means())
+        assert isinstance(result["criterion1_detail"], str) and result["criterion1_detail"]
+        assert isinstance(result["criterion2_detail"], str) and result["criterion2_detail"]
+
+    def test_proceed_true_recommendation_mentions_n50(self):
+        result = gate1_decision(100, 97, _varied_model_bias_means())
+        assert "N=50" in result["recommendation"] or "n=50" in result["recommendation"].lower()
+
+    def test_schema_completeness(self):
+        result = gate1_decision(100, 97, _varied_model_bias_means())
+        expected_keys = {
+            "proceed", "error_rate", "criterion1_pass", "criterion1_detail",
+            "n_models_with_variation", "criterion2_pass", "criterion2_detail",
+            "recommendation",
+        }
+        assert expected_keys.issubset(result.keys())

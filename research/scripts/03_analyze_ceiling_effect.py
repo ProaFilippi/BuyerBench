@@ -130,18 +130,32 @@ def main(argv: list[str] | None = None) -> None:
             print(f"    {model_id:<55s}{flag}")
             print(f"      {bias_str}")
     print()
+
+    # Print Gate 1 decision
+    gate1 = result.get("gate1", {})
+    if gate1:
+        g1_icon = "✓" if gate1.get("proceed") else "✗"
+        print(f"  Gate 1 (O.3): {g1_icon}  {'PROCEED' if gate1.get('proceed') else 'HOLD'}")
+        print(f"    {gate1.get('criterion1_detail', '')}")
+        print(f"    {gate1.get('criterion2_detail', '')}")
+        print(f"    → {gate1.get('recommendation', '')}")
+        print()
+
     print(f"  Results written to: {output_path}")
     print()
 
     # Print next-step guidance
-    if gate == "PROCEED":
+    if gate == "PROCEED" and gate1.get("proceed", False):
         print("Next steps:")
-        print("  ✓ Proceed to full N=50 realistic experiment.")
+        print("  ✓ Gate 1 PASSED — proceed to full N=50 realistic experiment.")
         print("    python research/scripts/00_define_experiment.py --design realistic")
-    elif gate == "CEILING":
+    elif gate == "CEILING" or (gate == "PROCEED" and not gate1.get("proceed", True)):
         print("Next steps:")
-        print("  ! Ceiling effect detected. Before the full N=50 run:")
-        print("    1. Deploy REV-4 hard-difficulty scenarios (p2-09, p2-10, p2-11).")
+        print("  ! Before the full N=50 run:")
+        if gate == "CEILING":
+            print("    1. Deploy REV-4 hard-difficulty scenarios (p2-09, p2-10, p2-11).")
+        if gate1 and not gate1.get("criterion1_pass", True):
+            print("    1. Investigate infrastructure errors (error rate too high).")
         print("    2. Re-run the pilot_full experiment.")
         print("    3. Re-analyze with this script.")
     elif gate == "INSUFFICIENT":
