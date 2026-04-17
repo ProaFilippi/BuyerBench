@@ -54,6 +54,7 @@ class HypothesisDef(BaseModel):
     prq_dimension: str  # Which PRQ dimension this addresses
     statement: str  # Full testable statement
     direction: Literal["positive", "negative", "null", "non_directional"]
+    analysis_type: Literal["confirmatory", "exploratory"] = "exploratory"
     test: str  # Statistical test planned
     null_outcome: str  # What a null result means
     data_requirement: str  # Minimum data needed to test
@@ -62,6 +63,13 @@ class HypothesisDef(BaseModel):
 #: Hardcoded hypothesis set from docs/paper/hypotheses/d1 and d2.
 #: These are fixed at pre-registration time and must not be changed after
 #: data collection begins.
+#:
+#: Confirmatory hypotheses (H1, H3, H5, H7) are the primary inferential engine.
+#: BH-FDR correction is applied to these 4 hypotheses only.
+#: All other hypotheses (H2, H4, H6, H8, H9, H10) are pre-specified as
+#: exploratory — results are descriptive or depend on future data.
+CONFIRMATORY_HYPOTHESIS_IDS: frozenset[str] = frozenset({"H1", "H3", "H5", "H7"})
+
 BUYERBENCH_HYPOTHESES: list[HypothesisDef] = [
     HypothesisDef(
         id="H1",
@@ -72,6 +80,7 @@ BUYERBENCH_HYPOTHESES: list[HypothesisDef] = [
             "excluding zero) for at least one bias type, in at least five of ten tested models."
         ),
         direction="positive",
+        analysis_type="confirmatory",
         test=(
             "Per-bias-type one-sample t-test (H₀: BSI = 0) aggregated across models; "
             "BH-FDR correction at q = 0.05 across 5 tests."
@@ -110,6 +119,7 @@ BUYERBENCH_HYPOTHESES: list[HypothesisDef] = [
             "and higher than the mean BSI across all other bias types."
         ),
         direction="positive",
+        analysis_type="confirmatory",
         test=(
             "One-sample t-test (decoy BSI > 0); pairwise contrast between decoy mean_BSI "
             "and grand mean across remaining 4 bias types (Dunnett or Tukey HSD post-hoc)."
@@ -148,6 +158,7 @@ BUYERBENCH_HYPOTHESES: list[HypothesisDef] = [
             "(p2-02, FRAMING_GAIN), consistent with loss aversion predictions."
         ),
         direction="positive",
+        analysis_type="confirmatory",
         test="Paired t-test: mean BSI under FRAMING_LOSS vs FRAMING_GAIN across models.",
         null_outcome=(
             "No framing asymmetry — LLMs respond symmetrically to gain and loss frames, "
@@ -183,6 +194,7 @@ BUYERBENCH_HYPOTHESES: list[HypothesisDef] = [
             "all cells, consistent with a boundary-response mechanism."
         ),
         direction="positive",
+        analysis_type="confirmatory",
         test=(
             "OLS regression: std_bsi ~ β₀ + β₁·mean_bsi. "
             "Significant positive β₁ supports H7."
@@ -774,15 +786,28 @@ def render_prereg_markdown(doc: PreregistrationDocument) -> str:
         "No imputation is applied."
     )
 
-    h(3, "5.6 Exploratory Analyses")
+    h(3, "5.6 Confirmatory vs. Exploratory Hypothesis Classification")
     p(
-        "The following analyses are pre-specified as exploratory (not confirmatory):"
+        "Hypotheses are pre-classified as **confirmatory** or **exploratory** before "
+        "data collection. BH-FDR correction (q = 0.05) is applied to confirmatory "
+        "hypotheses only. Exploratory results are reported descriptively and must "
+        "not be used as primary evidence for publication claims."
+    )
+    blank()
+
+    confirmatory_hyps = [h for h in doc.hypotheses if h.analysis_type == "confirmatory"]
+    exploratory_hyps = [h for h in doc.hypotheses if h.analysis_type == "exploratory"]
+
+    p("**Confirmatory hypotheses** (inferential; BH-FDR correction applied):")
+    ul([f"{h.id} — {h.label}" for h in confirmatory_hyps])
+
+    p("**Exploratory hypotheses** (descriptive only; no inferential claims permitted):")
+    ul([f"{h.id} — {h.label}" for h in exploratory_hyps])
+
+    p(
+        "Additional unplanned exploratory analyses (not pre-specified as hypotheses):"
     )
     ul([
-        "H2 capability regression (OLS: mean_BSI ~ pillar1_score) — N = 10 is below "
-        "inference threshold; labeled descriptive.",
-        "H9 model-specific bias profiles — Cronbach's alpha and hierarchical clustering "
-        "across 5-dimension BSI vectors; N = 10 limits stability.",
         "Session order effects (G.6.5): BSI ~ run_index to detect within-session drift.",
         "Temperature moderation (Phase 3): if multiple temperature levels are collected, "
         "BSI ~ temperature × bias_type interaction is exploratory.",
@@ -808,6 +833,7 @@ def render_prereg_markdown(doc: PreregistrationDocument) -> str:
         h(3, f"6.{hyp.id} — {hyp.label}")
         field("PRQ Dimension", hyp.prq_dimension)
         field("Direction", hyp.direction.replace("_", " "))
+        field("Analysis type", hyp.analysis_type.upper())
         blank()
         p(f"**Statement:** {hyp.statement}")
         blank()

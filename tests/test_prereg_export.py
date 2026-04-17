@@ -9,6 +9,7 @@ import pytest
 from results.experiment_manifest import ExperimentManifest
 from results.prereg_export import (
     BUYERBENCH_HYPOTHESES,
+    CONFIRMATORY_HYPOTHESIS_IDS,
     HypothesisDef,
     PreregistrationDocument,
     build_planned_manifest,
@@ -891,3 +892,134 @@ class TestGeneratePreregDocumentStandalone:
         manifest = _make_manifest(n_runs_per_cell=20)
         doc, _ = generate_prereg_document(manifest)
         assert doc.manifest_n_runs_per_cell == 20
+
+
+# ── TestConfirmatoryExploratorySplit ─────────────────────────────────────────
+
+class TestConfirmatoryExploratorySplit:
+    """Tests for the confirmatory/exploratory analysis_type classification."""
+
+    def test_confirmatory_ids_constant_has_four_elements(self):
+        assert len(CONFIRMATORY_HYPOTHESIS_IDS) == 4
+
+    def test_confirmatory_ids_are_h1_h3_h5_h7(self):
+        assert CONFIRMATORY_HYPOTHESIS_IDS == {"H1", "H3", "H5", "H7"}
+
+    def test_h1_is_confirmatory(self):
+        h1 = next(h for h in BUYERBENCH_HYPOTHESES if h.id == "H1")
+        assert h1.analysis_type == "confirmatory"
+
+    def test_h3_is_confirmatory(self):
+        h3 = next(h for h in BUYERBENCH_HYPOTHESES if h.id == "H3")
+        assert h3.analysis_type == "confirmatory"
+
+    def test_h5_is_confirmatory(self):
+        h5 = next(h for h in BUYERBENCH_HYPOTHESES if h.id == "H5")
+        assert h5.analysis_type == "confirmatory"
+
+    def test_h7_is_confirmatory(self):
+        h7 = next(h for h in BUYERBENCH_HYPOTHESES if h.id == "H7")
+        assert h7.analysis_type == "confirmatory"
+
+    def test_h2_is_exploratory(self):
+        h2 = next(h for h in BUYERBENCH_HYPOTHESES if h.id == "H2")
+        assert h2.analysis_type == "exploratory"
+
+    def test_h4_is_exploratory(self):
+        h4 = next(h for h in BUYERBENCH_HYPOTHESES if h.id == "H4")
+        assert h4.analysis_type == "exploratory"
+
+    def test_h6_is_exploratory(self):
+        h6 = next(h for h in BUYERBENCH_HYPOTHESES if h.id == "H6")
+        assert h6.analysis_type == "exploratory"
+
+    def test_h8_is_exploratory(self):
+        h8 = next(h for h in BUYERBENCH_HYPOTHESES if h.id == "H8")
+        assert h8.analysis_type == "exploratory"
+
+    def test_h9_is_exploratory(self):
+        h9 = next(h for h in BUYERBENCH_HYPOTHESES if h.id == "H9")
+        assert h9.analysis_type == "exploratory"
+
+    def test_h10_is_exploratory(self):
+        h10 = next(h for h in BUYERBENCH_HYPOTHESES if h.id == "H10")
+        assert h10.analysis_type == "exploratory"
+
+    def test_confirmatory_set_matches_constant(self):
+        confirmatory = {h.id for h in BUYERBENCH_HYPOTHESES if h.analysis_type == "confirmatory"}
+        assert confirmatory == CONFIRMATORY_HYPOTHESIS_IDS
+
+    def test_exploratory_count_is_six(self):
+        exploratory = [h for h in BUYERBENCH_HYPOTHESES if h.analysis_type == "exploratory"]
+        assert len(exploratory) == 6
+
+    def test_analysis_type_default_is_exploratory(self):
+        """HypothesisDef defaults to exploratory so old tests remain valid."""
+        hyp = HypothesisDef(
+            id="HC1",
+            label="Custom",
+            prq_dimension="D1",
+            statement="Test.",
+            direction="positive",
+            test="t-test",
+            null_outcome="No effect.",
+            data_requirement="N=10",
+        )
+        assert hyp.analysis_type == "exploratory"
+
+    def test_analysis_type_invalid_value_raises(self):
+        with pytest.raises(Exception):
+            HypothesisDef(
+                id="HC1",
+                label="Custom",
+                prq_dimension="D1",
+                statement="Test.",
+                direction="positive",
+                analysis_type="invalid",
+                test="t-test",
+                null_outcome="No effect.",
+                data_requirement="N=10",
+            )
+
+    def test_markdown_shows_confirmatory_for_h1(self):
+        doc = build_prereg_document(_make_manifest())
+        md = render_prereg_markdown(doc)
+        h1_section = md.split("6.H1")[1].split("6.H2")[0]
+        assert "CONFIRMATORY" in h1_section
+
+    def test_markdown_shows_exploratory_for_h2(self):
+        doc = build_prereg_document(_make_manifest())
+        md = render_prereg_markdown(doc)
+        h2_section = md.split("6.H2")[1].split("6.H3")[0]
+        assert "EXPLORATORY" in h2_section
+
+    def test_markdown_section_56_lists_confirmatory_hypotheses(self):
+        doc = build_prereg_document(_make_manifest())
+        md = render_prereg_markdown(doc)
+        assert "5.6 Confirmatory vs. Exploratory" in md
+        section_56 = md.split("5.6 Confirmatory vs. Exploratory")[1].split("5.7")[0]
+        for hid in ["H1", "H3", "H5", "H7"]:
+            assert hid in section_56, f"{hid} not listed in section 5.6"
+
+    def test_markdown_section_56_lists_exploratory_hypotheses(self):
+        doc = build_prereg_document(_make_manifest())
+        md = render_prereg_markdown(doc)
+        section_56 = md.split("5.6 Confirmatory vs. Exploratory")[1].split("5.7")[0]
+        for hid in ["H2", "H4", "H6", "H8", "H9", "H10"]:
+            assert hid in section_56, f"{hid} not listed in section 5.6"
+
+    def test_markdown_section_56_mentions_bh_fdr(self):
+        doc = build_prereg_document(_make_manifest())
+        md = render_prereg_markdown(doc)
+        section_56 = md.split("5.6 Confirmatory vs. Exploratory")[1].split("5.7")[0]
+        assert "BH-FDR" in section_56
+
+    def test_json_metadata_contains_analysis_type(self, tmp_path):
+        manifest = _make_manifest()
+        doc, md = generate_prereg_document(manifest)
+        write_prereg_document(doc, md, tmp_path)
+        data = json.loads((tmp_path / "prereg_metadata.json").read_text())
+        h1 = next(h for h in data["hypotheses"] if h["id"] == "H1")
+        assert h1["analysis_type"] == "confirmatory"
+        h2 = next(h for h in data["hypotheses"] if h["id"] == "H2")
+        assert h2["analysis_type"] == "exploratory"

@@ -1,7 +1,7 @@
 ---
 title: "BuyerBench Pillar 2: Behavioral Bias Susceptibility of LLM-Based Procurement Agents — Pre-Registration Document"
 authors: "BuyerBench Research Team"
-generated_at: "2026-04-16T11:43:07.368238+00:00"
+generated_at: "2026-04-17T14:17:16.369771+00:00"
 experiment_id: "buyerbench-pillar2-realistic-v1"
 git_commit: "unknown"
 design_tier: "realistic"
@@ -10,7 +10,7 @@ design_tier: "realistic"
 # BuyerBench Pillar 2: Behavioral Bias Susceptibility of LLM-Based Procurement Agents — Pre-Registration Document
 
 **Authors:** BuyerBench Research Team  
-**Generated:** 2026-04-16T11:43:07.368238+00:00  
+**Generated:** 2026-04-17T14:17:16.369771+00:00  
 **Experiment ID:** `buyerbench-pillar2-realistic-v1`  
 
 ---
@@ -159,12 +159,29 @@ BSI values are in [0, 1] by construction. No transformation is pre-specified. If
 
 API call failures are logged with error_flag = True and error_message. Excluded from BSI and optimality_gap calculations but included in n_runs. If a model exceeds 20% failure rate across its cells, that model's results are flagged in the report and excluded from aggregate cross-model analyses. No imputation is applied.
 
-### 5.6 Exploratory Analyses
+### 5.6 Confirmatory vs. Exploratory Hypothesis Classification
 
-The following analyses are pre-specified as exploratory (not confirmatory):
+Hypotheses are pre-classified as **confirmatory** or **exploratory** before data collection. BH-FDR correction (q = 0.05) is applied to confirmatory hypotheses only. Exploratory results are reported descriptively and must not be used as primary evidence for publication claims.
 
-- H2 capability regression (OLS: mean_BSI ~ pillar1_score) — N = 10 is below inference threshold; labeled descriptive.
-- H9 model-specific bias profiles — Cronbach's alpha and hierarchical clustering across 5-dimension BSI vectors; N = 10 limits stability.
+
+**Confirmatory hypotheses** (inferential; BH-FDR correction applied):
+
+- H1 — Bias Universality
+- H3 — Decoy Effect Reliability
+- H5 — Framing Asymmetry (Loss > Gain)
+- H7 — Stochastic Variance Proportional to BSI
+
+**Exploratory hypotheses** (descriptive only; no inferential claims permitted):
+
+- H2 — Capability-Bias Tradeoff
+- H4 — Anchoring Magnitude Proportionality
+- H6 — Sunk Cost × Capability Non-Monotone Interaction
+- H8 — CoT Reduces Anchoring but Not Decoy
+- H9 — Model-Specific Bias Profiles
+- H10 — Human Benchmark Calibration
+
+Additional unplanned exploratory analyses (not pre-specified as hypotheses):
+
 - Session order effects (G.6.5): BSI ~ run_index to detect within-session drift.
 - Temperature moderation (Phase 3): if multiple temperature levels are collected, BSI ~ temperature × bias_type interaction is exploratory.
 
@@ -185,6 +202,7 @@ All hypotheses are pre-specified before data collection. No post-hoc hypothesis 
 
 **PRQ Dimension:** D1: Existence  
 **Direction:** positive  
+**Analysis type:** CONFIRMATORY  
 
 **Statement:** LLM agents exhibit non-trivial bias susceptibility (BSI > 0.10 with 95% CI excluding zero) for at least one bias type, in at least five of ten tested models.
 
@@ -202,6 +220,7 @@ All hypotheses are pre-specified before data collection. No post-hoc hypothesis 
 
 **PRQ Dimension:** D3: Capability variation  
 **Direction:** negative  
+**Analysis type:** EXPLORATORY  
 
 **Statement:** There is a negative Spearman rank correlation between Pillar 1 composite score (agent capability proxy) and mean BSI across bias types at the model level.
 
@@ -219,6 +238,7 @@ All hypotheses are pre-specified before data collection. No post-hoc hypothesis 
 
 **PRQ Dimension:** D2: Bias type variation  
 **Direction:** positive  
+**Analysis type:** CONFIRMATORY  
 
 **Statement:** The decoy bias type (p2-03) produces a BSI significantly greater than zero and higher than the mean BSI across all other bias types.
 
@@ -236,6 +256,7 @@ All hypotheses are pre-specified before data collection. No post-hoc hypothesis 
 
 **PRQ Dimension:** D2: Bias type variation  
 **Direction:** positive  
+**Analysis type:** EXPLORATORY  
 
 **Statement:** BSI for high-magnitude anchoring (p2-01, ANCHOR_HIGH) is greater than for low-magnitude anchoring (p2-01b, ANCHOR_LOW), demonstrating proportionality.
 
@@ -253,6 +274,7 @@ All hypotheses are pre-specified before data collection. No post-hoc hypothesis 
 
 **PRQ Dimension:** D2: Bias type variation  
 **Direction:** positive  
+**Analysis type:** CONFIRMATORY  
 
 **Statement:** The LOSS frame (p2-02, FRAMING_LOSS) produces higher BSI than the GAIN frame (p2-02, FRAMING_GAIN), consistent with loss aversion predictions.
 
@@ -270,6 +292,7 @@ All hypotheses are pre-specified before data collection. No post-hoc hypothesis 
 
 **PRQ Dimension:** D2/D3: Bias × capability interaction  
 **Direction:** positive  
+**Analysis type:** EXPLORATORY  
 
 **Statement:** High-capability models show greater sunk cost susceptibility than low-capability models, producing a positive (not negative) capability–BSI slope for p2-05.
 
@@ -287,6 +310,7 @@ All hypotheses are pre-specified before data collection. No post-hoc hypothesis 
 
 **PRQ Dimension:** D4: Stochastic vs. systematic variance  
 **Direction:** positive  
+**Analysis type:** CONFIRMATORY  
 
 **Statement:** Within-cell variance (std_bsi) is positively correlated with mean BSI across all cells, consistent with a boundary-response mechanism.
 
@@ -304,6 +328,7 @@ All hypotheses are pre-specified before data collection. No post-hoc hypothesis 
 
 **PRQ Dimension:** D4: Prompt moderation  
 **Direction:** non directional  
+**Analysis type:** EXPLORATORY  
 
 **Statement:** Chain-of-thought prompting reduces anchoring BSI (p2-01) but does not reduce — and may increase — decoy BSI (p2-03), producing a significant bias_type × prompt_version interaction.
 
@@ -321,6 +346,7 @@ All hypotheses are pre-specified before data collection. No post-hoc hypothesis 
 
 **PRQ Dimension:** D3: Model-specific patterns  
 **Direction:** null  
+**Analysis type:** EXPLORATORY  
 
 **Statement:** Cronbach's alpha across the 5-dimension BSI vector (one dimension per bias type) is low (< 0.50) across the 10-model sample, indicating bias-specific rather than general susceptibility patterns.
 
@@ -338,6 +364,7 @@ All hypotheses are pre-specified before data collection. No post-hoc hypothesis 
 
 **PRQ Dimension:** D5: Human comparison  
 **Direction:** negative  
+**Analysis type:** EXPLORATORY  
 
 **Statement:** LLM BSI effect sizes (Cohen's d vs. 0) are smaller than human meta-analytic benchmarks for the same bias categories from behavioral economics literature.
 
