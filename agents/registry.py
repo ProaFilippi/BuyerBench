@@ -152,6 +152,9 @@ def get_agent(
     temperature = config.get("temperature", family_cfg.get("temperature", None))
     if temperature is not None:
         kwargs["temperature"] = temperature
+    prompt_version = config.get("prompt_version", family_cfg.get("prompt_version", "standard"))
+    if prompt_version != "standard":
+        kwargs["prompt_version"] = prompt_version
     if cli_path := family_cfg.get("cli_path"):
         kwargs["cli_path"] = cli_path
     if mcp_cfg := family_cfg.get("mcp_config_path"):

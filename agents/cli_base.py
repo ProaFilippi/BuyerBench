@@ -70,6 +70,7 @@ class CLIAgent(BaseAgent):
                 raw_output="",
                 latency_ms=0.0,
                 temperature=self.temperature,
+                prompt_version=self.prompt_version,
             )
 
         start = time.monotonic()
@@ -86,6 +87,7 @@ class CLIAgent(BaseAgent):
             raw_output=raw_output,
             latency_ms=latency_ms,
             temperature=self.temperature,
+            prompt_version=self.prompt_version,
         )
 
     def _invoke_subprocess(self, cmd: list[str], input_text: str | None = None) -> str:

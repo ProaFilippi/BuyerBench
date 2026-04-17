@@ -593,3 +593,103 @@ class TestTemperatureParameterSupport:
             "claude_code": {"temperature": 0.9},
         })
         assert agent.temperature == 0.1
+
+
+class TestUpgrade7PromptVersionCLIRegistry:
+    """UPGRADE-7: prompt_version flows from config → CLIAgent for all three CLI families."""
+
+    def test_claude_default_prompt_version_is_standard(self):
+        from agents.claude_code_agent import ClaudeCodeAgent
+        agent = ClaudeCodeAgent(mode="baseline")
+        assert agent.prompt_version == "standard"
+
+    def test_claude_cot_prompt_version_stored(self):
+        from agents.claude_code_agent import ClaudeCodeAgent
+        agent = ClaudeCodeAgent(mode="baseline", prompt_version="cot")
+        assert agent.prompt_version == "cot"
+
+    def test_claude_expert_role_prompt_version_stored(self):
+        from agents.claude_code_agent import ClaudeCodeAgent
+        agent = ClaudeCodeAgent(mode="baseline", prompt_version="expert_role")
+        assert agent.prompt_version == "expert_role"
+
+    def test_codex_default_prompt_version_is_standard(self):
+        from agents.codex_agent import CodexAgent
+        agent = CodexAgent(mode="baseline")
+        assert agent.prompt_version == "standard"
+
+    def test_codex_cot_prompt_version_stored(self):
+        from agents.codex_agent import CodexAgent
+        agent = CodexAgent(mode="baseline", prompt_version="cot")
+        assert agent.prompt_version == "cot"
+
+    def test_gemini_default_prompt_version_is_standard(self):
+        from agents.gemini_agent import GeminiAgent
+        agent = GeminiAgent(mode="baseline")
+        assert agent.prompt_version == "standard"
+
+    def test_gemini_expert_role_prompt_version_stored(self):
+        from agents.gemini_agent import GeminiAgent
+        agent = GeminiAgent(mode="baseline", prompt_version="expert_role")
+        assert agent.prompt_version == "expert_role"
+
+    def test_registry_passes_cot_to_claude(self):
+        from agents.claude_code_agent import ClaudeCodeAgent
+        from agents.registry import get_agent
+        agent = get_agent("claude-code-baseline", {"prompt_version": "cot"})
+        assert isinstance(agent, ClaudeCodeAgent)
+        assert agent.prompt_version == "cot"
+
+    def test_registry_passes_expert_role_to_claude(self):
+        from agents.claude_code_agent import ClaudeCodeAgent
+        from agents.registry import get_agent
+        agent = get_agent("claude-code-baseline", {"prompt_version": "expert_role"})
+        assert isinstance(agent, ClaudeCodeAgent)
+        assert agent.prompt_version == "expert_role"
+
+    def test_registry_passes_cot_to_codex(self):
+        from agents.codex_agent import CodexAgent
+        from agents.registry import get_agent
+        agent = get_agent("codex-baseline", {"prompt_version": "cot"})
+        assert isinstance(agent, CodexAgent)
+        assert agent.prompt_version == "cot"
+
+    def test_registry_passes_cot_to_gemini(self):
+        from agents.gemini_agent import GeminiAgent
+        from agents.registry import get_agent
+        agent = get_agent("gemini-baseline", {"prompt_version": "cot"})
+        assert isinstance(agent, GeminiAgent)
+        assert agent.prompt_version == "cot"
+
+    def test_registry_standard_prompt_version_when_not_in_config(self):
+        from agents.registry import get_agent
+        agent = get_agent("claude-code-baseline", {})
+        assert agent.prompt_version == "standard"
+
+    def test_registry_family_cfg_prompt_version_fallback(self):
+        from agents.claude_code_agent import ClaudeCodeAgent
+        from agents.registry import get_agent
+        agent = get_agent("claude-code-baseline", {"claude_code": {"prompt_version": "cot"}})
+        assert isinstance(agent, ClaudeCodeAgent)
+        assert agent.prompt_version == "cot"
+
+    def test_top_level_prompt_version_overrides_family_cfg(self):
+        from agents.claude_code_agent import ClaudeCodeAgent
+        from agents.registry import get_agent
+        agent = get_agent("claude-code-baseline", {
+            "prompt_version": "expert_role",
+            "claude_code": {"prompt_version": "cot"},
+        })
+        assert agent.prompt_version == "expert_role"
+
+    def test_cot_prompt_version_in_dry_run_response(self):
+        from agents.claude_code_agent import ClaudeCodeAgent
+        agent = ClaudeCodeAgent(mode="baseline", prompt_version="cot", dry_run=True)
+        response = agent.respond(_make_scenario())
+        assert response.prompt_version == "cot"
+
+    def test_standard_prompt_version_in_dry_run_response(self):
+        from agents.claude_code_agent import ClaudeCodeAgent
+        agent = ClaudeCodeAgent(mode="baseline", dry_run=True)
+        response = agent.respond(_make_scenario())
+        assert response.prompt_version == "standard"

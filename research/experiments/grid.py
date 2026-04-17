@@ -14,6 +14,11 @@ robustness_t0
     and N=30 per cell (3,000 total runs ≈ $450).  Section O.2 Week 3.
     Run after Gate 1 clears to verify that BSI results are not stochastic
     artifacts of temperature=0.7 sampling.
+cot_experiment
+    UPGRADE-7: 10 models × 5 bias types × 2 variants × 3 prompt versions
+    (standard, cot, expert_role) × 15 runs per cell = 4,500 total runs ≈ $675.
+    Section O.2 Week 4.  Tests whether chain-of-thought and expert-role framing
+    modulates BSI relative to the standard prompt.
 flagship
     Same models / biases, but 100 runs per cell, 2 temperatures (0.7 + 0.0),
     and 2 prompt versions (standard + cot) = 40,000 total runs.
@@ -86,6 +91,20 @@ ROBUSTNESS_T0_DESIGN: dict = {
     "cost_per_run_usd": 0.15,  # 10 × 5 × 2 × 30 = 3,000 runs ≈ $450
 }
 
+# ── CoT Experiment Design (UPGRADE-7; N=15 per cell; 3 prompt versions) ───────
+
+COT_EXPERIMENT_DESIGN: dict = {
+    **REALISTIC_DESIGN,
+    "design_tier": "cot_experiment",
+    # UPGRADE-7: tests standard vs. cot vs. expert_role prompt framing.
+    # N=15 per cell → 10 × 5 × 2 × 3 × 15 = 4,500 runs ≈ $675.
+    # N=15 balances statistical power with cost given 3-way comparison.
+    "n_runs_per_cell": 15,
+    "temperatures": [0.7],
+    "prompt_versions": ["standard", "cot", "expert_role"],
+    "cost_per_run_usd": 0.15,  # 10 × 5 × 2 × 3 × 15 = 4,500 runs ≈ $675
+}
+
 # ── Flagship Design (inherits all settings; overrides what changes) ───────────
 
 FLAGSHIP_DESIGN: dict = {
@@ -127,6 +146,7 @@ PILOT_DESIGN: dict = {
 DESIGNS: dict[str, dict] = {
     "realistic": REALISTIC_DESIGN,
     "robustness_t0": ROBUSTNESS_T0_DESIGN,
+    "cot_experiment": COT_EXPERIMENT_DESIGN,
     "flagship": FLAGSHIP_DESIGN,
     "pilot_full": PILOT_FULL_DESIGN,
     "pilot": PILOT_DESIGN,
