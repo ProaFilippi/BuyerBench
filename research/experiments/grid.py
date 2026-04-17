@@ -9,6 +9,11 @@ Design tiers
 realistic
     10 models × 5 bias types × 2 variants × 1 temperature × 1 prompt version
     × 50 runs = 5,000 total runs.  Primary published experiment.
+robustness_t0
+    Same 10 models / biases as realistic, but temperature=0.0 (deterministic)
+    and N=30 per cell (3,000 total runs ≈ $450).  Section O.2 Week 3.
+    Run after Gate 1 clears to verify that BSI results are not stochastic
+    artifacts of temperature=0.7 sampling.
 flagship
     Same models / biases, but 100 runs per cell, 2 temperatures (0.7 + 0.0),
     and 2 prompt versions (standard + cot) = 40,000 total runs.
@@ -69,6 +74,18 @@ REALISTIC_DESIGN: dict = {
     "cost_per_run_usd": 0.15,
 }
 
+# ── Robustness T=0.0 Design (deterministic; N=30 per cell) ───────────────────
+
+ROBUSTNESS_T0_DESIGN: dict = {
+    **REALISTIC_DESIGN,
+    "design_tier": "robustness_t0",
+    # Deterministic temperature.  N=30 per cell is sufficient to detect
+    # supplier-order effects while keeping cost ≈ $450.  Section O.2 Week 3.
+    "n_runs_per_cell": 30,
+    "temperatures": [0.0],
+    "cost_per_run_usd": 0.15,  # 10 × 5 × 2 × 30 = 3,000 runs ≈ $450
+}
+
 # ── Flagship Design (inherits all settings; overrides what changes) ───────────
 
 FLAGSHIP_DESIGN: dict = {
@@ -109,6 +126,7 @@ PILOT_DESIGN: dict = {
 
 DESIGNS: dict[str, dict] = {
     "realistic": REALISTIC_DESIGN,
+    "robustness_t0": ROBUSTNESS_T0_DESIGN,
     "flagship": FLAGSHIP_DESIGN,
     "pilot_full": PILOT_FULL_DESIGN,
     "pilot": PILOT_DESIGN,

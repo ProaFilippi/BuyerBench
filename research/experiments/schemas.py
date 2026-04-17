@@ -240,7 +240,7 @@ class ExperimentManifest:
     end_time_utc: Optional[str] = None
     """ISO-8601 UTC timestamp when the last run completed (or failed)."""
 
-    _VALID_TIERS = frozenset({"realistic", "flagship", "pilot_full", "pilot"})
+    _VALID_TIERS = frozenset({"realistic", "robustness_t0", "flagship", "pilot_full", "pilot"})
 
     def __post_init__(self) -> None:
         if self.design_tier not in self._VALID_TIERS:
