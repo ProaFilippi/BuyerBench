@@ -26,7 +26,13 @@ from pathlib import Path
 import pytest
 
 # Import constants from the importable grid module.
-from research.experiments.grid import DESIGNS, FLAGSHIP_DESIGN, PILOT_DESIGN, REALISTIC_DESIGN
+from research.experiments.grid import (
+    DESIGNS,
+    FLAGSHIP_8_BIAS_SCENARIOS,
+    FLAGSHIP_DESIGN,
+    PILOT_DESIGN,
+    REALISTIC_DESIGN,
+)
 
 
 # ── Load the script module via importlib (digit-prefix filename) ──────────────
@@ -128,6 +134,78 @@ class TestDesignConstants:
                 assert isinstance(scenario_id, str) and scenario_id, (
                     f"{bias}.{variant} has empty/invalid scenario_id"
                 )
+
+
+# ── Flagship bias scenarios: UPGRADE-8/9/10 ───────────────────────────────────
+
+
+class TestFlagshipBiasScenarios:
+    """Verify FLAGSHIP_8_BIAS_SCENARIOS includes all 8 bias types with correct IDs."""
+
+    def test_flagship_has_eight_bias_types(self):
+        assert len(FLAGSHIP_8_BIAS_SCENARIOS) == 8
+
+    def test_flagship_includes_all_realistic_bias_types(self):
+        for bias in ("anchoring", "framing", "decoy", "scarcity", "sunk_cost"):
+            assert bias in FLAGSHIP_8_BIAS_SCENARIOS, f"Missing realistic bias: {bias}"
+
+    def test_flagship_includes_default_bias(self):
+        assert "default" in FLAGSHIP_8_BIAS_SCENARIOS
+
+    def test_flagship_includes_loss_aversion(self):
+        assert "loss_aversion" in FLAGSHIP_8_BIAS_SCENARIOS
+
+    def test_flagship_includes_warp(self):
+        assert "warp" in FLAGSHIP_8_BIAS_SCENARIOS
+
+    def test_flagship_default_pair_scenario_ids(self):
+        default = FLAGSHIP_8_BIAS_SCENARIOS["default"]
+        assert default["baseline"] == "p2-06-default-BASELINE"
+        assert default["treatment"] == "p2-06-default-DEFAULT"
+
+    def test_flagship_loss_aversion_pair_scenario_ids(self):
+        la = FLAGSHIP_8_BIAS_SCENARIOS["loss_aversion"]
+        assert la["baseline"] == "p2-07-loss-aversion-BASELINE"
+        assert la["treatment"] == "p2-07-loss-aversion-LOSS_AVERSION"
+
+    def test_flagship_warp_is_triplet(self):
+        warp = FLAGSHIP_8_BIAS_SCENARIOS["warp"]
+        assert len(warp) == 3, "WARP must be a triplet (AB, BC, AC)"
+
+    def test_flagship_warp_scenario_ids(self):
+        warp = FLAGSHIP_8_BIAS_SCENARIOS["warp"]
+        assert warp["warp_ab"] == "p2-08-warp-WARP_AB"
+        assert warp["warp_bc"] == "p2-08-warp-WARP_BC"
+        assert warp["warp_ac"] == "p2-08-warp-WARP_AC"
+
+    def test_flagship_total_scenario_slots(self):
+        # 5 standard pairs × 2 + default × 2 + loss_aversion × 2 + warp × 3 = 17
+        total_slots = sum(len(v) for v in FLAGSHIP_8_BIAS_SCENARIOS.values())
+        assert total_slots == 17
+
+    def test_flagship_design_uses_flagship_8_bias_scenarios(self):
+        assert FLAGSHIP_DESIGN["bias_scenarios"] is FLAGSHIP_8_BIAS_SCENARIOS
+
+    def test_flagship_design_has_eight_bias_types(self):
+        assert len(FLAGSHIP_DESIGN["bias_scenarios"]) == 8
+
+    def test_flagship_all_scenario_ids_are_strings(self):
+        for bias, variants in FLAGSHIP_8_BIAS_SCENARIOS.items():
+            for variant, scenario_id in variants.items():
+                assert isinstance(scenario_id, str) and scenario_id, (
+                    f"flagship.{bias}.{variant} has empty/invalid scenario_id"
+                )
+
+    def test_flagship_standard_pairs_have_baseline_and_treatment(self):
+        for bias in ("anchoring", "framing", "decoy", "scarcity", "sunk_cost",
+                     "default", "loss_aversion"):
+            variants = FLAGSHIP_8_BIAS_SCENARIOS[bias]
+            assert "baseline" in variants, f"{bias} missing 'baseline'"
+            assert "treatment" in variants, f"{bias} missing 'treatment'"
+
+    def test_flagship_warp_keys_are_warp_ab_bc_ac(self):
+        warp = FLAGSHIP_8_BIAS_SCENARIOS["warp"]
+        assert set(warp.keys()) == {"warp_ab", "warp_bc", "warp_ac"}
 
 
 # ── main() end-to-end: realistic design ──────────────────────────────────────
@@ -252,13 +330,15 @@ class TestMainFlagship:
 
     def test_manifest_total_planned_runs(self, exp_dir):
         m = json.loads((exp_dir / "manifest.json").read_text())
-        # 10 × 5 × 2 × 2 temps × 2 prompt_versions × 100 = 40,000
-        assert m["total_planned_runs"] == 40000
+        # UPGRADE-8/9/10: 8 bias types, 17 scenario slots total
+        # Slots: 5×2 (original pairs) + 2 (default) + 2 (loss_aversion) + 3 (warp) = 17
+        # 10 models × 17 slots × 2 temps × 2 prompt_versions × 100 runs = 68,000
+        assert m["total_planned_runs"] == 68000
 
     def test_run_plan_row_count(self, exp_dir):
         with open(exp_dir / "run_plan.csv") as f:
             rows = list(csv.DictReader(f))
-        assert len(rows) == 40000
+        assert len(rows) == 68000
 
     def test_run_plan_all_run_ids_unique(self, exp_dir):
         with open(exp_dir / "run_plan.csv") as f:
@@ -267,8 +347,8 @@ class TestMainFlagship:
 
     def test_cost_estimate_uses_flagship_rate(self, exp_dir):
         cost = json.loads((exp_dir / "cost_estimate.txt").read_text())
-        # Flagship uses $0.20/run
-        assert abs(cost["estimated_total_usd"] - 40000 * 0.20) < 0.01
+        # Flagship uses $0.20/run; 68,000 runs × $0.20 = $13,600
+        assert abs(cost["estimated_total_usd"] - 68000 * 0.20) < 0.01
 
 
 # ── main() end-to-end: pilot design ─────────────────────────────────────────

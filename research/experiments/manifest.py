@@ -180,10 +180,14 @@ def create_manifest(
     n_variants_per_bias = (
         max(len(v) for v in bias_scenarios.values()) if bias_scenarios else 0
     )
+    # Sum scenario slots across all bias categories — handles variable-length
+    # dicts such as the WARP triplet (3 slots) vs. standard pairs (2 slots).
+    total_scenario_slots = (
+        sum(len(v) for v in bias_scenarios.values()) if bias_scenarios else 0
+    )
     total_planned_runs = (
         len(models)
-        * len(bias_scenarios)
-        * n_variants_per_bias
+        * total_scenario_slots
         * len(temperatures)
         * len(prompt_versions)
         * n_runs_per_cell

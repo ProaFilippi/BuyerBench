@@ -20,8 +20,13 @@ cot_experiment
     Section O.2 Week 4.  Tests whether chain-of-thought and expert-role framing
     modulates BSI relative to the standard prompt.
 flagship
-    Same models / biases, but 100 runs per cell, 2 temperatures (0.7 + 0.0),
-    and 2 prompt versions (standard + cot) = 40,000 total runs.
+    UPGRADE-8/9/10 expansion: 10 models × 8 bias types × 100 runs per cell ×
+    2 temperatures (0.7 + 0.0) × 2 prompt versions (standard + cot).
+    Bias types: anchoring, framing, decoy, scarcity, sunk_cost (realistic 5),
+    plus default (p2-06), loss_aversion (p2-07), and warp (p2-08, triplet).
+    WARP has 3 scenario slots (warp_ab, warp_bc, warp_ac); all others have 2.
+    Total scenario slots = 5×2 + 2 + 2 + 3 = 17.
+    Total runs = 10 × 17 × 2 × 2 × 100 = 68,000.
 pilot_full
     Same 10 real models as realistic, but N=30 per cell (3,000 total runs ≈ $450).
     Run before the full realistic design to detect ceiling effects and validate
@@ -105,11 +110,65 @@ COT_EXPERIMENT_DESIGN: dict = {
     "cost_per_run_usd": 0.15,  # 10 × 5 × 2 × 3 × 15 = 4,500 runs ≈ $675
 }
 
-# ── Flagship Design (inherits all settings; overrides what changes) ───────────
+# ── Flagship Bias Battery (UPGRADE-8/9/10 — 8 bias types) ────────────────────
+#
+# Realistic uses 5 standard pairs.  Flagship extends to 8:
+#   - p2-06-default     (UPGRADE-8): status-quo / default bias
+#   - p2-07-loss-aversion (UPGRADE-9): loss-aversion switching cost
+#   - p2-08-warp          (UPGRADE-10): WARP transitivity battery (triplet)
+#
+# WARP is a triplet of pairwise binary choices (A vs B, B vs C, A vs C).
+# All three run as independent scenarios; compute_warp_transitivity() in
+# evaluators/pillar2.py performs the post-hoc transitivity check.
+
+FLAGSHIP_8_BIAS_SCENARIOS: dict = {
+    # ── Original 5 (Realistic Design) ────────────────────────────────────────
+    "anchoring": {
+        "baseline": "p2-01-anchor-high-BASELINE",
+        "treatment": "p2-01-anchor-high-ANCHOR_HIGH",
+    },
+    "framing": {
+        "baseline": "p2-02-framing-GAIN",
+        "treatment": "p2-02-framing-LOSS",
+    },
+    "decoy": {
+        "baseline": "p2-03-decoy-BASELINE",
+        "treatment": "p2-03-decoy-DECOY",
+    },
+    "scarcity": {
+        "baseline": "p2-04-scarcity-BASELINE",
+        "treatment": "p2-04-scarcity-SCARCITY",
+    },
+    "sunk_cost": {
+        "baseline": "p2-05-sunk-cost-BASELINE",
+        "treatment": "p2-05-sunk-cost-SUNK_COST",
+    },
+    # ── UPGRADE-8: Default / Status-Quo Bias (p2-06) ─────────────────────────
+    "default": {
+        "baseline": "p2-06-default-BASELINE",
+        "treatment": "p2-06-default-DEFAULT",
+    },
+    # ── UPGRADE-9: Loss Aversion / Switching Cost (p2-07) ────────────────────
+    "loss_aversion": {
+        "baseline": "p2-07-loss-aversion-BASELINE",
+        "treatment": "p2-07-loss-aversion-LOSS_AVERSION",
+    },
+    # ── UPGRADE-10: WARP Transitivity Battery (p2-08, triplet) ───────────────
+    # Three pairwise binary choices: AB, BC, AC.  No baseline/treatment framing
+    # — all three are run as independent scenarios for post-hoc WARP analysis.
+    "warp": {
+        "warp_ab": "p2-08-warp-WARP_AB",
+        "warp_bc": "p2-08-warp-WARP_BC",
+        "warp_ac": "p2-08-warp-WARP_AC",
+    },
+}
+
+# ── Flagship Design (UPGRADE-8/9/10: 8 bias types, N=100, T∈{0.7,0.0}) ──────
 
 FLAGSHIP_DESIGN: dict = {
     **REALISTIC_DESIGN,
     "design_tier": "flagship",
+    "bias_scenarios": FLAGSHIP_8_BIAS_SCENARIOS,
     "n_runs_per_cell": 100,
     "temperatures": [0.7, 0.0],
     "prompt_versions": ["standard", "cot"],
