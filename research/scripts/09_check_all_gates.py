@@ -49,6 +49,20 @@ _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
+# Lazy import to avoid circular dependency — loaded on first call
+_gate4_scanner = None
+
+
+def _get_gate4_scanner():
+    global _gate4_scanner
+    if _gate4_scanner is None:
+        import importlib.util
+        _scanner_path = Path(__file__).parent / "10_gate4_paper_scan.py"
+        spec = importlib.util.spec_from_file_location("gate4_paper_scan", _scanner_path)
+        _gate4_scanner = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(_gate4_scanner)
+    return _gate4_scanner
+
 # Gate 2 threshold mirrors harness/robustness_pilot.py
 GATE2_CV_THRESHOLD: float = 0.60
 
@@ -382,6 +396,19 @@ def build_gate4_checklist() -> list[dict]:
     ]
 
 
+def check_gate4_scan(paper_path: Optional[Path] = None) -> dict:
+    """Run the automated Tier C paper scan (Gate 4 component).
+
+    Delegates to ``10_gate4_paper_scan.run_gate4_scan()``.  Returns a dict
+    matching the other gate checker schemas:
+      ``status``, ``proceed``, ``n_violations``, ``n_placeholders``,
+      ``violations``, ``source_file``, ``recommendation``.
+    """
+    scanner = _get_gate4_scanner()
+    target = Path(paper_path) if paper_path else scanner.PAPER_PATH
+    return scanner.run_gate4_scan(target)
+
+
 # ── Formatter ─────────────────────────────────────────────────────────────────
 
 _STATUS_ICONS = {
@@ -418,15 +445,40 @@ def _print_gate(
         print()
 
 
-def _print_gate4(checklist: list[dict], verbose: bool = True) -> None:
-    print(f"  Gate 4  ○  MANUAL CHECKLIST   — Pre-submission claim-tier filter")
+def _print_gate4(
+    checklist: list[dict],
+    verbose: bool = True,
+    scan_result: Optional[dict] = None,
+) -> None:
+    if scan_result is not None:
+        icons = {"PASS": "✓", "PENDING": "○", "FAIL": "✗", "MISSING": "—"}
+        labels = {
+            "PASS": "PASS (automated scan)",
+            "PENDING": "PENDING (placeholders remain)",
+            "FAIL": "FAIL (Tier C violations)",
+            "MISSING": "MISSING (paper not found)",
+        }
+        status = scan_result.get("status", "MISSING")
+        icon = icons.get(status, "?")
+        label = labels.get(status, status)
+        print(f"  Gate 4  {icon}  {label}   — Pre-submission claim-tier filter")
+        if verbose:
+            print(f"           Violations: {scan_result.get('n_violations', 0)}  "
+                  f"Placeholders: {scan_result.get('n_placeholders', 0)}")
+            print(f"           {scan_result.get('recommendation', '')}")
+            if scan_result.get("violations"):
+                for v in scan_result["violations"]:
+                    print(f"           ! Line {v['line_number']}: [{v['category']}] {v['match']!r}")
+    else:
+        print(f"  Gate 4  ○  MANUAL CHECKLIST   — Pre-submission claim-tier filter")
+        if verbose:
+            print()
+            for i, item in enumerate(checklist, 1):
+                print(f"    {i}. [ ] {item['label']}")
+                print(f"           {item['instruction']}")
+                if item.get("note"):
+                    print(f"           Note: {item['note']}")
     if verbose:
-        print()
-        for i, item in enumerate(checklist, 1):
-            print(f"    {i}. [ ] {item['label']}")
-            print(f"           {item['instruction']}")
-            if item.get("note"):
-                print(f"           Note: {item['note']}")
         print()
 
 
@@ -435,6 +487,7 @@ def _render_markdown(
     gate2: dict,
     gate3: dict,
     gate4_checklist: list[dict],
+    gate4_scan: Optional[dict] = None,
 ) -> str:
     """Render a Markdown gate-status report."""
 
@@ -526,13 +579,43 @@ def _render_markdown(
         )
     lines.append("")
 
-    lines += [
-        "## Gate 4 — Pre-Submission Claim-Tier Filter (manual)",
-        "",
-        "Apply the N.2 claim-tier hierarchy to every result statement before submission.  "
-        "Each item below must be confirmed manually.",
-        "",
-    ]
+    if gate4_scan is not None:
+        scan_status = gate4_scan.get("status", "MISSING")
+        scan_badge = {
+            "PASS": "✅ PASS",
+            "PENDING": "⏳ PENDING",
+            "FAIL": "❌ FAIL",
+            "MISSING": "⚠️ MISSING",
+        }.get(scan_status, scan_status)
+        lines += [
+            "## Gate 4 — Pre-Submission Claim-Tier Filter (automated scan)",
+            "",
+            f"**Automated Tier C Scan:** {scan_badge}  ",
+            f"**Tier C violations:** {gate4_scan.get('n_violations', 0)}  ",
+            f"**Unresolved placeholders:** {gate4_scan.get('n_placeholders', 0)}  ",
+            f"**Recommendation:** {gate4_scan.get('recommendation', '')}",
+            "",
+        ]
+        if gate4_scan.get("violations"):
+            lines.append("**Violations detected:**")
+            for v in gate4_scan["violations"]:
+                lines.append(
+                    f"- Line {v['line_number']}: `[{v['category']}]` "
+                    f"{v['description']}  Match: `{v['match']}`"
+                )
+            lines.append("")
+        lines += [
+            "**Manual checklist** (still required before submission):",
+            "",
+        ]
+    else:
+        lines += [
+            "## Gate 4 — Pre-Submission Claim-Tier Filter (manual)",
+            "",
+            "Apply the N.2 claim-tier hierarchy to every result statement before submission.  "
+            "Run `python research/scripts/10_gate4_paper_scan.py` for automated Tier C scan.",
+            "",
+        ]
     for i, item in enumerate(gate4_checklist, 1):
         lines.append(f"- [ ] **{item['label']}**")
         lines.append(f"  - {item['instruction']}")
@@ -620,6 +703,17 @@ def main(argv: list[str] | None = None) -> None:
         help="Write a Markdown gate-status report to FILE.",
     )
     parser.add_argument(
+        "--paper",
+        type=Path,
+        default=None,
+        metavar="FILE",
+        help=(
+            "Path to the working paper Markdown file for automated Gate 4 Tier C scan.  "
+            "Default: docs/paper/pillar2-working-paper.md.  "
+            "Pass to enable automated scan; omit for manual checklist display only."
+        ),
+    )
+    parser.add_argument(
         "--quiet",
         action="store_true",
         help="Print only status lines; suppress recommendations and artifact paths.",
@@ -637,6 +731,11 @@ def main(argv: list[str] | None = None) -> None:
     gate2 = check_gate2(robustness_dir) if args.gate in (None, 2) else None
     gate3 = check_gate3(full_dir) if args.gate in (None, 3) else None
     gate4_checklist = build_gate4_checklist() if args.gate in (None, 4) else None
+    gate4_scan = (
+        check_gate4_scan(args.paper)
+        if args.gate in (None, 4) and args.paper is not None
+        else None
+    )
 
     sep = "=" * 70
     print()
@@ -652,7 +751,7 @@ def main(argv: list[str] | None = None) -> None:
     if gate3 is not None:
         _print_gate(3, "≥3/10 Models Detectable Bias (full N=50 run)", gate3, verbose)
     if gate4_checklist is not None:
-        _print_gate4(gate4_checklist, verbose)
+        _print_gate4(gate4_checklist, verbose, scan_result=gate4_scan)
 
     # Summary line
     all_results = {
@@ -680,7 +779,7 @@ def main(argv: list[str] | None = None) -> None:
 
     # Write Markdown report if requested
     if args.report and all(r is not None for r in [gate1, gate2, gate3, gate4_checklist]):
-        md = _render_markdown(gate1, gate2, gate3, gate4_checklist)
+        md = _render_markdown(gate1, gate2, gate3, gate4_checklist, gate4_scan)
         out = Path(args.report)
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(md, encoding="utf-8")
