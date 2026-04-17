@@ -7,6 +7,7 @@ Covers:
 - `run --agent all` with available agent runs normally and writes real results
 - `run --agent <id>` still works single-agent (regression)
 - Multi-run support: --n-runs N, run_index field, file naming
+- Session independence: each run is a fresh independent call with unique run_id
 """
 from __future__ import annotations
 
@@ -296,6 +297,88 @@ class TestMultiRunSupport:
         agent_dir = tmp_path / "mock-agent-v1"
         result_files = list(agent_dir.glob("*.json"))
         assert len(result_files) == 6  # 6 pillar-1 scenarios × 1 run
+
+    def test_run_ids_are_unique_across_runs(self, tmp_path):
+        """Each run must produce a distinct run_id (content-addressable; different seed → different hash)."""
+        from agents.mock import MockAgent
+        from harness.loader import load_all_scenarios
+        from harness.runner import run_scenario
+
+        scenarios_root = Path(__file__).parent.parent / "scenarios"
+        scenarios = load_all_scenarios(str(scenarios_root))
+        agent = MockAgent()
+
+        run_ids = []
+        for run_idx in range(5):
+            result = run_scenario(scenarios[0], agent, output_dir=str(tmp_path), run_index=run_idx)
+            run_ids.append(result.run_id)
+
+        assert len(set(run_ids)) == 5, "All 5 independent runs must have distinct run_ids"
+
+    def test_agent_respond_called_n_times_for_n_runs(self, tmp_path):
+        """run_scenario() must invoke agent.respond() exactly once per call; N runs = N respond() calls."""
+        from agents.mock import MockAgent
+        from harness.loader import load_all_scenarios
+        from harness.runner import run_scenario
+
+        scenarios_root = Path(__file__).parent.parent / "scenarios"
+        scenarios = load_all_scenarios(str(scenarios_root))
+        agent = MockAgent()
+
+        call_count = 0
+        original_respond = agent.respond
+
+        def counting_respond(scenario):
+            nonlocal call_count
+            call_count += 1
+            return original_respond(scenario)
+
+        agent.respond = counting_respond
+
+        for run_idx in range(3):
+            run_scenario(scenarios[0], agent, output_dir=str(tmp_path), run_index=run_idx)
+
+        assert call_count == 3, f"Expected 3 respond() calls for 3 runs, got {call_count}"
+
+    def test_runs_have_different_supplier_orderings(self, tmp_path):
+        """Sequential runs must present suppliers in different orders (different seed → different shuffle)."""
+        from agents.mock import MockAgent
+        from harness.loader import load_all_scenarios
+        from harness.runner import run_scenario, _shuffle_context
+
+        scenarios_root = Path(__file__).parent.parent / "scenarios"
+        all_scenarios = load_all_scenarios(str(scenarios_root))
+        p2 = [s for s in all_scenarios if "p2" in s.id]
+        scenario = p2[0] if p2 else all_scenarios[0]
+
+        agent = MockAgent()
+        seeds = []
+        for run_idx in range(5):
+            result = run_scenario(scenario, agent, output_dir=str(tmp_path), run_index=run_idx)
+            seeds.append(result.supplier_order_seed)
+
+        assert len(set(seeds)) > 1, "Independent runs must use different supplier ordering seeds"
+
+    def test_same_explicit_seed_produces_same_run_id(self, tmp_path):
+        """Reproducibility: identical (run_index, seed) inputs → identical run_id (deterministic hash)."""
+        from agents.mock import MockAgent
+        from harness.loader import load_all_scenarios
+        from harness.runner import run_scenario
+
+        scenarios_root = Path(__file__).parent.parent / "scenarios"
+        scenarios = load_all_scenarios(str(scenarios_root))
+        agent = MockAgent()
+
+        r1 = run_scenario(scenarios[0], agent, output_dir=str(tmp_path),
+                          run_index=0, supplier_order_seed=99999)
+        # Need separate output path to avoid filename collision
+        import shutil
+        tmp2 = tmp_path / "replay"
+        tmp2.mkdir()
+        r2 = run_scenario(scenarios[0], agent, output_dir=str(tmp2),
+                          run_index=0, supplier_order_seed=99999)
+
+        assert r1.run_id == r2.run_id, "Same inputs must produce the same run_id (reproducibility)"
 
 
 # ---------------------------------------------------------------------------

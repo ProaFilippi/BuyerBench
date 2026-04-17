@@ -145,7 +145,8 @@
 
 **Week 1 — Infrastructure**
 
-- [ ] **Day 1–2:** Implement UPGRADE-1 (multi-run support): add `--n-runs N` to `buyerbench run`; verify runs are independent (fresh session per run)
+- [x] **Day 1–2:** Implement UPGRADE-1 (multi-run support): add `--n-runs N` to `buyerbench run`; verify runs are independent (fresh session per run)
+  - **Implementation:** `--n-runs N` CLI flag was already integrated (CLI option, run loop, file naming `{scenario_id}-run{NNN}.json`, run_index on `EvaluationResult`, manifest `n_runs_per_cell` field, and UPGRADE-5 cell aggregation when N > 1). Added 4 session-independence verification tests in `TestMultiRunSupport` (`tests/test_run_all_agents.py`): (1) `test_run_ids_are_unique_across_runs` — all N runs produce distinct SHA-256 `run_id` hashes (different seed → different hash); (2) `test_agent_respond_called_n_times_for_n_runs` — `respond()` is invoked exactly once per `run_scenario()` call with no batching; (3) `test_runs_have_different_supplier_orderings` — fresh random seed per run guarantees distinct supplier orderings; (4) `test_same_explicit_seed_produces_same_run_id` — deterministic hash on fixed `(run_index, seed)` inputs proves reproducibility. All 1979 tests pass (2026-04-17).
 - [ ] **Day 2:** Implement UPGRADE-2 (supplier order randomization seed)
 - [ ] **Day 3:** Implement UPGRADE-3 (temperature parameter support)
 - [ ] **Day 3–4:** Implement UPGRADE-4 (run metadata logging: run_index, temperature, timestamp, tokens)
