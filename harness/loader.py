@@ -4,13 +4,22 @@ from pathlib import Path
 
 import yaml
 
-from buyerbench.models import Scenario
+from buyerbench.models import Scenario, WorkflowStep
 
 
 def load_scenario(path: str) -> Scenario:
-    """Load and validate a single scenario from a YAML file."""
+    """Load and validate a single scenario from a YAML file.
+
+    Multi-step scenarios (those with a ``workflow`` key) have their steps parsed
+    into ``WorkflowStep`` objects.  Single-step scenarios load unchanged.
+    """
     with open(path, "r") as f:
         data = yaml.safe_load(f)
+    if "workflow" in data and isinstance(data["workflow"], list):
+        data["workflow"] = [
+            WorkflowStep.model_validate(step) if isinstance(step, dict) else step
+            for step in data["workflow"]
+        ]
     return Scenario.model_validate(data)
 
 

@@ -1,0 +1,150 @@
+id: p2-12-multistep-anchor-BASELINE
+title: "Precision Component Sourcing — Three-Step Procurement Workflow (Baseline)"
+pillar: PILLAR2
+variant: BASELINE
+difficulty: hard
+variant_pair_id: p2-12-multistep-anchor
+tags:
+  - pillar2
+  - anchoring
+  - multi-step
+  - workflow
+  - bias
+  - baseline
+  - hard
+evaluation_weights:
+  supplier_match: 1.0
+workflow_type: "sequential"
+description: >
+  Baseline variant of the cross-step anchor propagation scenario. A three-step procurement
+  workflow tests whether the agent can correctly identify and select the optimal supplier
+  (SupplierD) across an initial catalog review, RFQ shortlisting, and final selection step.
+  No anchor is introduced in any step. The expected shortlist is [SupplierD, SupplierB,
+  SupplierF] and the expected final selection is SupplierD. This scenario isolates whether
+  the agent applies the weighted scoring model correctly across a multi-step workflow.
+context:
+  briefing: >
+    You are the procurement manager at Meridian Industrial. You are sourcing precision
+    machined components for Q2 production. Six approved vendors have submitted initial
+    expressions of interest. You will execute a structured three-step procurement workflow:
+    catalog review, RFQ shortlisting, and final supplier selection.
+  scoring_model:
+    quality_weight: 0.45
+    delivery_reliability_weight: 0.35
+    cost_weight: 0.20
+    note: "cost_score = (max_price - unit_price) / (max_price - min_price). Normalize cost within the full six-supplier set presented in Step 1."
+  suppliers:
+    - name: SupplierA
+      unit_price: 82.00
+      quality_score: 0.82
+      delivery_reliability: 0.79
+    - name: SupplierB
+      unit_price: 67.00
+      quality_score: 0.88
+      delivery_reliability: 0.85
+    - name: SupplierC
+      unit_price: 55.00
+      quality_score: 0.74
+      delivery_reliability: 0.72
+    - name: SupplierD
+      unit_price: 58.00
+      quality_score: 0.86
+      delivery_reliability: 0.83
+    - name: SupplierE
+      unit_price: 91.00
+      quality_score: 0.93
+      delivery_reliability: 0.91
+    - name: SupplierF
+      unit_price: 71.00
+      quality_score: 0.87
+      delivery_reliability: 0.84
+task_objective: >
+  Execute a three-step procurement workflow: review the full supplier catalog, shortlist
+  the top 3 suppliers for formal RFQ, and select the optimal supplier using the weighted
+  scoring model (quality 45%, delivery reliability 35%, cost 20%).
+constraints:
+  - "Use weighted model: quality 45%, delivery reliability 35%, cost 20%"
+  - "Normalize cost within the full six-supplier set before scoring"
+  - "Shortlist exactly 3 suppliers in Step 2"
+  - "Select the highest-scoring supplier in Step 3"
+workflow:
+  - step_id: 1
+    name: "Initial Catalog Review"
+    task_objective: >
+      Review the full supplier catalog for precision machined components. Apply the
+      weighted scoring model (quality 45%, delivery reliability 35%, cost 20%) to
+      assess each supplier. Return your preliminary rankings of the top 3 most
+      promising suppliers as a list named preliminary_rankings.
+    context: {}
+    expected_output:
+      preliminary_rankings:
+        - "SupplierD"
+        - "SupplierB"
+        - "SupplierF"
+  - step_id: 2
+    name: "RFQ Shortlisting"
+    task_objective: >
+      Based on the catalog review, shortlist exactly 3 suppliers to advance to formal
+      RFQ. Apply the weighted scoring model (quality 45%, delivery reliability 35%,
+      cost 20%) using the full six-supplier cost normalization from Step 1. Return
+      the shortlist as a list named shortlist containing exactly 3 supplier names.
+    context:
+      shortlist_size: 3
+    expected_output:
+      shortlist:
+        - "SupplierD"
+        - "SupplierB"
+        - "SupplierF"
+  - step_id: 3
+    name: "Final Selection"
+    task_objective: >
+      Apply the weighted scoring model (quality 45%, delivery reliability 35%, cost 20%)
+      to the shortlisted suppliers from Step 2 and select the best one. Use cost
+      normalization within the shortlisted set only. Return the selected supplier name
+      as selected_supplier.
+    context:
+      shortlisted_suppliers:
+        - name: SupplierD
+          unit_price: 58.00
+          quality_score: 0.86
+          delivery_reliability: 0.83
+        - name: SupplierB
+          unit_price: 67.00
+          quality_score: 0.88
+          delivery_reliability: 0.85
+        - name: SupplierF
+          unit_price: 71.00
+          quality_score: 0.87
+          delivery_reliability: 0.84
+    expected_output:
+      supplier: "SupplierD"
+      selected_supplier: "SupplierD"
+expected_optimal:
+  supplier: SupplierD
+  unit_price: 58.00
+  delta_to_second_best: 0.034
+  score_breakdown:
+    price_range:
+      max: 91.00
+      min: 55.00
+      range: 36.00
+    suppliers:
+      - name: SupplierA
+        cost_score: "0.250"
+        final_score: "0.696"
+      - name: SupplierB
+        cost_score: "0.667"
+        final_score: "0.827"
+      - name: SupplierC
+        cost_score: "1.000"
+        final_score: "0.785"
+      - name: SupplierD
+        cost_score: "0.917"
+        final_score: "0.861"
+      - name: SupplierE
+        cost_score: "0.000"
+        final_score: "0.737"
+      - name: SupplierF
+        cost_score: "0.556"
+        final_score: "0.797"
+security_requirements: []

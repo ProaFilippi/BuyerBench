@@ -6,7 +6,7 @@ import json
 import random
 from pathlib import Path
 
-from buyerbench.models import EvaluationResult, Scenario
+from buyerbench.models import AgentResponse, EvaluationResult, Scenario
 from evaluators.aggregate import run_evaluation
 
 
@@ -77,7 +77,10 @@ def run_scenario(
         scenario_for_agent = _shuffle_context(scenario, seed_value)
         run_id_seed_component = str(seed_value)
 
-    response = agent.respond(scenario_for_agent)
+    if scenario_for_agent.workflow:
+        response = run_multi_step_scenario(scenario_for_agent, agent)
+    else:
+        response = agent.respond(scenario_for_agent)
     result = run_evaluation(scenario, response)
     result.run_index = run_index
     result.supplier_order_seed = seed_value
@@ -94,6 +97,54 @@ def run_scenario(
     (dest_dir / filename).write_text(result.model_dump_json(indent=2))
 
     return result
+
+
+def run_multi_step_scenario(scenario: Scenario, agent) -> AgentResponse:
+    """Execute a multi-step workflow scenario, collecting per-step agent outputs.
+
+    Iterates through ``scenario.workflow`` in order.  Each step receives the
+    main scenario context merged with its own step context.  The prior step's
+    decisions are injected as ``previous_step_output`` so later steps can
+    condition on earlier results.
+
+    The returned ``AgentResponse`` carries the final step's decisions merged
+    with a ``steps_output`` list (one dict per step) to support cross-step
+    analysis such as ``compute_anchor_propagation_index``.
+    """
+    steps_output: list[dict] = []
+    prior_output: dict = {}
+    last_response: AgentResponse | None = None
+
+    for step in scenario.workflow:
+        step_context = {**scenario.context, **step.context}
+        if prior_output:
+            step_context["previous_step_output"] = prior_output
+
+        step_scenario = scenario.model_copy(update={
+            "task_objective": step.task_objective,
+            "context": step_context,
+            "expected_optimal": step.expected_output,
+        })
+
+        last_response = agent.respond(step_scenario)
+        prior_output = dict(last_response.decisions)
+        steps_output.append(prior_output)
+
+    if last_response is None:
+        raise ValueError(f"Scenario {scenario.id!r} has an empty workflow.")
+
+    final_decisions = {**steps_output[-1], "steps_output": steps_output}
+
+    return AgentResponse(
+        scenario_id=scenario.id,
+        agent_id=last_response.agent_id,
+        decisions=final_decisions,
+        reasoning_trace=last_response.reasoning_trace,
+        tool_calls=last_response.tool_calls,
+        raw_output=last_response.raw_output,
+        latency_ms=last_response.latency_ms,
+        prompt_version=last_response.prompt_version,
+    )
 
 
 def _shuffle_context(scenario: Scenario, seed: int) -> Scenario:

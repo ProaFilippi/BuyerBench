@@ -60,8 +60,8 @@ class TestRunSuiteBasics:
 
     def test_variant_pair_ids_preserved(self, suite_results):
         paired = [r for r in suite_results if r.variant_pair_id]
-        # REV-4 added 6 more paired scenarios: 17 + 6 = 23
-        assert len(paired) == 23, "23 pillar2 scenarios have variant_pair_ids"
+        # p2-12 multistep anchor pair added: 23 + 2 = 25
+        assert len(paired) == 25, "25 pillar2 scenarios have variant_pair_ids"
 
     def test_summary_json_created(self, all_scenarios, mock_agent, tmp_path):
         import os
@@ -104,8 +104,8 @@ class TestMockAgentScores:
 
     def test_all_pillar2_scores_above_threshold(self, suite_results):
         p2_results = [r for r in suite_results if r.pillar_scores[0].pillar == Pillar.PILLAR2]
-        # REV-4 added 6 hard scenarios: 17 + 6 = 23
-        assert len(p2_results) == 23
+        # p2-12 multistep anchor pair added: 23 + 2 = 25
+        assert len(p2_results) == 25
 
         for r in p2_results:
             score = r.pillar_scores[0].score

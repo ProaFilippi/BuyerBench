@@ -48,8 +48,8 @@ class TestSuiteCompleteness:
 
     def test_pillar2_count(self, all_scenarios):
         p2 = [s for s in all_scenarios if s.pillar == Pillar.PILLAR2]
-        # REV-4 added 6 hard scenarios: 17 + 6 = 23
-        assert len(p2) == 23
+        # p2-12 multistep anchor pair added: 23 + 2 = 25
+        assert len(p2) == 25
 
     def test_pillar3_count(self, all_scenarios):
         p3 = [s for s in all_scenarios if s.pillar == Pillar.PILLAR3]

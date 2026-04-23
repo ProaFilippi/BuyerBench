@@ -58,9 +58,9 @@ class TestLoadAllScenarios:
 
 class TestLoadScenarioPairs:
     def test_returns_four_pairs(self):
-        # REV-4 added 3 new hard pairs (p2-09, p2-10, p2-11): 7 + 3 = 10
+        # p2-12 multistep anchor pair added: 10 + 1 = 11
         pairs = load_scenario_pairs(str(SCENARIOS_ROOT))
-        assert len(pairs) == 10
+        assert len(pairs) == 11
 
     def test_each_pair_is_two_scenarios(self):
         pairs = load_scenario_pairs(str(SCENARIOS_ROOT))

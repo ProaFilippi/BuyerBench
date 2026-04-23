@@ -37,6 +37,14 @@ class Difficulty(str, Enum):
     HARD = "hard"
 
 
+class WorkflowStep(BaseModel):
+    step_id: int
+    name: str
+    task_objective: str
+    context: dict[str, Any] = Field(default_factory=dict)
+    expected_output: dict[str, Any] = Field(default_factory=dict)
+
+
 class Scenario(BaseModel):
     id: str
     title: str
@@ -52,6 +60,8 @@ class Scenario(BaseModel):
     difficulty: Difficulty = Difficulty.EASY
     variant_pair_id: str | None = None
     evaluation_weights: dict[str, float] = Field(default_factory=dict)
+    workflow: list[WorkflowStep] | None = None
+    workflow_type: str | None = None
 
 
 class AgentResponse(BaseModel):

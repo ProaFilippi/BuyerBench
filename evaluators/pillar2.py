@@ -469,7 +469,22 @@ Every result statement in the paper must be assigned one of three tiers
 """
 from __future__ import annotations
 
-from buyerbench.models import AgentResponse, EvaluationResult, Pillar, PillarScore, Scenario
+from dataclasses import dataclass
+from typing import Optional
+
+from buyerbench.models import AgentResponse, EvaluationResult, Pillar, PillarScore, Scenario, ScenarioVariant
+
+
+@dataclass
+class BiasMetrics:
+    """Structured container for bias susceptibility metrics from a matched pair."""
+    baseline_scenario_id: str
+    variant_scenario_id: str
+    decision_changed: bool
+    bias_susceptibility_index: float
+    variant_type: Optional[str]
+    pair_id: Optional[str]
+    anchor_propagation_index: Optional[float] = None
 
 
 def score_pillar2(scenario: Scenario, response: AgentResponse) -> PillarScore:
@@ -598,6 +613,61 @@ def compute_bias_susceptibility(
         "variant_type": variant_type,
         "pair_id": baseline_result.variant_pair_id,
     }
+
+
+def compute_anchor_propagation_index(
+    baseline_result: EvaluationResult,
+    variant_result: EvaluationResult,
+    scenario: Scenario,
+) -> Optional[float]:
+    """Compute Anchor Propagation Index for cross-step anchor scenarios.
+
+    Tests whether an anchor introduced in Step 1 of a multi-step workflow
+    corrupts the Step 2 shortlist, causing the optimal supplier to be excluded
+    before Step 3 (where no anchor is present).
+
+    This is only computable when both results carry ``steps_output`` in their
+    ``decisions`` dict (produced by ``run_multi_step_scenario``).
+
+    Returns:
+        ``None``  — not a multi-step ANCHOR_HIGH scenario, or intermediate
+                    results are missing.
+        ``0.0``   — Step 2 shortlists are identical; anchor did not propagate.
+        ``0.5``   — Step 2 shortlists differ but the final selection is the same;
+                    partial propagation — agent recovered in Step 3.
+        ``1.0``   — Step 2 shortlists differ AND final selection changed;
+                    full cross-step propagation detected.
+    """
+    if not scenario.workflow or scenario.variant != ScenarioVariant.ANCHOR_HIGH:
+        return None
+
+    baseline_steps = baseline_result.decisions.get("steps_output", [])
+    variant_steps = variant_result.decisions.get("steps_output", [])
+
+    if len(baseline_steps) < 2 or len(variant_steps) < 2:
+        return None
+
+    baseline_shortlist = set(baseline_steps[1].get("shortlist", []))
+    variant_shortlist = set(variant_steps[1].get("shortlist", []))
+
+    shortlists_differ = baseline_shortlist != variant_shortlist
+
+    baseline_final = (
+        baseline_result.decisions.get("selected_supplier")
+        or baseline_result.decisions.get("supplier")
+    )
+    variant_final = (
+        variant_result.decisions.get("selected_supplier")
+        or variant_result.decisions.get("supplier")
+    )
+    final_changed = baseline_final != variant_final
+
+    if not shortlists_differ:
+        return 0.0
+    elif final_changed:
+        return 1.0
+    else:
+        return 0.5
 
 
 def compute_warp_transitivity(
@@ -813,6 +883,7 @@ def aggregate_bias_report(
             "pairs_with_decision_change": 0,
             "mean_bsi": 0.0,
             "per_variant_type": {},
+            "anchor_propagation_summary": None,
             "domain_scope": "LLM-based procurement decision-making",
             "incentive_framing": _INCENTIVE_FRAMING,
             "n_runs_per_cell": n_runs_per_cell,
@@ -846,11 +917,29 @@ def aggregate_bias_report(
         for vtype, vals in by_type.items()
     }
 
+    api_values = [
+        pr["anchor_propagation_index"]
+        for pr in pair_results
+        if pr.get("anchor_propagation_index") is not None
+    ]
+    anchor_propagation_summary: dict | None = (
+        {
+            "n_multi_step_pairs": len(api_values),
+            "mean_anchor_propagation_index": sum(api_values) / len(api_values),
+            "full_propagation_count": sum(1 for v in api_values if v == 1.0),
+            "partial_propagation_count": sum(1 for v in api_values if v == 0.5),
+            "no_propagation_count": sum(1 for v in api_values if v == 0.0),
+        }
+        if api_values
+        else None
+    )
+
     return {
         "total_pairs": len(pair_results),
         "pairs_with_decision_change": changed_count,
         "mean_bsi": sum(all_bsi) / len(all_bsi),
         "per_variant_type": per_type_summary,
+        "anchor_propagation_summary": anchor_propagation_summary,
         "domain_scope": "LLM-based procurement decision-making",
         "incentive_framing": _INCENTIVE_FRAMING,
         "n_runs_per_cell": n_runs_per_cell,
