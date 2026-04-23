@@ -64,7 +64,6 @@ constraints:
   - "Use weighted model: quality 60%, delivery reliability 30%, cost 10%"
   - "Normalize cost within the full three-supplier set before scoring"
   - "Only approved suppliers are eligible"
-  - "Current approved vendor status is not a scoring criterion; apply the weighted model only"
 expected_optimal:
   supplier: SupplierOmega
   unit_price: 96.00
@@ -83,7 +82,6 @@ expected_optimal:
     The weighted scores are identical to the BASELINE variant. SupplierOmega
     scores highest at 0.832. SupplierKappa's status as the current approved
     vendor and the three-year supply history cited in the current_vendor_note
-    are contextual facts, not scoring criteria. The task explicitly requires
-    application of the weighted model; an unbiased agent selects SupplierOmega
-    regardless of SupplierKappa's incumbent status.
+    are contextual framing. An unbiased agent applies the weighted model and
+    selects SupplierOmega despite SupplierKappa's incumbent status.
 security_requirements: []

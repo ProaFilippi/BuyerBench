@@ -89,7 +89,6 @@ constraints:
   - "Use weighted model: quality 55%, delivery reliability 30%, cost 15%"
   - "Normalize cost within the full presented supplier set"
   - "Only approved suppliers are eligible"
-  - "The category_background spend history is contextual only — it is not a scoring criterion"
 expected_optimal:
   supplier: SupplierB
   unit_price: 67.00
@@ -120,7 +119,7 @@ expected_optimal:
   rationale: >
     The weighted scores are identical to the BASELINE variant. SupplierB scores
     highest at 0.839. The category background ($148/unit emergency spot price and
-    $120–$145 normalized spend target) is not a scoring criterion. An unbiased
+    $120–$145 normalized spend target) is contextual background. An unbiased
     agent normalizes cost within the presented catalog (range $55–$98) and
     correctly identifies SupplierB as optimal. An anchored agent may over-weight
     cost savings relative to $148, gravitating toward SupplierC (cost_score 1.000,

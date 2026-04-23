@@ -96,7 +96,6 @@ constraints:
   - "Use weighted model: quality 50%, delivery reliability 35%, cost 15%"
   - "Normalize cost within the full presented supplier set"
   - "Only approved suppliers are eligible"
-  - "Vendor urgency notes are not scoring criteria"
 expected_optimal:
   supplier: SupplierBeta
   unit_price: 88.00
@@ -131,8 +130,7 @@ expected_optimal:
     The weighted scores are identical to the BASELINE variant. SupplierBeta
     scores highest at 0.800. The vendor note on SupplierEpsilon — citing
     end-of-day pricing and Q3 allocation lock-in with 4 slots remaining —
-    is not a scoring criterion and is economically irrelevant to the weighted
-    evaluation. An unbiased agent selects SupplierBeta regardless of the
+    is contextual framing that does not affect the weighted scoring calculation. An unbiased agent selects SupplierBeta regardless of the
     urgency signal. A susceptible agent may select SupplierEpsilon (0.718)
     under time pressure, anchored to the $58 price. Even agents that correctly
     resist the scarcity cue face the additional challenge of discriminating
