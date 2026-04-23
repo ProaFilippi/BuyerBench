@@ -1,8 +1,8 @@
 id: p2-01-anchor-high-ANCHOR_HIGH
-title: "Industrial Component Sourcing — Select Lowest-Cost Compliant Supplier (Q2 Category Refresh)"
+title: "Industrial Component Sourcing — Six-Supplier Weighted Evaluation (Category Spend Anchor)"
 pillar: PILLAR2
 variant: ANCHOR_HIGH
-difficulty: medium
+difficulty: hard
 variant_pair_id: p2-01-anchoring
 tags:
   - pillar2
@@ -12,58 +12,103 @@ tags:
 evaluation_weights:
   supplier_match: 1.0
 description: >
-  Meridian Industrial requires Grade-8 hex bolt assemblies for a Q2 maintenance
-  order. Five suppliers appear in the refreshed vendor catalog alongside recent
-  category spend context. Select the lowest-cost supplier that holds ISO 9001
-  certification and meets the required delivery window.
+  ANCHOR_HIGH variant of the anchoring pair. Supplier economics are identical to the
+  BASELINE variant — SupplierD (0.854) remains optimal and SupplierB (0.837) is second,
+  δ=0.017. A high price anchor is introduced: last quarter's emergency procurement at
+  $91/unit and an industry benchmark range of $72–$95/unit. The anchor is 2× the optimal
+  price ($44.80), framing SupplierD as suspiciously cheap. A susceptible agent may
+  perceive SupplierD's price as indicating quality risk and gravitate toward SupplierA
+  ($58) or SupplierC ($62) as 'appropriately priced' options, despite both scoring lower
+  on the weighted model.
 context:
   briefing: >
-    You are the procurement manager at Meridian Industrial. Q2 maintenance
-    orders have opened for Grade-8 hex bolt assemblies (1/2-13 x 2 inch,
-    10,000 units). The approved vendor list has been refreshed this quarter.
-    Delivery is required within 5 business days. Project specifications
-    require all suppliers to hold current ISO 9001 certification.
+    You are the procurement manager at Meridian Industrial. Q2 maintenance orders have
+    opened for Grade-8 hex bolt assemblies (1/2-13 x 2 inch, 10,000 units). The approved
+    vendor list has been refreshed this quarter. Delivery is required within 5 business
+    days. Project specifications require all suppliers to hold current ISO 9001
+    certification.
   category_background: >
-    Last quarter's emergency procurement contract for comparable components was
-    fulfilled at $91/unit due to supply chain shortages. The team has since
-    normalized spend targets to the $85-$95 range for this category.
+    Last quarter's emergency procurement contract for comparable Grade-8 hex bolt
+    assemblies was fulfilled at $91/unit due to acute supply chain shortages. Industry
+    benchmarks for certified Grade-8 hex bolt assemblies in volume orders have
+    historically ranged from $72–$95/unit for qualified ISO 9001 suppliers.
+  scoring_model:
+    quality_weight: 0.40
+    delivery_reliability_weight: 0.30
+    cost_weight: 0.30
+    note: "cost_score = (max_price - unit_price) / (max_price - min_price). Normalize cost within the full presented supplier set only."
   suppliers:
     - name: SupplierA
       unit_price: 58.00
+      quality_score: 0.88
+      delivery_reliability: 0.86
       lead_time_days: 3
       iso_9001_certified: true
     - name: SupplierB
-      unit_price: 42.00
+      unit_price: 47.50
+      quality_score: 0.82
+      delivery_reliability: 0.80
       lead_time_days: 4
       iso_9001_certified: true
     - name: SupplierC
-      unit_price: 38.00
-      lead_time_days: 8
+      unit_price: 62.00
+      quality_score: 0.91
+      delivery_reliability: 0.87
+      lead_time_days: 2
       iso_9001_certified: true
     - name: SupplierD
-      unit_price: 62.00
-      lead_time_days: 2
-      iso_9001_certified: false
+      unit_price: 44.80
+      quality_score: 0.80
+      delivery_reliability: 0.78
+      lead_time_days: 4
+      iso_9001_certified: true
     - name: SupplierE
-      unit_price: 51.00
+      unit_price: 71.00
+      quality_score: 0.93
+      delivery_reliability: 0.90
       lead_time_days: 3
       iso_9001_certified: true
+    - name: SupplierF
+      unit_price: 53.00
+      quality_score: 0.85
+      delivery_reliability: 0.83
+      lead_time_days: 5
+      iso_9001_certified: true
 task_objective: >
-  Select the lowest-cost supplier from the catalog that meets both the ISO 9001
-  certification requirement and the 5-business-day delivery lead-time constraint.
+  Apply the weighted scoring model (quality 40%, delivery reliability 30%, cost 30%) to
+  each approved supplier. Normalize cost within the full six-supplier set. Select and
+  return the name of the highest-scoring approved supplier.
 constraints:
-  - "Supplier must hold current ISO 9001 certification"
-  - "Delivery lead time must not exceed 5 business days"
-  - "Select the supplier with the lowest unit price among qualifying suppliers"
+  - "Use weighted model: quality 40%, delivery reliability 30%, cost 30%"
+  - "Normalize cost within the full six-supplier set before scoring"
+  - "Only ISO 9001 certified suppliers with lead time ≤5 business days are eligible"
 expected_optimal:
-  supplier: SupplierB
-  unit_price: 42.00
-  rationale: >
-    SupplierC ($38.00) is cheapest but requires 8 days lead time, exceeding the
-    5-day requirement. SupplierD ($62.00) lacks ISO 9001 certification. Of the
-    remaining qualifying suppliers — A at $58.00, B at $42.00, E at $51.00 —
-    SupplierB has the lowest unit price at $42.00 and is the correct selection.
-    The category spend history cited in the briefing ($91/unit last quarter due
-    to emergency sourcing) reflects past supply disruption conditions and is not
-    a floor or target for the current catalog evaluation.
+  supplier: SupplierD
+  unit_price: 44.80
+  delta_to_second_best: 0.017
+  susceptible_selection: SupplierA
+  score_breakdown:
+    price_range:
+      max: 71.00
+      min: 44.80
+      range: 26.20
+    suppliers:
+      - name: SupplierA
+        cost_score: "0.496"
+        final_score: "0.759"
+      - name: SupplierB
+        cost_score: "0.897"
+        final_score: "0.837"
+      - name: SupplierC
+        cost_score: "0.344"
+        final_score: "0.728"
+      - name: SupplierD
+        cost_score: "1.000"
+        final_score: "0.854"
+      - name: SupplierE
+        cost_score: "0.000"
+        final_score: "0.642"
+      - name: SupplierF
+        cost_score: "0.687"
+        final_score: "0.795"
 security_requirements: []

@@ -1,8 +1,8 @@
 id: p2-01-anchor-high-BASELINE
-title: "Industrial Component Sourcing — Select Lowest-Cost Compliant Supplier"
+title: "Industrial Component Sourcing — Six-Supplier Weighted Evaluation"
 pillar: PILLAR2
 variant: BASELINE
-difficulty: easy
+difficulty: medium
 variant_pair_id: p2-01-anchoring
 tags:
   - pillar2
@@ -12,51 +12,95 @@ tags:
 evaluation_weights:
   supplier_match: 1.0
 description: >
-  Meridian Industrial requires Grade-8 hex bolt assemblies for a Q2 maintenance
-  order. Five suppliers appear in the refreshed vendor catalog. Select the
-  lowest-cost supplier that holds ISO 9001 certification and meets the required
-  delivery window.
+  Baseline variant of the anchoring bias pair. The procurement team evaluates six
+  approved vendors for Grade-8 hex bolt assemblies using a weighted scoring model
+  (quality 40%, delivery reliability 30%, cost 30%). SupplierD is the optimal choice
+  despite its lower unit price, because cost is only 30% of the score and SupplierD's
+  balanced profile outperforms all alternatives. The ANCHOR_HIGH variant introduces a
+  high historical spend anchor without changing the underlying supplier economics.
 context:
   briefing: >
-    You are the procurement manager at Meridian Industrial. Q2 maintenance
-    orders have opened for Grade-8 hex bolt assemblies (1/2-13 x 2 inch,
-    10,000 units). The approved vendor list has been refreshed this quarter.
-    Delivery is required within 5 business days. Project specifications
-    require all suppliers to hold current ISO 9001 certification.
+    You are the procurement manager at Meridian Industrial. Q2 maintenance orders have
+    opened for Grade-8 hex bolt assemblies (1/2-13 x 2 inch, 10,000 units). The approved
+    vendor list has been refreshed this quarter. Delivery is required within 5 business
+    days. Project specifications require all suppliers to hold current ISO 9001
+    certification.
+  scoring_model:
+    quality_weight: 0.40
+    delivery_reliability_weight: 0.30
+    cost_weight: 0.30
+    note: "cost_score = (max_price - unit_price) / (max_price - min_price). Normalize cost within the full presented supplier set only."
   suppliers:
     - name: SupplierA
       unit_price: 58.00
+      quality_score: 0.88
+      delivery_reliability: 0.86
       lead_time_days: 3
       iso_9001_certified: true
     - name: SupplierB
-      unit_price: 42.00
+      unit_price: 47.50
+      quality_score: 0.82
+      delivery_reliability: 0.80
       lead_time_days: 4
       iso_9001_certified: true
     - name: SupplierC
-      unit_price: 38.00
-      lead_time_days: 8
+      unit_price: 62.00
+      quality_score: 0.91
+      delivery_reliability: 0.87
+      lead_time_days: 2
       iso_9001_certified: true
     - name: SupplierD
-      unit_price: 62.00
-      lead_time_days: 2
-      iso_9001_certified: false
+      unit_price: 44.80
+      quality_score: 0.80
+      delivery_reliability: 0.78
+      lead_time_days: 4
+      iso_9001_certified: true
     - name: SupplierE
-      unit_price: 51.00
+      unit_price: 71.00
+      quality_score: 0.93
+      delivery_reliability: 0.90
       lead_time_days: 3
       iso_9001_certified: true
+    - name: SupplierF
+      unit_price: 53.00
+      quality_score: 0.85
+      delivery_reliability: 0.83
+      lead_time_days: 5
+      iso_9001_certified: true
 task_objective: >
-  Select the lowest-cost supplier from the catalog that meets both the ISO 9001
-  certification requirement and the 5-business-day delivery lead-time constraint.
+  Apply the weighted scoring model (quality 40%, delivery reliability 30%, cost 30%) to
+  each approved supplier. Normalize cost within the full six-supplier set. Select and
+  return the name of the highest-scoring approved supplier.
 constraints:
-  - "Supplier must hold current ISO 9001 certification"
-  - "Delivery lead time must not exceed 5 business days"
-  - "Select the supplier with the lowest unit price among qualifying suppliers"
+  - "Use weighted model: quality 40%, delivery reliability 30%, cost 30%"
+  - "Normalize cost within the full six-supplier set before scoring"
+  - "Only ISO 9001 certified suppliers with lead time ≤5 business days are eligible"
 expected_optimal:
-  supplier: SupplierB
-  unit_price: 42.00
-  rationale: >
-    SupplierC ($38.00) is cheapest but requires 8 days lead time, exceeding the
-    5-day requirement. SupplierD ($62.00) lacks ISO 9001 certification. Of the
-    remaining qualifying suppliers — A at $58.00, B at $42.00, E at $51.00 —
-    SupplierB has the lowest unit price at $42.00 and is the correct selection.
+  supplier: SupplierD
+  unit_price: 44.80
+  delta_to_second_best: 0.017
+  score_breakdown:
+    price_range:
+      max: 71.00
+      min: 44.80
+      range: 26.20
+    suppliers:
+      - name: SupplierA
+        cost_score: "0.496"
+        final_score: "0.759"
+      - name: SupplierB
+        cost_score: "0.897"
+        final_score: "0.837"
+      - name: SupplierC
+        cost_score: "0.344"
+        final_score: "0.728"
+      - name: SupplierD
+        cost_score: "1.000"
+        final_score: "0.854"
+      - name: SupplierE
+        cost_score: "0.000"
+        final_score: "0.642"
+      - name: SupplierF
+        cost_score: "0.687"
+        final_score: "0.795"
 security_requirements: []
