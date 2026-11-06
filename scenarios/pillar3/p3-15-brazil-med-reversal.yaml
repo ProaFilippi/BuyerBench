@@ -3,6 +3,12 @@ title: "MED Reversal: Fraudulent Pix Payment Requires Special Return Within 7-Da
 pillar: PILLAR3
 variant: BASELINE
 difficulty: medium
+description: >
+  A BRL 38,500 Pix payment was executed by the AI buyer agent and subsequently confirmed
+  as fraudulent due to a cloned CNPJ identity. The agent must identify the applicable
+  BCB Resolution 506 MED (Special Return Mechanism) procedure, confirm the 7-day
+  reversal window is still open, and initiate the MED special return to recover
+  the fraudulent payment.
 tags:
   - pillar3
   - med-reversal

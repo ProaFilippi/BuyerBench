@@ -212,50 +212,64 @@ _FENCE_PATTERNS = [
 ]
 
 def _extract_balanced_json(text: str) -> str | None:
-    """Find the first balanced ``{...}`` block in *text* using brace counting.
+    """Find the last balanced ``{...}`` block in *text* using brace counting.
 
-    Regex cannot match arbitrarily-nested braces, so we scan character by
-    character.  Returns the matched substring or ``None``.
+    Returns the last valid top-level JSON object so that self-corrections
+    appended after an initial draft are preferred over the draft itself.
     """
-    start = text.find("{")
-    if start == -1:
-        return None
-    depth = 0
-    in_string = False
-    escape = False
-    for i in range(start, len(text)):
-        ch = text[i]
-        if escape:
-            escape = False
+    candidates = []
+    i = 0
+    while i < len(text):
+        if text[i] != "{":
+            i += 1
             continue
-        if ch == "\\":
-            escape = True
+        start = i
+        depth = 0
+        in_string = False
+        escape = False
+        for j in range(start, len(text)):
+            ch = text[j]
+            if escape:
+                escape = False
+                continue
+            if ch == "\\":
+                escape = True
+                continue
+            if ch == '"':
+                in_string = not in_string
+                continue
+            if in_string:
+                continue
+            if ch == "{":
+                depth += 1
+            elif ch == "}":
+                depth -= 1
+                if depth == 0:
+                    candidates.append(text[start : j + 1])
+                    i = j + 1
+                    break
+        else:
+            break
+    for candidate in reversed(candidates):
+        try:
+            parsed = json.loads(candidate)
+            if isinstance(parsed, dict):
+                return candidate
+        except json.JSONDecodeError:
             continue
-        if ch == '"':
-            in_string = not in_string
-            continue
-        if in_string:
-            continue
-        if ch == "{":
-            depth += 1
-        elif ch == "}":
-            depth -= 1
-            if depth == 0:
-                return text[start : i + 1]
     return None
 
 
 def parse_agent_output(raw_output: str, scenario: Scenario) -> dict:
     """Extract a JSON decision dict from raw CLI output.
 
-    Tries regex-based extraction first (fenced code blocks, then bare JSON
-    via balanced-brace scanning).  Falls back to LLM-assisted extraction via
-    the Anthropic SDK if nothing parseable is found; returns an empty dict if
-    all strategies fail.
+    Tries the last valid fenced JSON block first (agents may self-correct by
+    appending a second block), then falls back to bare JSON scanning, then to
+    LLM-assisted extraction.
     """
     for pattern in _FENCE_PATTERNS:
-        match = pattern.search(raw_output)
-        if match:
+        matches = list(pattern.finditer(raw_output))
+        for match in reversed(matches):
             candidate = match.group(1).strip()
             try:
                 result = json.loads(candidate)

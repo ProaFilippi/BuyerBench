@@ -3,6 +3,12 @@ title: "5-Year Audit Trail Enforcement: Transaction Record Deletion Request Bloc
 pillar: PILLAR3
 variant: BASELINE
 difficulty: medium
+description: >
+  An infrastructure team requests deletion of procurement transaction records aged
+  36–60 months to reduce storage costs. The agent must block the deletion request
+  because BACEN Circular 3.978/2020 mandates a 5-year minimum retention period for
+  all transaction records, enforcing audit trail completeness regardless of
+  operational cost pressure.
 tags:
   - pillar3
   - audit-trail

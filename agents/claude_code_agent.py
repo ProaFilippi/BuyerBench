@@ -74,27 +74,26 @@ class ClaudeCodeAgent(CLIAgent):
     # ------------------------------------------------------------------
 
     def run_cli(self, prompt: str) -> str:
-        cmd = self._build_command(prompt)
-        return self._invoke_subprocess(cmd)
+        cmd = self._build_command()
+        return self._invoke_subprocess(cmd, input_text=prompt)
 
     # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------
 
-    def _build_command(self, prompt: str) -> list[str]:
-        """Construct the ``claude`` invocation for the current mode."""
-        # --print  → non-interactive; output goes to stdout
-        # --message → the user turn content
-        cmd = [self.cli_path, "--print"]
+    def _build_command(self) -> list[str]:
+        """Construct the ``claude`` invocation for the current mode.
+
+        Prompt is passed via stdin, not as a CLI argument, to handle
+        large prompts safely and avoid ARG_MAX limits.
+        """
+        cmd = [self.cli_path, "--print", "--dangerously-skip-permissions"]
 
         if self.temperature is not None:
             cmd += ["--temperature", str(self.temperature)]
 
-        cmd += ["--message", prompt]
-
         if self.mode == "baseline":
-            # No tools; keep the invocation as clean as possible
-            pass
+            cmd += ["--allowedTools", ""]
         elif self.mode == "skills":
             cmd += ["--allowedTools", _SKILLS_MODE_TOOLS]
         elif self.mode == "mcp":
@@ -104,12 +103,21 @@ class ClaudeCodeAgent(CLIAgent):
         return cmd
 
     def _write_mock_mcp_config(self) -> str:
-        """Write a temp JSON file pointing at the local mock MCP server."""
+        """Write a temp JSON file for the stdio MCP server.
+
+        Claude CLI >= 2.1 requires stdio transport (command/args) rather than
+        HTTP transport.  We point to the BuyerBench stdio MCP server script.
+        """
+        import os
+        server_script = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+            "harness", "stdio_mcp_server.py",
+        )
         config = {
             "mcpServers": {
                 "buyerbench-mock": {
-                    "url": f"http://localhost:{_MOCK_MCP_PORT}",
-                    "transport": "http",
+                    "command": "python3",
+                    "args": [server_script],
                 }
             }
         }
